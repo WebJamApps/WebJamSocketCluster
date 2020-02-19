@@ -1,0 +1,34 @@
+{
+  "plugins": ["security", "jest"],
+  "extends": ["plugin:security/recommended", "airbnb", "plugin:jest/recommended", "plugin:node/recommended"],
+  "rules": {
+    "no-underscore-dangle": 0,
+    "node/no-unsupported-features/es-syntax": 0,
+    "no-multiple-empty-lines": [
+      "error",
+      {
+        "max": 1,
+        "maxEOF": 1
+      }
+    ],
+    "no-trailing-spaces": [0, {
+      "skipBlankLines": true
+    }],
+    "one-var-declaration-per-line": [0, "never"],
+    "one-var": [2, {
+      "var": "never",
+      "let": "always",
+      "const": "never"
+    }],
+    "max-len": ["error", {
+      "code": 150
+    }]
+  },
+  "env": {
+    "jest": true,
+    "node": true
+  },
+  "globals": {
+    "mongoose": true
+  }
+}

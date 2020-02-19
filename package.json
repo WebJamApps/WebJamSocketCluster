@@ -1,0 +1,68 @@
+{
+  "name": "WebJamSocketServer",
+  "description": "Uses latest version of socketcluster-server",
+  "version": "1.0.0",
+  "license": "MIT",
+  "engines": {
+    "node": ">=13.8.0"
+  },
+  "contributors": [{
+    "name": "Jonathan Gros-Dubois",
+    "email": "grosjona@yahoo.com.au"
+  }, {
+    "name": "Joshua V Sherman",
+    "email": "joshua.v.sherman@gmail.com"
+  }],
+  "dependencies": {
+    "scc-broker-client": "latest",
+    "socketcluster-client": "latest",
+    "socketcluster-server": "latest",
+    "connect": "latest",
+    "debug": "latest",
+    "dotenv": "latest",
+    "eetase": "latest",
+    "express": "latest",
+    "morgan": "latest",
+    "mongoose": "latest",
+    "nodemon": "latest",
+    "sc-errors": "latest",
+    "serve-static": "latest",
+    "uuid": "latest"
+  },
+  "devDependencies": {
+    "eslint": "latest",
+    "eslint-config-airbnb": "latest",
+    "eslint-plugin-es": "latest",
+    "eslint-plugin-import": "latest",
+    "eslint-plugin-jest": "latest",
+    "eslint-plugin-jsx-a11y": "latest",
+    "eslint-plugin-node": "latest",
+    "eslint-plugin-react": "latest",
+    "eslint-plugin-react-hooks": "latest",
+    "eslint-plugin-security": "latest",
+    "jest": "latest",
+    "typescript": "latest",
+    "supertest": "latest"
+  },
+  "keywords": [
+    "websocket",
+    "server",
+    "realtime",
+    "cluster",
+    "scalable"
+  ],
+  "readmeFilename": "README.md",
+  "scripts": {
+    "test": "eslint . && rm -rf coverage && npm run test:jest",
+    "cc": "codeclimate analyze -f html > codeclimate.html",
+    "installglobals": "yarn config set registry https://registry.yarnpkg.com -g",
+    "cleaninstall": "rm -rf yarn.lock && rm -rf package-lock.json && rm -rf node_modules && yarn cache clean && yarn installglobals && yarn install",
+    "start": "node server.js",
+    "start:debug": "DEBUG=WebJamSocketServer:* nodemon server.js",
+    "start:watch": "./node_modules/nodemon/bin/nodemon.js server.js",
+    "start:docker": "./node_modules/nodemon/bin/nodemon.js /usr/src/app/server.js",
+    "test:lint": "eslint . --fix",
+    "test:local": "eslint . --fix && yarn test:jest && yarn cc",
+    "test:jest": "jest --no-cache --config jest.config.json --notify --detectOpenHandles"
+  }
+}
