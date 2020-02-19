@@ -65,8 +65,14 @@ expressApp.get('/health-check', (req, res) => {
 (async () => {
   for await (const { socket } of agServer.listener('connection')) {
     debug('I have a connection');
-    debug(socket);
     // Handle socket connection.
+    (async () => {
+      // Set up a loop to handle remote transmitted events.
+      for await (const data of socket.receiver('howdy')) {
+        debug(`howdy ${data}`);
+        // ...
+      }
+    })();
   }
 })();
 
