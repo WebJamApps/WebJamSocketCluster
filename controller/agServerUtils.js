@@ -9,6 +9,7 @@ exports.routing = (agServer) => {
       debug(`howdy ${data}`);
     })();
   })();
+  return Promise.resolve(true);
 };
 
 exports.handleErrAndWarn = (SOCKETCLUSTER_LOG_LEVEL, SOCKETCLUSTER_PORT, agServer) => {
@@ -29,4 +30,5 @@ exports.handleErrAndWarn = (SOCKETCLUSTER_LOG_LEVEL, SOCKETCLUSTER_PORT, agServe
       debug(`warning: ${warning}`);
     })();
   }
+  return Promise.resolve(true);
 };

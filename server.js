@@ -40,6 +40,7 @@ const agOptions = {};
 
 const agServer = socketClusterServer.attach(httpServer, agOptions);
 const expressApp = express();
+// console.log(expressApp);
 /* istanbul ignore if */if (ENVIRONMENT === 'dev' || ENVIRONMENT === 'development') {
   expressApp.use(morgan('dev'));// Log every HTTP request. See https://github.com/expressjs/morgan for available formats.
 }
