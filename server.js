@@ -9,10 +9,10 @@ const morgan = require('morgan');
 const uuid = require('uuid');
 const sccBrokerClient = require('scc-broker-client');
 const debug = require('debug')('WebJamSocketServer:server');
-const httpServer = require('./httpServer');
+const httpServer = require('./controller/httpServer');
 
-const ENVIRONMENT = process.env.ENV || 'dev';
-const SOCKETCLUSTER_PORT = process.env.SOCKETCLUSTER_PORT || process.env.PORT || 8888;
+const ENVIRONMENT = process.env.ENV || process.env.NODE_ENV;
+const SOCKETCLUSTER_PORT = process.env.SOCKETCLUSTER_PORT || process.env.PORT;
 // const SOCKETCLUSTER_WS_ENGINE = process.env.SOCKETCLUSTER_WS_ENGINE || 'ws';
 // const SOCKETCLUSTER_SOCKET_CHANNEL_LIMIT = Number(process.env.SOCKETCLUSTER_SOCKET_CHANNEL_LIMIT) || 1000;
 const SOCKETCLUSTER_LOG_LEVEL = process.env.SOCKETCLUSTER_LOG_LEVEL || 2;
@@ -33,56 +33,41 @@ const SCC_BROKER_RETRY_DELAY = Number(process.env.SCC_BROKER_RETRY_DELAY) || nul
 
 const agOptions = {};
 
-if (process.env.SOCKETCLUSTER_OPTIONS) {
+/* istanbul ignore if */if (process.env.SOCKETCLUSTER_OPTIONS) {
   const envOptions = JSON.parse(process.env.SOCKETCLUSTER_OPTIONS);
   Object.assign(agOptions, envOptions);
 }
 
-// const httpServer = eetase(http.createServer());
 const agServer = socketClusterServer.attach(httpServer, agOptions);
-
 const expressApp = express();
-if (ENVIRONMENT === 'dev') {
-  // Log every HTTP request. See https://github.com/expressjs/morgan for other
-  // available formats.
-  expressApp.use(morgan('dev'));
+if (ENVIRONMENT === 'dev' || ENVIRONMENT === 'development') {
+  expressApp.use(morgan('dev'));// Log every HTTP request. See https://github.com/expressjs/morgan for available formats.
 }
 expressApp.use(serveStatic(path.resolve(__dirname, 'public')));
 
 // Add GET /health-check express route
-expressApp.get('/health-check', (req, res) => {
-  res.status(200).send('OK');
-});
+expressApp.get('/health-check', (req, res) => res.status(200).send('OK'));
 
-// HTTP request handling loop.
-(async () => {
-  for await (const requestData of httpServer.listener('request')) {
-    expressApp(...requestData);
-  }
+(async () => { // HTTP request handling
+  const requestData = await httpServer.listener('request').once();
+  expressApp(...requestData);
 })();
 
-// SocketCluster/WebSocket connection handling loop.
-(async () => {
-  for await (const { socket } of agServer.listener('connection')) {
-    debug('I have a connection');
-    // Handle socket connection.
-    (async () => {
-      // Set up a loop to handle remote transmitted events.
-      for await (const data of socket.receiver('howdy')) {
-        debug(`howdy ${data}`);
-        // ...
-      }
-    })();
-  }
+(async () => { // SocketCluster/WebSocket connection handling
+  const { socket } = await agServer.listener('connection').once();
+  debug(`new connection with id: ${socket.id}`);
+  (async () => {
+    const data = await socket.receiver('howdy').once();
+    debug(`howdy ${data}`);
+  })();
 })();
 
 httpServer.listen(SOCKETCLUSTER_PORT);
 
 if (SOCKETCLUSTER_LOG_LEVEL >= 1) {
   (async () => {
-    for await (const { error } of agServer.listener('error')) {
-      console.error(error);// eslint-disable-line no-console
-    }
+    const { error } = await agServer.listener('error').once();
+    debug(`error ${error}`);
   })();
 }
 
@@ -100,9 +85,8 @@ if (SOCKETCLUSTER_LOG_LEVEL >= 2) { // eslint-disable-next-line no-console
   debug('socketcluster-server is running now');
 
   (async () => {
-    for await (const { warning } of agServer.listener('warning')) {
-      console.warn(warning);// eslint-disable-line no-console
-    }
+    const { warning } = await agServer.listener('warning').once();
+    debug(`warning: ${warning}`);
   })();
 }
 
@@ -127,10 +111,8 @@ if (SCC_STATE_SERVER_HOST) {
 
   if (SOCKETCLUSTER_LOG_LEVEL >= 1) {
     (async () => {
-      for await (const { error } of sccClient.listener('error')) {
-        error.name = 'SCCError';
-        console.error(error);// eslint-disable-line no-console
-      }
+      const { error } = sccClient.listener('error').once();
+      debug(`sccClient error: ${error}`);
     })();
   }
 }
