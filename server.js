@@ -1,6 +1,4 @@
 require('dotenv').config();
-// const http = require('http');
-// const eetase = require('eetase');
 const socketClusterServer = require('socketcluster-server');
 const express = require('express');
 const serveStatic = require('serve-static');
@@ -10,6 +8,8 @@ const uuid = require('uuid');
 const sccBrokerClient = require('scc-broker-client');
 const debug = require('debug')('WebJamSocketServer:server');
 const httpServer = require('./controller/httpServer');
+const appUtils = require('./controller/appUtils');
+const agServerUtils = require('./controller/agServerUtils');
 
 const ENVIRONMENT = process.env.ENV || process.env.NODE_ENV;
 const SOCKETCLUSTER_PORT = process.env.SOCKETCLUSTER_PORT || process.env.PORT;
@@ -40,58 +40,15 @@ const agOptions = {};
 
 const agServer = socketClusterServer.attach(httpServer, agOptions);
 const expressApp = express();
-if (ENVIRONMENT === 'dev' || ENVIRONMENT === 'development') {
+/* istanbul ignore if */if (ENVIRONMENT === 'dev' || ENVIRONMENT === 'development') {
   expressApp.use(morgan('dev'));// Log every HTTP request. See https://github.com/expressjs/morgan for available formats.
 }
 expressApp.use(serveStatic(path.resolve(__dirname, 'public')));
-
-// Add GET /health-check express route
-expressApp.get('/health-check', (req, res) => res.status(200).send('OK'));
-
-(async () => { // HTTP request handling
-  const requestData = await httpServer.listener('request').once();
-  expressApp(...requestData);
-})();
-
-(async () => { // SocketCluster/WebSocket connection handling
-  const { socket } = await agServer.listener('connection').once();
-  debug(`new connection with id: ${socket.id}`);
-  (async () => {
-    const data = await socket.receiver('howdy').once();
-    debug(`howdy ${data}`);
-  })();
-})();
-
+appUtils.setup(expressApp, httpServer);
 httpServer.listen(SOCKETCLUSTER_PORT);
-
-if (SOCKETCLUSTER_LOG_LEVEL >= 1) {
-  (async () => {
-    const { error } = await agServer.listener('error').once();
-    debug(`error ${error}`);
-  })();
-}
-
-function colorText(message, color) {
-  if (color) {
-    return `\x1b[${color}m${message}\x1b[0m`;
-  }
-  return message;
-}
-
-if (SOCKETCLUSTER_LOG_LEVEL >= 2) { // eslint-disable-next-line no-console
-  console.log(
-    `   ${colorText('[Active]', 32)} SocketCluster worker with PID ${process.pid} is listening on port ${SOCKETCLUSTER_PORT}`,
-  );
-  debug('socketcluster-server is running now');
-
-  (async () => {
-    const { warning } = await agServer.listener('warning').once();
-    debug(`warning: ${warning}`);
-  })();
-}
-
-if (SCC_STATE_SERVER_HOST) {
-  // Setup broker client to connect to SCC.
+agServerUtils.routing(agServer);
+agServerUtils.handleErrAndWarn(SOCKETCLUSTER_LOG_LEVEL, SOCKETCLUSTER_PORT, agServer);
+/* istanbul ignore if */if (SCC_STATE_SERVER_HOST) { // Setup broker client to connect to SCC.
   const sccClient = sccBrokerClient.attach(agServer.brokerEngine, {
     instanceId: SCC_INSTANCE_ID,
     instancePort: SOCKETCLUSTER_PORT,
@@ -108,7 +65,6 @@ if (SCC_STATE_SERVER_HOST) {
     stateServerReconnectRandomness: SCC_STATE_SERVER_RECONNECT_RANDOMNESS,
     brokerRetryDelay: SCC_BROKER_RETRY_DELAY,
   });
-
   if (SOCKETCLUSTER_LOG_LEVEL >= 1) {
     (async () => {
       const { error } = sccClient.listener('error').once();
