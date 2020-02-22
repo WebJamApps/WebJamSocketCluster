@@ -1,13 +1,26 @@
 const debug = require('debug')('WebJamSocketServer:agServerUtils');
 
+exports.handleReceiver = (socket) => {
+  (async () => {
+    let receiver;
+    const rConsumer = socket.socket.receiver('howdy').createConsumer();
+    while (true) { // eslint-disable-line no-constant-condition
+      receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
+      debug(`howdy ${receiver.value}`);
+      /* istanbul ignore else */if (receiver.done) break;
+    }
+  })();
+};
 exports.routing = (agServer) => {
   (async () => { // SocketCluster/WebSocket connection handling
-    const { socket } = await agServer.listener('connection').once();
-    debug(`new connection with id: ${socket.id}`);
-    (async () => {
-      const data = await socket.receiver('howdy').once();
-      debug(`howdy ${data}`);
-    })();
+    let socket;
+    const cConsumer = agServer.listener('connection').createConsumer();
+    while (true) { // eslint-disable-line no-constant-condition
+      socket = await cConsumer.next();// eslint-disable-line no-await-in-loop
+      debug(`new connection with id: ${socket.value.id}`);
+      this.handleReceiver(socket.value);
+      /* istanbul ignore else */if (socket.done) break;
+    }
   })();
   return Promise.resolve(true);
 };
@@ -15,8 +28,13 @@ exports.routing = (agServer) => {
 exports.handleErrAndWarn = (SOCKETCLUSTER_LOG_LEVEL, SOCKETCLUSTER_PORT, agServer) => {
   /* istanbul ignore else */if (SOCKETCLUSTER_LOG_LEVEL >= 1) {
     (async () => {
-      const { error } = await agServer.listener('error').once();
-      debug(`error ${error}`);
+      let error;
+      const eConsumer = agServer.listener('error').createConsumer();
+      while (true) { // eslint-disable-line no-constant-condition
+        error = await eConsumer.next();// eslint-disable-line no-await-in-loop
+        debug(`error ${error.value}`);
+        /* istanbul ignore else */if (error.done) break;
+      }
     })();
   }
   function colorText(message, color) {
@@ -26,8 +44,13 @@ exports.handleErrAndWarn = (SOCKETCLUSTER_LOG_LEVEL, SOCKETCLUSTER_PORT, agServe
   /* istanbul ignore else */if (SOCKETCLUSTER_LOG_LEVEL >= 2) { // eslint-disable-next-line no-console
     console.log(`   ${colorText('[Active]', 32)} SocketCluster worker with PID ${process.pid} is listening on port ${SOCKETCLUSTER_PORT}`);
     (async () => {
-      const { warning } = await agServer.listener('warning').once();
-      debug(`warning: ${warning}`);
+      let warning;
+      const wConsumer = agServer.listener('warning').createConsumer();
+      while (true) { // eslint-disable-line no-constant-condition
+        warning = await wConsumer.next();// eslint-disable-line no-await-in-loop
+        debug(`warning ${warning.value}`);
+        /* istanbul ignore else */if (warning.done) break;
+      }
     })();
   }
   return Promise.resolve(true);

@@ -14,7 +14,7 @@ exports.setup = (expressApp, httpServer) => { // Add GET /health-check express r
     while (true) { // eslint-disable-line no-constant-condition
       packet = await consumer.next();// eslint-disable-line no-await-in-loop
       this.handleRequest(expressApp, packet.value);
-      if (packet.done) break;
+      /* istanbul ignore else */if (packet.done) break;
     }
   })();
 };

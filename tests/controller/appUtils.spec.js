@@ -8,7 +8,12 @@ describe('appUtils', () => {
   it('sets up the express app with a route', async () => {
     const res = { status: () => ({ send: (msg) => { expect(msg).toBe('OK'); } }) };
     const eStub = { get: (route, cb) => { cb({}, res); } };
-    const hStub = { listener: () => ({ once: () => Promise.resolve([{ requestData: 'howdy' }]) }) };
+    const hStub = {
+      listener: () => ({
+        createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: [{ url: '/health-check' }] }) }),
+        once: () => Promise.resolve([{ requestData: 'howdy' }]),
+      }),
+    };
     await appUtils.setup(eStub, hStub);
   });
   it('handles an http request', () => {
