@@ -57,7 +57,7 @@
     "cc": "codeclimate analyze -f html > codeclimate.html",
     "installglobals": "yarn config set registry https://registry.yarnpkg.com -g",
     "cleaninstall": "rm -rf yarn.lock && rm -rf package-lock.json && rm -rf node_modules && yarn cache clean && yarn installglobals && yarn install",
-    "start": "node server.js",
+    "start": "DEBUG=WebJamSocketServer:* node server.js",
     "start:debug": "DEBUG=WebJamSocketServer:* nodemon server.js",
     "start:watch": "./node_modules/nodemon/bin/nodemon.js server.js",
     "start:docker": "./node_modules/nodemon/bin/nodemon.js /usr/src/app/server.js",
