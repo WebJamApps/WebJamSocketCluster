@@ -1,4 +1,4 @@
-const httpServer = require('../httpServer');
+const httpServer = require('../controller/httpServer');
 
 describe('server', () => {
   it('is defines the server', () => {
