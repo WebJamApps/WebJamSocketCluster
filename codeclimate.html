@@ -8,6 +8,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.6.0/components/prism-clike.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.6.0/plugins/line-numbers/prism-line-numbers.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.6.0/plugins/line-highlight/prism-line-highlight.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.6.0/components/prism-javascript.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.6.0/themes/prism.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.6.0/plugins/line-numbers/prism-line-numbers.min.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.6.0/plugins/line-highlight/prism-line-highlight.min.css" />
@@ -167,11 +168,27 @@
       });
     </script>
     <style>
+      .filter-category-complexity > li,
+      .filter-category-duplication > li,
+      .filter-engine-duplication > li,
+      .filter-engine-structure > li,
       .filter-none > li {
         display: none;
       }
 
+      .filter-category-all.filter-engine-duplication > li[data-engine="duplication"],
+      .filter-category-all.filter-engine-structure > li[data-engine="structure"],
+      .filter-category-complexity.filter-engine-all > li[data-categories~="complexity"],
+      .filter-category-duplication.filter-engine-all > li[data-categories~="duplication"],
       .filter-category-all.filter-engine-all > li[data-categories~="all"][data-engine="all"],
+      .filter-category-all.filter-engine-duplication > li[data-categories~="all"][data-engine="duplication"],
+      .filter-category-all.filter-engine-structure > li[data-categories~="all"][data-engine="structure"],
+      .filter-category-complexity.filter-engine-all > li[data-categories~="complexity"][data-engine="all"],
+      .filter-category-complexity.filter-engine-duplication > li[data-categories~="complexity"][data-engine="duplication"],
+      .filter-category-complexity.filter-engine-structure > li[data-categories~="complexity"][data-engine="structure"],
+      .filter-category-duplication.filter-engine-all > li[data-categories~="duplication"][data-engine="all"],
+      .filter-category-duplication.filter-engine-duplication > li[data-categories~="duplication"][data-engine="duplication"],
+      .filter-category-duplication.filter-engine-structure > li[data-categories~="duplication"][data-engine="structure"],
       .filter-category-all.filter-engine-all > li {
         display: block;
       }
@@ -548,9 +565,266 @@
       </nav>
       <div id="main-container">
 
-          <div id="no-issues-message">
-            No issues have been found!
+          <div class="issue-filters">
+            <label for="category-filter">Category</label>
+            <select id="category-filter">
+              <option value="">All Categories</option>
+              <option value="complexity">Complexity</option>
+              <option value="duplication">Duplication</option>
+            </select>
+            <label for="engine-filter">Engine</label>
+            <select id="engine-filter">
+              <option value="">All Engines</option>
+              <option value="duplication">duplication</option>
+              <option value="structure">structure</option>
+            </select>
           </div>
+          <ul id="smells">
+            <li
+              data-categories="complexity"
+              data-engine="structure">
+              <h2>Function `handleErrAndWarn` has a Cognitive Complexity of 11 (exceeds 10 allowed). Consider refactoring.</h2>
+              <div class="code">
+                <pre class="line-numbers language-javascript"
+                     data-line="28-57"
+                     data-start="26"
+                     data-line-offset="25"><code>};
+
+exports.handleErrAndWarn = (SOCKETCLUSTER_LOG_LEVEL, SOCKETCLUSTER_PORT, agServer) =&gt; {
+  /* istanbul ignore else */if (SOCKETCLUSTER_LOG_LEVEL &gt;= 1) {
+    (async () =&gt; {
+      let error;
+      const eConsumer = agServer.listener(&#39;error&#39;).createConsumer();
+      while (true) { // eslint-disable-line no-constant-condition
+        error = await eConsumer.next();// eslint-disable-line no-await-in-loop
+        debug(`error ${error.value}`);
+        /* istanbul ignore else */if (error.done) break;
+      }
+    })();
+  }
+  function colorText(message, color) {
+</code></pre>
+              </div>
+                <details>
+                  <summary>Details</summary>
+                  <h1>Cognitive Complexity</h1>
+
+<p>Cognitive Complexity is a measure of how difficult a unit of code is to intuitively understand. Unlike Cyclomatic Complexity, which determines how difficult your code will be to test, Cognitive Complexity tells you how difficult your code will be to read and comprehend.</p>
+
+<h3>A method&#39;s cognitive complexity is based on a few simple rules:</h3>
+
+<ul>
+<li>Code is not considered more complex when it uses shorthand that the language provides for collapsing multiple statements into one</li>
+<li>Code is considered more complex for each &quot;break in the linear flow of the code&quot;</li>
+<li>Code is considered more complex when &quot;flow breaking structures are nested&quot;</li>
+</ul>
+
+<h3>Further reading</h3>
+
+<ul>
+<li><a href="https://docs.codeclimate.com/v1.0/docs/cognitive-complexity" target="_blank">Cognitive Complexity docs</a></li>
+<li><a href="https://www.sonarsource.com/docs/CognitiveComplexity.pdf" target="_blank">Cognitive Complexity: A new way of measuring understandability</a></li>
+</ul>
+                </details>
+              <div class="found-in">
+                Found in controller/agServerUtils.js by
+                <a href="https://docs.codeclimate.com/docs/structure">structure</a>
+              </div>
+            </li>
+            <li
+              data-categories="duplication"
+              data-engine="duplication">
+              <h2>Similar blocks of code found in 2 locations. Consider refactoring.</h2>
+              <div class="code">
+                <pre class="line-numbers language-javascript"
+                     data-line="30-38"
+                     data-start="28"
+                     data-line-offset="27"><code>exports.handleErrAndWarn = (SOCKETCLUSTER_LOG_LEVEL, SOCKETCLUSTER_PORT, agServer) =&gt; {
+  /* istanbul ignore else */if (SOCKETCLUSTER_LOG_LEVEL &gt;= 1) {
+    (async () =&gt; {
+      let error;
+      const eConsumer = agServer.listener(&#39;error&#39;).createConsumer();
+      while (true) { // eslint-disable-line no-constant-condition
+        error = await eConsumer.next();// eslint-disable-line no-await-in-loop
+        debug(`error ${error.value}`);
+        /* istanbul ignore else */if (error.done) break;
+      }
+    })();
+  }
+  function colorText(message, color) {
+</code></pre>
+              </div>
+
+                <details>
+                  <summary>Other instances</summary>
+                    <h4>controller/agServerUtils.js</h4>
+                    <div class="code">
+                      <pre class="line-numbers language-javascript"
+                           data-line="46-54"
+                           data-start="44"
+                           data-line-offset="43"><code>  /* istanbul ignore else */if (SOCKETCLUSTER_LOG_LEVEL &gt;= 2) { // eslint-disable-next-line no-console
+    console.log(`   ${colorText(&#39;[Active]&#39;, 32)} SocketCluster worker with PID ${process.pid} is listening on port ${SOCKETCLUSTER_PORT}`);
+    (async () =&gt; {
+      let warning;
+      const wConsumer = agServer.listener(&#39;warning&#39;).createConsumer();
+      while (true) { // eslint-disable-line no-constant-condition
+        warning = await wConsumer.next();// eslint-disable-line no-await-in-loop
+        debug(`warning ${warning.value}`);
+        /* istanbul ignore else */if (warning.done) break;
+      }
+    })();
+  }
+  return Promise.resolve(true);
+</code></pre>
+                    </div>
+                </details>
+                <details>
+                  <summary>Details</summary>
+                  <h2>Duplicated Code</h2>
+
+<p>Duplicated code can lead to software that is hard to understand and difficult to change. The Don&#39;t Repeat Yourself (DRY) principle states:</p>
+
+<blockquote>
+<p>Every piece of knowledge must have a single, unambiguous, authoritative representation within a system.</p>
+</blockquote>
+
+<p>When you violate DRY, bugs and maintenance problems are sure to follow. Duplicated code has a tendency to both continue to replicate and also to diverge (leaving bugs as two similar implementations differ in subtle ways).</p>
+
+<h2>Tuning</h2>
+
+<p><strong>This issue has a mass of 100</strong>.</p>
+
+<p>We set useful threshold defaults for the languages we support but you may want to adjust these settings based on your project guidelines.</p>
+
+<p>The threshold configuration represents the minimum <a href="https://docs.codeclimate.com/docs/duplication#mass" target="_blank">mass</a> a code block must have to be analyzed for duplication. The lower the threshold, the more fine-grained the comparison.</p>
+
+<p>If the engine is too easily reporting duplication, try raising the threshold. If you suspect that the engine isn&#39;t catching enough duplication, try lowering the threshold. The best setting tends to differ from language to language.</p>
+
+<p>See <a href="https://docs.codeclimate.com/docs/duplication" target="_blank"><code>codeclimate-duplication</code>&#39;s documentation</a> for more information about tuning the mass threshold in your <code>.codeclimate.yml</code>.</p>
+
+<h2>Refactorings</h2>
+
+<ul>
+<li>  <a href="http://sourcemaking.com/refactoring/extract-method" target="_blank">Extract Method</a></li>
+<li>  <a href="http://sourcemaking.com/refactoring/extract-class" target="_blank">Extract Class</a></li>
+<li>  <a href="http://sourcemaking.com/refactoring/form-template-method" target="_blank">Form Template Method</a></li>
+<li>  <a href="http://sourcemaking.com/refactoring/introduce-null-object" target="_blank">Introduce Null Object</a></li>
+<li>  <a href="http://sourcemaking.com/refactoring/pull-up-method" target="_blank">Pull Up Method</a></li>
+<li>  <a href="http://sourcemaking.com/refactoring/pull-up-field" target="_blank">Pull Up Field</a></li>
+<li>  <a href="http://sourcemaking.com/refactoring/substitute-algorithm" target="_blank">Substitute Algorithm</a></li>
+</ul>
+
+<h2>Further Reading</h2>
+
+<ul>
+<li>  <a href="http://c2.com/cgi/wiki?DontRepeatYourself" target="_blank">Don&#39;t Repeat Yourself</a> on the C2 Wiki</li>
+<li>  <a href="http://sourcemaking.com/refactoring/duplicated-code" target="_blank">Duplicated Code</a> on SourceMaking</li>
+<li>  <a href="http://www.amazon.com/Refactoring-Improving-Design-Existing-Code/dp/0201485672" target="_blank">Refactoring: Improving the Design of Existing Code</a> by Martin Fowler. <em>Duplicated Code</em>, p76</li>
+</ul>
+                </details>
+              <div class="found-in">
+                Found in controller/agServerUtils.js by
+                <a href="https://docs.codeclimate.com/docs/duplication">duplication</a>
+              </div>
+            </li>
+            <li
+              data-categories="duplication"
+              data-engine="duplication">
+              <h2>Similar blocks of code found in 2 locations. Consider refactoring.</h2>
+              <div class="code">
+                <pre class="line-numbers language-javascript"
+                     data-line="46-54"
+                     data-start="44"
+                     data-line-offset="43"><code>  /* istanbul ignore else */if (SOCKETCLUSTER_LOG_LEVEL &gt;= 2) { // eslint-disable-next-line no-console
+    console.log(`   ${colorText(&#39;[Active]&#39;, 32)} SocketCluster worker with PID ${process.pid} is listening on port ${SOCKETCLUSTER_PORT}`);
+    (async () =&gt; {
+      let warning;
+      const wConsumer = agServer.listener(&#39;warning&#39;).createConsumer();
+      while (true) { // eslint-disable-line no-constant-condition
+        warning = await wConsumer.next();// eslint-disable-line no-await-in-loop
+        debug(`warning ${warning.value}`);
+        /* istanbul ignore else */if (warning.done) break;
+      }
+    })();
+  }
+  return Promise.resolve(true);
+</code></pre>
+              </div>
+
+                <details>
+                  <summary>Other instances</summary>
+                    <h4>controller/agServerUtils.js</h4>
+                    <div class="code">
+                      <pre class="line-numbers language-javascript"
+                           data-line="30-38"
+                           data-start="28"
+                           data-line-offset="27"><code>exports.handleErrAndWarn = (SOCKETCLUSTER_LOG_LEVEL, SOCKETCLUSTER_PORT, agServer) =&gt; {
+  /* istanbul ignore else */if (SOCKETCLUSTER_LOG_LEVEL &gt;= 1) {
+    (async () =&gt; {
+      let error;
+      const eConsumer = agServer.listener(&#39;error&#39;).createConsumer();
+      while (true) { // eslint-disable-line no-constant-condition
+        error = await eConsumer.next();// eslint-disable-line no-await-in-loop
+        debug(`error ${error.value}`);
+        /* istanbul ignore else */if (error.done) break;
+      }
+    })();
+  }
+  function colorText(message, color) {
+</code></pre>
+                    </div>
+                </details>
+                <details>
+                  <summary>Details</summary>
+                  <h2>Duplicated Code</h2>
+
+<p>Duplicated code can lead to software that is hard to understand and difficult to change. The Don&#39;t Repeat Yourself (DRY) principle states:</p>
+
+<blockquote>
+<p>Every piece of knowledge must have a single, unambiguous, authoritative representation within a system.</p>
+</blockquote>
+
+<p>When you violate DRY, bugs and maintenance problems are sure to follow. Duplicated code has a tendency to both continue to replicate and also to diverge (leaving bugs as two similar implementations differ in subtle ways).</p>
+
+<h2>Tuning</h2>
+
+<p><strong>This issue has a mass of 100</strong>.</p>
+
+<p>We set useful threshold defaults for the languages we support but you may want to adjust these settings based on your project guidelines.</p>
+
+<p>The threshold configuration represents the minimum <a href="https://docs.codeclimate.com/docs/duplication#mass" target="_blank">mass</a> a code block must have to be analyzed for duplication. The lower the threshold, the more fine-grained the comparison.</p>
+
+<p>If the engine is too easily reporting duplication, try raising the threshold. If you suspect that the engine isn&#39;t catching enough duplication, try lowering the threshold. The best setting tends to differ from language to language.</p>
+
+<p>See <a href="https://docs.codeclimate.com/docs/duplication" target="_blank"><code>codeclimate-duplication</code>&#39;s documentation</a> for more information about tuning the mass threshold in your <code>.codeclimate.yml</code>.</p>
+
+<h2>Refactorings</h2>
+
+<ul>
+<li>  <a href="http://sourcemaking.com/refactoring/extract-method" target="_blank">Extract Method</a></li>
+<li>  <a href="http://sourcemaking.com/refactoring/extract-class" target="_blank">Extract Class</a></li>
+<li>  <a href="http://sourcemaking.com/refactoring/form-template-method" target="_blank">Form Template Method</a></li>
+<li>  <a href="http://sourcemaking.com/refactoring/introduce-null-object" target="_blank">Introduce Null Object</a></li>
+<li>  <a href="http://sourcemaking.com/refactoring/pull-up-method" target="_blank">Pull Up Method</a></li>
+<li>  <a href="http://sourcemaking.com/refactoring/pull-up-field" target="_blank">Pull Up Field</a></li>
+<li>  <a href="http://sourcemaking.com/refactoring/substitute-algorithm" target="_blank">Substitute Algorithm</a></li>
+</ul>
+
+<h2>Further Reading</h2>
+
+<ul>
+<li>  <a href="http://c2.com/cgi/wiki?DontRepeatYourself" target="_blank">Don&#39;t Repeat Yourself</a> on the C2 Wiki</li>
+<li>  <a href="http://sourcemaking.com/refactoring/duplicated-code" target="_blank">Duplicated Code</a> on SourceMaking</li>
+<li>  <a href="http://www.amazon.com/Refactoring-Improving-Design-Existing-Code/dp/0201485672" target="_blank">Refactoring: Improving the Design of Existing Code</a> by Martin Fowler. <em>Duplicated Code</em>, p76</li>
+</ul>
+                </details>
+              <div class="found-in">
+                Found in controller/agServerUtils.js by
+                <a href="https://docs.codeclimate.com/docs/duplication">duplication</a>
+              </div>
+            </li>
+          </ul>
+          <div id="filtered-out-message">All issues have been filtered out</div>
       </div>
     </div>
   </div>
