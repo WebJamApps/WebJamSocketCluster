@@ -24,34 +24,28 @@ exports.routing = (agServer) => {
   })();
   return Promise.resolve(true);
 };
+exports.setupErrorWarning = (agServer, type) => {
+  (async () => {
+    let msg;
+    const eConsumer = agServer.listener(type).createConsumer();
+    while (true) { // eslint-disable-line no-constant-condition
+      msg = await eConsumer.next();// eslint-disable-line no-await-in-loop
+      debug(`${type} ${msg.value}`);
+      /* istanbul ignore else */if (msg.done) break;
+    }
+  })();
+};
 
 exports.handleErrAndWarn = (SOCKETCLUSTER_LOG_LEVEL, SOCKETCLUSTER_PORT, agServer) => {
-  /* istanbul ignore else */if (SOCKETCLUSTER_LOG_LEVEL >= 1) {
-    (async () => {
-      let error;
-      const eConsumer = agServer.listener('error').createConsumer();
-      while (true) { // eslint-disable-line no-constant-condition
-        error = await eConsumer.next();// eslint-disable-line no-await-in-loop
-        debug(`error ${error.value}`);
-        /* istanbul ignore else */if (error.done) break;
-      }
-    })();
-  }
+  /* istanbul ignore else */if (SOCKETCLUSTER_LOG_LEVEL >= 1) this.setupErrorWarning(agServer, 'error');
   function colorText(message, color) {
-  /* istanbul ignore else */if (color) return `\x1b[${color}m${message}\x1b[0m`;
-    /* istanbul ignore next */return message;
+    let fullMessage = message;
+    /* istanbul ignore else */if (color) fullMessage = `\x1b[${color}m${message}\x1b[0m`;
+    return fullMessage;
   }
   /* istanbul ignore else */if (SOCKETCLUSTER_LOG_LEVEL >= 2) { // eslint-disable-next-line no-console
     console.log(`   ${colorText('[Active]', 32)} SocketCluster worker with PID ${process.pid} is listening on port ${SOCKETCLUSTER_PORT}`);
-    (async () => {
-      let warning;
-      const wConsumer = agServer.listener('warning').createConsumer();
-      while (true) { // eslint-disable-line no-constant-condition
-        warning = await wConsumer.next();// eslint-disable-line no-await-in-loop
-        debug(`warning ${warning.value}`);
-        /* istanbul ignore else */if (warning.done) break;
-      }
-    })();
+    this.setupErrorWarning(agServer, 'warning');
   }
   return Promise.resolve(true);
 };
