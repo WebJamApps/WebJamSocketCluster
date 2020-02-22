@@ -3,10 +3,10 @@ const debug = require('debug')('WebJamSocketServer:agServerUtils');
 exports.handleReceiver = (socket) => {
   (async () => {
     let receiver;
-    const rConsumer = socket.socket.receiver('howdy').createConsumer();
+    const rConsumer = socket.socket.receiver('initial message').createConsumer();
     while (true) { // eslint-disable-line no-constant-condition
       receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
-      debug(`howdy ${receiver.value}`);
+      debug(`received initial message: ${receiver.value}`);
       /* istanbul ignore else */if (receiver.done) break;
     }
   })();
