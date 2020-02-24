@@ -14,7 +14,11 @@ describe('agServerUtils', () => {
           done: true,
           value: {
             id: '123',
-            socket: { receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }) }, 
+            socket: {
+              listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
+              transmit: () => {},
+              receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
+            },
           },
         }),
       }),
@@ -27,6 +31,6 @@ describe('agServerUtils', () => {
   it('handles routing', async () => {
     r = await agServerUtils.routing(aStub);
     expect(r).toBe(true);
-    // expect(testMsg).toBe('howdy');
+    jest.advanceTimersByTime(1000);
   });
 });
