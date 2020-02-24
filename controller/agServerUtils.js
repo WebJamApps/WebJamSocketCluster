@@ -1,4 +1,5 @@
 const debug = require('debug')('WebJamSocketServer:agServerUtils');
+const AgController = require('./AgController');
 
 let count = 0;
 // const activeClients = [];
@@ -40,6 +41,7 @@ exports.handleReceiver = (socket, agServer) => {
   })();
 };
 exports.routing = (agServer) => {
+  const agController = new AgController(agServer);
   (async () => { // SocketCluster/WebSocket connection handling
     let socket;
     const cConsumer = agServer.listener('connection').createConsumer();
@@ -47,6 +49,7 @@ exports.routing = (agServer) => {
       socket = await cConsumer.next();// eslint-disable-line no-await-in-loop
       debug(`new connection with id: ${socket.value.id}`);
       count += 1;
+      agController.addSocket(socket.value.id);
       this.handleReceiver(socket.value, agServer);
       this.sendPulse(socket.value, agServer);
       /* istanbul ignore else */if (socket.done) break;
