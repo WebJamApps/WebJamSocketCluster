@@ -1,7 +1,8 @@
 const debug = require('debug')('WebJamSocketServer:agServerUtils');
 
+let count = 0;
 // const activeClients = [];
-exports.handleDisconnect = (socket, interval) => {
+exports.handleDisconnect = (socket, interval, agServer) => {
   (async () => {
     let disconnect;
     const dConsumer = socket.listener('disconnect').createConsumer();
@@ -10,29 +11,28 @@ exports.handleDisconnect = (socket, interval) => {
       debug('received disconnect:');
       debug(disconnect.value);
       clearInterval(interval);
+      count -= 1;
+      agServer.exchange.transmitPublish('sample', count);
       /* istanbul ignore else */if (disconnect.done) break;
     }
   })();
 };
 
-exports.sendPulse = (socket) => {
+exports.sendPulse = (socket, agServer) => {
   const interval = setInterval(() => {
     socket.socket.transmit('pulse', { number: Math.floor(Math.random() * 5) });
   }, 1000);
-  // activeClients.push({ id: socket.id, pulse: interval });
-  this.handleDisconnect(socket.socket, interval);
-  // socket.socket.on('disconnect', () => {
-  //   console.log('disconnected');
-  //   if (process.env.NODE_ENV !== 'test') clearInterval(interval);
-  // });
+  this.handleDisconnect(socket.socket, interval, agServer);
 };
-exports.handleReceiver = (socket) => {
+exports.handleReceiver = (socket, agServer) => {
   (async () => {
     let receiver;
     const rConsumer = socket.socket.receiver('initial message').createConsumer();
     while (true) { // eslint-disable-line no-constant-condition
       receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
       debug(`received initial message: ${receiver.value}`);
+      count += 1;
+      agServer.exchange.transmitPublish('sample', count);
       /* istanbul ignore else */if (receiver.done) break;
     }
   })();
@@ -44,8 +44,8 @@ exports.routing = (agServer) => {
     while (true) { // eslint-disable-line no-constant-condition
       socket = await cConsumer.next();// eslint-disable-line no-await-in-loop
       debug(`new connection with id: ${socket.value.id}`);
-      this.handleReceiver(socket.value);
-      this.sendPulse(socket.value);
+      this.handleReceiver(socket.value, agServer);
+      this.sendPulse(socket.value, agServer);
       /* istanbul ignore else */if (socket.done) break;
     }
   })();
@@ -57,7 +57,8 @@ exports.setupErrorWarning = (agServer, type) => {
     const eConsumer = agServer.listener(type).createConsumer();
     while (true) { // eslint-disable-line no-constant-condition
       msg = await eConsumer.next();// eslint-disable-line no-await-in-loop
-      debug(`${type} ${msg.value}`);
+      debug(`${type}`);
+      debug(`${msg.value}`);
       /* istanbul ignore else */if (msg.done) break;
     }
   })();
