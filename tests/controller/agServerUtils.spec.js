@@ -3,6 +3,7 @@ const agServerUtils = require('../../controller/agServerUtils');
 describe('agServerUtils', () => {
   let r;
   const aStub = {
+    exchange: { transmitPublish: () => {} },
     listener: (name) => ({
       once: () => {
         if (name === 'error') return Promise.resolve({ error: 'bad' });
@@ -32,5 +33,14 @@ describe('agServerUtils', () => {
     r = await agServerUtils.routing(aStub);
     expect(r).toBe(true);
     jest.advanceTimersByTime(1000);
+  });
+  it('handles undefined disconnects', async () => {
+    const sStub = {
+      listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true }) }) }),
+      transmit: () => {},
+      receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
+    };
+    r = await agServerUtils.handleDisconnect(sStub, null, aStub);
+    expect(r).toBe(true);
   });
 });
