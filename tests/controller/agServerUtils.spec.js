@@ -34,13 +34,4 @@ describe('agServerUtils', () => {
     expect(r).toBe(true);
     jest.advanceTimersByTime(1000);
   });
-  it('handles undefined disconnects', async () => {
-    const sStub = {
-      listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true }) }) }),
-      transmit: () => {},
-      receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
-    };
-    r = await agServerUtils.handleDisconnect(sStub, null, aStub);
-    expect(r).toBe(true);
-  });
 });
