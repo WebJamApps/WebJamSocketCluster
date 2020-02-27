@@ -1,4 +1,5 @@
 const agServerUtils = require('../../controller/agServerUtils');
+const tourController = require('../../model/tour/tour-controller');
 
 describe('agServerUtils', () => {
   let r;
@@ -32,6 +33,10 @@ describe('agServerUtils', () => {
   it('handles routing', async () => {
     r = await agServerUtils.routing(aStub);
     expect(r).toBe(true);
-    jest.advanceTimersByTime(1000);
+  });
+  it('handles routing but has an error on resetData', async () => {
+    tourController.createDocs = jest.fn(() => Promise.reject(new Error('bad')));
+    r = await agServerUtils.routing(aStub);
+    expect(r).toBe(true);
   });
 });
