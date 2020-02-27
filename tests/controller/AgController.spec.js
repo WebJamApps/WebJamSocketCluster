@@ -48,4 +48,19 @@ describe('AgControler', () => {
     r = await agController.handleDisconnect(sStub, null);
     expect(r).toBe(true);
   });
+  it('sends a pulse', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    const sStub = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => {},
+        receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
+      },
+    };
+    global.setInterval = jest.fn((cb) => cb());
+    r = await agController.sendPulse(sStub);
+    expect(r).toBe(true);
+  });
 });

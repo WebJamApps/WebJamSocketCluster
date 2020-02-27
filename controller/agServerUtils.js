@@ -1,9 +1,9 @@
 const debug = require('debug')('WebJamSocketServer:agServerUtils');
 const AgController = require('./AgController');
 
-exports.routing = (agServer) => {
+exports.routing = async (agServer) => {
   const agController = new AgController(agServer);
-  if (process.env.NODE_ENV !== 'production') agController.resetData();
+  /* istanbul ignore else */if (process.env.NODE_ENV !== 'production') await agController.resetData();
   (async () => { // SocketCluster/WebSocket connection handling
     let socket;
     const cConsumer = agServer.listener('connection').createConsumer();

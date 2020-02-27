@@ -47,7 +47,7 @@ class AgController {
     debug(`num clients: ${this.clients.length}`);
     socket.socket.transmit('num_clients', this.clients.length);
     this.server.exchange.transmitPublish('sample', this.clients.length);
-    this.handleDisconnect(socket.socket, interval);
+    return this.handleDisconnect(socket.socket, interval);
   }
 
   handleReceiver(socket) { // eslint-disable-line class-methods-use-this
