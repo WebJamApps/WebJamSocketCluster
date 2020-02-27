@@ -1,4 +1,5 @@
 require('dotenv').config();
+require('./model/db'); 
 const socketClusterServer = require('socketcluster-server');
 const express = require('express');
 const serveStatic = require('serve-static');

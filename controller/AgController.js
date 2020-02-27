@@ -1,9 +1,21 @@
 const debug = require('debug')('WebJamSocketServer:AgController');
+const tourController = require('../model/tour/tour-controller');
+const tourData = require('../model/tour/reset-tour');
 
 class AgController {
   constructor(server) {
     this.server = server;
     this.clients = [];
+    this.tourController = tourController;
+  }
+
+  async resetData() {
+    const { tour } = tourData;
+    try {
+      await this.tourController.deleteAllDocs();
+      await this.tourController.createDocs(tour);
+    } catch (e) { debug(e.message); return Promise.resolve(e.message); }
+    return Promise.resolve(true);
   }
 
   handleDisconnect(socket, interval) {

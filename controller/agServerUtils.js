@@ -3,6 +3,7 @@ const AgController = require('./AgController');
 
 exports.routing = (agServer) => {
   const agController = new AgController(agServer);
+  if (process.env.NODE_ENV !== 'production') agController.resetData();
   (async () => { // SocketCluster/WebSocket connection handling
     let socket;
     const cConsumer = agServer.listener('connection').createConsumer();
