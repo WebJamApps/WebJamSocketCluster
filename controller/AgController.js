@@ -50,6 +50,15 @@ class AgController {
     return this.handleDisconnect(socket.socket, interval);
   }
 
+  async sendTours(socket) {
+    let allTours;
+    try { allTours = await this.tourController.getAllSort({ datetime: -1 }); } catch (e) {
+      debug(e.message); return Promise.resolve(e.message);
+    }
+    socket.socket.transmit('allTours', allTours);
+    return Promise.resolve(true);
+  }
+
   handleReceiver(socket) { // eslint-disable-line class-methods-use-this
     (async () => {
       let receiver;
@@ -57,6 +66,7 @@ class AgController {
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received initial message: ${receiver.value}`);
+        if (receiver.value === 123) await this.sendTours(socket);// eslint-disable-line no-await-in-loop
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
