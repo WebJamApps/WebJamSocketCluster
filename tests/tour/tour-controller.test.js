@@ -14,13 +14,8 @@ describe('TourController', () => {
     controller.model.create = jest.fn(() => Promise.reject(new Error('bad')));
     await expect(controller.createDocs()).rejects.toThrow('bad');
   });
-  // it('gets all tours sorted', async () => {
-  //   controller.model.findSort = jest.fn(() => Promise.resolve(true));
-  //   const result = await controller.getAllSort();
-  //   expect(result).toBe(true);
-  // });
-  // it('throws error on gets all tours sorted', async () => {
-  //   controller.model.findSort = jest.fn(() => Promise.reject(new Error('bad')));
-  //   await expect(controller.getAllSort()).rejects.toThrow('bad');
-  // });
+  it('handles error on gets all tours sorted', async () => {
+    controller.model.findSort = jest.fn(() => Promise.reject(new Error('bad')));
+    await expect(controller.getAllSort()).rejects.toThrow('bad');
+  });
 });

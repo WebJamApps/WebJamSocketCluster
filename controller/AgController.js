@@ -59,7 +59,7 @@ class AgController {
     return Promise.resolve(true);
   }
 
-  handleReceiver(socket) { // eslint-disable-line class-methods-use-this
+  handleReceiver(socket) {
     (async () => {
       let receiver;
       const rConsumer = socket.socket.receiver('initial message').createConsumer();
@@ -70,6 +70,7 @@ class AgController {
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
+    return Promise.resolve(true);
   }
 
   async createTour(tour) {
@@ -89,20 +90,16 @@ class AgController {
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received newTour message: ${receiver.value}`);
         debug(receiver.value);
-        // date: { type: String, required: true },
-        // time: { type: String, required: true },
-        // datetime: { type: Date, require: true },
-        // location: { type: String, required: true },
-        // venue: { type: String, required: true },
         try {
           if (typeof receiver.value.token === 'string' && typeof receiver.value.tour.date === 'string' && typeof receiver.value.tour.time === 'string'
         && typeof receiver.value.tour.location === 'string' && typeof receiver.value.tour.venue === 'string') {
             await this.createTour(receiver.value.tour);// eslint-disable-line no-await-in-loop
-          } 
+          }
         } catch (e) { debug(e.message); }
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
+    return Promise.resolve(true);
   }
 
   addSocket(socket) {
