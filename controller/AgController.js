@@ -50,16 +50,56 @@ class AgController {
     return this.handleDisconnect(socket.socket, interval);
   }
 
-  handleReceiver(socket) { // eslint-disable-line class-methods-use-this
+  async sendTours(socket) {
+    let allTours;
+    try { allTours = await this.tourController.getAllSort({ datetime: -1 }); } catch (e) {
+      debug(e.message); return Promise.resolve(e.message);
+    }
+    socket.socket.transmit('allTours', allTours);
+    return Promise.resolve(true);
+  }
+
+  handleReceiver(socket) {
     (async () => {
       let receiver;
       const rConsumer = socket.socket.receiver('initial message').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received initial message: ${receiver.value}`);
+        if (receiver.value === 123) await this.sendTours(socket);// eslint-disable-line no-await-in-loop
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
+    return Promise.resolve(true);
+  }
+
+  async createTour(tour) {
+    let newTour;
+    try { newTour = await this.tourController.createDocs(tour); } catch (e) {
+      debug(e.message); return Promise.resolve(e.message);
+    }
+    this.server.exchange.transmitPublish('tourCreated', newTour);
+    return Promise.resolve(true);
+  }
+
+  newTour(socket) {
+    (async () => {
+      let receiver;
+      const rConsumer = socket.socket.receiver('newTour').createConsumer();
+      while (true) { // eslint-disable-line no-constant-condition
+        receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
+        debug(`received newTour message: ${receiver.value}`);
+        debug(receiver.value);
+        try {
+          if (typeof receiver.value.token === 'string' && typeof receiver.value.tour.date === 'string' && typeof receiver.value.tour.time === 'string'
+        && typeof receiver.value.tour.location === 'string' && typeof receiver.value.tour.venue === 'string') {
+            await this.createTour(receiver.value.tour);// eslint-disable-line no-await-in-loop
+          }
+        } catch (e) { debug(e.message); }
+        /* istanbul ignore else */if (receiver.done) break;
+      }
+    })();
+    return Promise.resolve(true);
   }
 
   addSocket(socket) {
@@ -68,6 +108,7 @@ class AgController {
     debug(this.clients);
     this.handleReceiver(socket);
     this.sendPulse(socket);
+    this.newTour(socket);
   }
 }
 module.exports = AgController;
