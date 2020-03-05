@@ -1,24 +1,16 @@
 const debug = require('debug')('WebJamSocketServer:agServerUtils');
+const AgController = require('./AgController');
 
-exports.handleReceiver = (socket) => {
-  (async () => {
-    let receiver;
-    const rConsumer = socket.socket.receiver('initial message').createConsumer();
-    while (true) { // eslint-disable-line no-constant-condition
-      receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
-      debug(`received initial message: ${receiver.value}`);
-      /* istanbul ignore else */if (receiver.done) break;
-    }
-  })();
-};
-exports.routing = (agServer) => {
+exports.routing = async (agServer) => {
+  const agController = new AgController(agServer);
+  /* istanbul ignore else */if (process.env.NODE_ENV !== 'production') await agController.resetData();
   (async () => { // SocketCluster/WebSocket connection handling
     let socket;
     const cConsumer = agServer.listener('connection').createConsumer();
     while (true) { // eslint-disable-line no-constant-condition
       socket = await cConsumer.next();// eslint-disable-line no-await-in-loop
       debug(`new connection with id: ${socket.value.id}`);
-      this.handleReceiver(socket.value);
+      agController.addSocket(socket.value);
       /* istanbul ignore else */if (socket.done) break;
     }
   })();
@@ -30,7 +22,8 @@ exports.setupErrorWarning = (agServer, type) => {
     const eConsumer = agServer.listener(type).createConsumer();
     while (true) { // eslint-disable-line no-constant-condition
       msg = await eConsumer.next();// eslint-disable-line no-await-in-loop
-      debug(`${type} ${msg.value}`);
+      debug(type);
+      debug(msg.value);
       /* istanbul ignore else */if (msg.done) break;
     }
   })();

@@ -1,5 +1,4 @@
 {
-  "timers": "fake",
   "clearMocks": true,
   "verbose": true,
   "bail": true,

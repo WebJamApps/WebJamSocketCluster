@@ -1,8 +1,10 @@
 const agServerUtils = require('../../controller/agServerUtils');
+const tourController = require('../../model/tour/tour-controller');
 
 describe('agServerUtils', () => {
   let r;
   const aStub = {
+    exchange: { transmitPublish: () => {} },
     listener: (name) => ({
       once: () => {
         if (name === 'error') return Promise.resolve({ error: 'bad' });
@@ -14,7 +16,11 @@ describe('agServerUtils', () => {
           done: true,
           value: {
             id: '123',
-            socket: { receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }) }, 
+            socket: {
+              listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
+              transmit: () => {},
+              receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
+            },
           },
         }),
       }),
@@ -27,6 +33,10 @@ describe('agServerUtils', () => {
   it('handles routing', async () => {
     r = await agServerUtils.routing(aStub);
     expect(r).toBe(true);
-    // expect(testMsg).toBe('howdy');
+  });
+  it('handles routing but has an error on resetData', async () => {
+    tourController.createDocs = jest.fn(() => Promise.reject(new Error('bad')));
+    r = await agServerUtils.routing(aStub);
+    expect(r).toBe(true);
   });
 });
