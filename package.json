@@ -1,10 +1,10 @@
 {
   "name": "WebJamSocketServer",
   "description": "Uses latest version of socketcluster-server",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "license": "MIT",
   "engines": {
-    "node": ">=13.8.0"
+    "node": ">=13.11.0"
   },
   "contributors": [{
     "name": "Jonathan Gros-Dubois",

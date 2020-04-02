@@ -102,6 +102,34 @@ class AgController {
     return Promise.resolve(true);
   }
 
+  async deleteTour(id) {
+    let r;
+    try { r = await this.tourController.deleteById(id); } catch (e) {
+      debug(e.message); return Promise.resolve(e.message);
+    }
+    this.server.exchange.transmitPublish('tourDeleted', r);
+    return Promise.resolve(true);
+  }
+
+  removeTour(socket) {
+    (async () => {
+      let receiver;
+      const rConsumer = socket.socket.receiver('deleteTour').createConsumer();
+      while (true) { // eslint-disable-line no-constant-condition
+        receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
+        debug(`received deleteTour message: ${receiver.value}`);
+        debug(receiver.value);
+        try {
+          if (typeof receiver.value.tour.tourId === 'string' && typeof receiver.value.token === 'string') {
+            await this.deleteTour(receiver.value.tour.tourId);// eslint-disable-line no-await-in-loop
+          }
+        } catch (e) { debug(e.message); }
+        /* istanbul ignore else */if (receiver.done) break;
+      }
+    })();
+    return Promise.resolve(true);
+  }
+
   addSocket(socket) {
     this.clients.push(socket.id);
     debug('clientIds');
@@ -109,6 +137,7 @@ class AgController {
     this.handleReceiver(socket);
     this.sendPulse(socket);
     this.newTour(socket);
+    this.removeTour(socket);
   }
 }
 module.exports = AgController;
