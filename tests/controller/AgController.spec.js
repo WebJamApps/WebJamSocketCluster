@@ -153,19 +153,73 @@ describe('AgControler', () => {
     r = await agController.newTour(sStub);
     expect(r).toBe(true);
   });
+  it('process the deleteTour message from client', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    const sStub = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => {},
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'token',
+                tour: {
+                  tourId: '123',
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    global.setInterval = jest.fn((cb) => cb());
+    r = await agController.removeTour(sStub);
+    expect(r).toBe(true);
+  });
+  it('handles missing token when the deleteTour message from client', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    const sStub = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => {},
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: null,
+                tour: {
+                  tourId: '123',
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    global.setInterval = jest.fn((cb) => cb());
+    r = await agController.removeTour(sStub);
+    expect(r).toBe(true);
+  });
   it('creates tours', async () => {
     const agController = new AgController(aStub);
-    r = await agController.createTour({
+    r = await agController.handleTour('createDocs', {
       date: 'date', time: 'time', location: 'location', venue: 'venue',
-    });
+    }, 'tourCreated');
     expect(r).toBe(true);
   });
   it('handles error from creates tours', async () => {
     const agController = new AgController(aStub);
     agController.tourController.createDocs = jest.fn(() => Promise.reject(new Error('bad')));
-    r = await agController.createTour({
+    r = await agController.handleTour('createDocs', {
       date: 'date', time: 'time', location: 'location', venue: 'venue',
-    });
+    }, 'tourCreated');
     expect(r).toBe('bad');
   });
 });
