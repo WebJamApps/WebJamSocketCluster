@@ -16,4 +16,12 @@ describe('Facade', () => {
     const facade = new Facade(schema);
     await expect(facade.findSort()).rejects.toThrow('bad');
   });
+  it('findByIdAndRemove', async () => {
+    const schema = {
+      findByIdAndRemove: () => ({ lean: () => ({ exec: () => Promise.resolve(true) }) }),
+    };
+    const facade = new Facade(schema);
+    const result = await facade.findByIdAndRemove();
+    expect(result).toBe(true);
+  });
 });
