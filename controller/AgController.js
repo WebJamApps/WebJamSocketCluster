@@ -121,6 +121,34 @@ class AgController {
     return Promise.resolve(true);
   }
 
+  async updateTour(data) {
+    let r;// eslint-disable-next-line security/detect-object-injection
+    try { r = await this.tourController.findByIdAndUpdate(data.tourId, data.tour); } catch (e) {
+      debug(e.message); return Promise.resolve(e.message);
+    }
+    this.server.exchange.transmitPublish('tourUpdated', r);
+    return Promise.resolve(true);
+  }
+
+  editTour(socket) {
+    (async () => {
+      let receiver;
+      const rConsumer = socket.socket.receiver('editTour').createConsumer();
+      while (true) { // eslint-disable-line no-constant-condition
+        receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
+        debug(`received editTour message: ${receiver.value}`);
+        debug(receiver.value);
+        try {
+          if (typeof receiver.value.tourId === 'string' && typeof receiver.value.token === 'string') {
+            await this.updateTour(receiver.value);// eslint-disable-line no-await-in-loop
+          }
+        } catch (e) { debug(e.message); }
+        /* istanbul ignore else */if (receiver.done) break;
+      }
+    })();
+    return Promise.resolve(true);
+  }
+
   addSocket(socket) {
     this.clients.push(socket.id);
     debug('clientIds');
@@ -129,6 +157,7 @@ class AgController {
     this.sendPulse(socket);
     this.newTour(socket);
     this.removeTour(socket);
+    this.editTour(socket);
   }
 }
 module.exports = AgController;
