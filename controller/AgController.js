@@ -73,12 +73,12 @@ class AgController {
     return Promise.resolve(true);
   }
 
-  async createTour(tour) {
-    let newTour;
-    try { newTour = await this.tourController.createDocs(tour); } catch (e) {
+  async handleTour(func, data, message) {
+    let r;// eslint-disable-next-line security/detect-object-injection
+    try { r = await this.tourController[func](data); } catch (e) {
       debug(e.message); return Promise.resolve(e.message);
     }
-    this.server.exchange.transmitPublish('tourCreated', newTour);
+    this.server.exchange.transmitPublish(message, r);
     return Promise.resolve(true);
   }
 
@@ -93,21 +93,12 @@ class AgController {
         try {
           if (typeof receiver.value.token === 'string' && typeof receiver.value.tour.date === 'string' && typeof receiver.value.tour.time === 'string'
         && typeof receiver.value.tour.location === 'string' && typeof receiver.value.tour.venue === 'string') {
-            await this.createTour(receiver.value.tour);// eslint-disable-line no-await-in-loop
+            await this.handleTour('createDocs', receiver.value.tour, 'tourCreated');// eslint-disable-line no-await-in-loop
           }
         } catch (e) { debug(e.message); }
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
-    return Promise.resolve(true);
-  }
-
-  async deleteTour(id) {
-    let r;
-    try { r = await this.tourController.deleteById(id); } catch (e) {
-      debug(e.message); return Promise.resolve(e.message);
-    }
-    this.server.exchange.transmitPublish('tourDeleted', r);
     return Promise.resolve(true);
   }
 
@@ -121,7 +112,35 @@ class AgController {
         debug(receiver.value);
         try {
           if (typeof receiver.value.tour.tourId === 'string' && typeof receiver.value.token === 'string') {
-            await this.deleteTour(receiver.value.tour.tourId);// eslint-disable-line no-await-in-loop
+            await this.handleTour('deleteById', receiver.value.tour.tourId, 'tourDeleted');// eslint-disable-line no-await-in-loop
+          }
+        } catch (e) { debug(e.message); }
+        /* istanbul ignore else */if (receiver.done) break;
+      }
+    })();
+    return Promise.resolve(true);
+  }
+
+  async updateTour(data) {
+    let r;// eslint-disable-next-line security/detect-object-injection
+    try { r = await this.tourController.findByIdAndUpdate(data.tourId, data.tour); } catch (e) {
+      debug(e.message); return Promise.resolve(e.message);
+    }
+    this.server.exchange.transmitPublish('tourUpdated', r);
+    return Promise.resolve(true);
+  }
+
+  editTour(socket) {
+    (async () => {
+      let receiver;
+      const rConsumer = socket.socket.receiver('editTour').createConsumer();
+      while (true) { // eslint-disable-line no-constant-condition
+        receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
+        debug(`received editTour message: ${receiver.value}`);
+        debug(receiver.value);
+        try {
+          if (typeof receiver.value.tourId === 'string' && typeof receiver.value.token === 'string') {
+            await this.updateTour(receiver.value);// eslint-disable-line no-await-in-loop
           }
         } catch (e) { debug(e.message); }
         /* istanbul ignore else */if (receiver.done) break;
@@ -138,6 +157,7 @@ class AgController {
     this.sendPulse(socket);
     this.newTour(socket);
     this.removeTour(socket);
+    this.editTour(socket);
   }
 }
 module.exports = AgController;
