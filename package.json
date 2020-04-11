@@ -24,7 +24,7 @@
     "express": "latest",
     "morgan": "latest",
     "mongoose": "latest",
-    "nodemon": "latest",
+    "nodemon": "2.0.3",
     "sc-errors": "latest",
     "serve-static": "latest",
     "uuid": "latest"
