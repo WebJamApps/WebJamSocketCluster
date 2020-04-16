@@ -1,19 +1,25 @@
 const debug = require('debug')('WebJamSocketServer:AgController');
 const tourController = require('../model/tour/tour-controller');
 const tourData = require('../model/tour/reset-tour');
+const bookController = require('../model/book/book-controller');
+const bookData = require('../model/book/reset-book');
 
 class AgController {
   constructor(server) {
     this.server = server;
     this.clients = [];
     this.tourController = tourController;
+    this.bookController = bookController;
   }
 
   async resetData() {
     const { tour } = tourData;
+    const { book } = bookData;
     try {
       await this.tourController.deleteAllDocs();
       await this.tourController.createDocs(tour);
+      await this.bookController.deleteAllDocs();
+      await this.bookController.createDocs(book);
     } catch (e) { debug(e.message); return Promise.resolve(e.message); }
     return Promise.resolve(true);
   }
@@ -59,6 +65,15 @@ class AgController {
     return Promise.resolve(true);
   }
 
+  async sendBooks(socket) {
+    let allBooks;
+    try { allBooks = await this.bookController.getAll(); } catch (e) {
+      debug(e.message); return Promise.resolve(e.message);
+    }
+    socket.socket.transmit('allBooks', allBooks);
+    return Promise.resolve(true);
+  }
+
   handleReceiver(socket) {
     (async () => {
       let receiver;
@@ -66,7 +81,10 @@ class AgController {
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received initial message: ${receiver.value}`);
-        if (receiver.value === 123) await this.sendTours(socket);// eslint-disable-line no-await-in-loop
+        if (receiver.value === 123) {
+          await this.sendTours(socket);// eslint-disable-line no-await-in-loop
+          await this.sendBooks(socket);// eslint-disable-line no-await-in-loop
+        }
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
