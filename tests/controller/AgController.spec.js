@@ -1,5 +1,7 @@
+const mongoose = require('mongoose');
 const AgController = require('../../controller/AgController');
 
+const testId = mongoose.Types.ObjectId();
 const aStub = {
   exchange: { transmitPublish: () => {} },
   listener: (name) => ({
@@ -105,6 +107,32 @@ describe('AgControler', () => {
     r = await agController.sendTours(sStub);
     expect(r).toBe('bad');
   });
+  it('handles error when gets all books', async () => {
+    const agController = new AgController(aStub);
+    const sStub = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => {},
+        receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
+      },
+    };
+    agController.bookController.getAll = jest.fn(() => Promise.reject(new Error('bad')));
+    r = await agController.sendBooks(sStub);
+    expect(r).toBe('bad');
+  });
+  it('updates a tours', async () => {
+    const agController = new AgController(aStub);
+    agController.tourController.findByIdAndUpdate = jest.fn(() => Promise.resolve(true));
+    r = await agController.updateTour({ tourId: testId, tour: {} });
+    expect(r).toBe(true);
+  });
+  it('handles error from updates a tours', async () => {
+    const agController = new AgController(aStub);
+    agController.tourController.findByIdAndUpdate = jest.fn(() => Promise.reject(new Error('bad')));
+    r = await agController.updateTour({ tourId: testId, tour: {} });
+    expect(r).toBe('bad');
+  });
   it('process the newTour message from client', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
@@ -178,6 +206,61 @@ describe('AgControler', () => {
     };
     global.setInterval = jest.fn((cb) => cb());
     r = await agController.removeTour(sStub);
+    expect(r).toBe(true);
+  });
+  it('process the editTour message from client', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    const sStub = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => {},
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                tourId: '123',
+                token: 'token',
+                tour: {
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    global.setInterval = jest.fn((cb) => cb());
+    r = await agController.editTour(sStub);
+    expect(r).toBe(true);
+  });
+  it('handles error when process the editTour message from client', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    const sStub = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => {},
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                tourId: '123',
+                token: 'token',
+                tour: {
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    global.setInterval = jest.fn((cb) => cb());
+    agController.updateTour = jest.fn(() => Promise.reject(new Error('bad')));
+    r = await agController.editTour(sStub);
     expect(r).toBe(true);
   });
   it('handles missing token when the deleteTour message from client', async () => {
