@@ -63,6 +63,6 @@
     "start:docker": "./node_modules/nodemon/bin/nodemon.js /usr/src/app/server.js",
     "test:lint": "eslint . --fix",
     "test:local": "eslint . --fix && yarn test:jest && yarn cc",
-    "test:jest": "jest --no-cache --config jest.config.json --notify --detectOpenHandles --forceExit"
+    "test:jest": "jest --no-cache --config jest.config.json --notify --detectOpenHandles --forceExit --runInBand"
   }
 }
