@@ -84,7 +84,7 @@ class AgController {
         if (receiver.value === 123) {
           await this.sendTours(socket);// eslint-disable-line no-await-in-loop
           await this.sendBooks(socket);// eslint-disable-line no-await-in-loop
-        }
+        } else break;
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
@@ -107,10 +107,10 @@ class AgController {
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received newTour message: ${receiver.value}`);
-        debug(receiver.value);
+        if (!receiver.value) break;
         try {
           if (typeof receiver.value.token === 'string' && typeof receiver.value.tour.date === 'string' && typeof receiver.value.tour.time === 'string'
-        && typeof receiver.value.tour.location === 'string' && typeof receiver.value.tour.venue === 'string') {
+            && typeof receiver.value.tour.location === 'string' && typeof receiver.value.tour.venue === 'string') {
             await this.handleTour('createDocs', receiver.value.tour, 'tourCreated');// eslint-disable-line no-await-in-loop
           }
         } catch (e) { debug(e.message); }
@@ -127,7 +127,7 @@ class AgController {
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received deleteTour message: ${receiver.value}`);
-        debug(receiver.value);
+        if (!receiver.value) break;
         try {
           if (typeof receiver.value.tour.tourId === 'string' && typeof receiver.value.token === 'string') {
             await this.handleTour('deleteById', receiver.value.tour.tourId, 'tourDeleted');// eslint-disable-line no-await-in-loop
@@ -155,7 +155,7 @@ class AgController {
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received editTour message: ${receiver.value}`);
-        debug(receiver.value);
+        if (!receiver.value) break;
         try {
           if (typeof receiver.value.tourId === 'string' && typeof receiver.value.token === 'string') {
             await this.updateTour(receiver.value);// eslint-disable-line no-await-in-loop

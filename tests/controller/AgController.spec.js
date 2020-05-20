@@ -3,7 +3,7 @@ const AgController = require('../../controller/AgController');
 
 const testId = mongoose.Types.ObjectId();
 const aStub = {
-  exchange: { transmitPublish: () => {} },
+  exchange: { transmitPublish: () => { } },
   listener: (name) => ({
     once: () => {
       if (name === 'error') return Promise.resolve({ error: 'bad' });
@@ -17,7 +17,7 @@ const aStub = {
           id: '123',
           socket: {
             listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
-            transmit: () => {},
+            transmit: () => { },
             receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
           },
         },
@@ -32,7 +32,7 @@ describe('AgControler', () => {
     const sStub = {
       id: '123',
       listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true }) }) }),
-      transmit: () => {},
+      transmit: () => { },
       receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
     };
     r = await agController.handleDisconnect(sStub, null);
@@ -44,7 +44,7 @@ describe('AgControler', () => {
     const sStub = {
       id: '123',
       listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-      transmit: () => {},
+      transmit: () => { },
       receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
     };
     r = await agController.handleDisconnect(sStub, null);
@@ -57,7 +57,7 @@ describe('AgControler', () => {
       socket: {
         id: '123',
         listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-        transmit: () => {},
+        transmit: () => { },
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
       },
     };
@@ -72,7 +72,7 @@ describe('AgControler', () => {
       socket: {
         id: '123',
         listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-        transmit: () => {},
+        transmit: () => { },
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
       },
     };
@@ -86,7 +86,7 @@ describe('AgControler', () => {
       socket: {
         id: '123',
         listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-        transmit: () => {},
+        transmit: () => { },
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
       },
     };
@@ -99,7 +99,7 @@ describe('AgControler', () => {
       socket: {
         id: '123',
         listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-        transmit: () => {},
+        transmit: () => { },
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
       },
     };
@@ -113,7 +113,7 @@ describe('AgControler', () => {
       socket: {
         id: '123',
         listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-        transmit: () => {},
+        transmit: () => { },
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
       },
     };
@@ -140,7 +140,7 @@ describe('AgControler', () => {
       socket: {
         id: '123',
         listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-        transmit: () => {},
+        transmit: () => { },
         receiver: () => ({
           createConsumer: () => ({
             next: () => Promise.resolve({
@@ -160,6 +160,34 @@ describe('AgControler', () => {
     r = await agController.newTour(sStub);
     expect(r).toBe(true);
   });
+  it('handles error from newTour', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    const sStub = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'token',
+                tour: {
+                  date: 'date', time: 'time', location: 'location', venue: 'venue',
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    global.setInterval = jest.fn((cb) => cb());
+    agController.handleTour = jest.fn(() => Promise.reject(new Error('bad')));
+    r = await agController.newTour(sStub);
+    expect(r).toBe(true);
+  });
   it('handles missing receiver value when process the newTour message from client', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
@@ -167,7 +195,7 @@ describe('AgControler', () => {
       socket: {
         id: '123',
         listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-        transmit: () => {},
+        transmit: () => { },
         receiver: () => ({
           createConsumer: () => ({
             next: () => Promise.resolve({
@@ -188,7 +216,7 @@ describe('AgControler', () => {
       socket: {
         id: '123',
         listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-        transmit: () => {},
+        transmit: () => { },
         receiver: () => ({
           createConsumer: () => ({
             next: () => Promise.resolve({
@@ -208,6 +236,26 @@ describe('AgControler', () => {
     r = await agController.removeTour(sStub);
     expect(r).toBe(true);
   });
+  it('does not process the deleteTour message from client', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    const sStub = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+            }),
+          }),
+        }),
+      },
+    };
+    global.setInterval = jest.fn((cb) => cb());
+    r = await agController.removeTour(sStub);
+    expect(r).toBe(true);
+  });
   it('process the editTour message from client', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
@@ -215,7 +263,7 @@ describe('AgControler', () => {
       socket: {
         id: '123',
         listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-        transmit: () => {},
+        transmit: () => { },
         receiver: () => ({
           createConsumer: () => ({
             next: () => Promise.resolve({
@@ -235,6 +283,26 @@ describe('AgControler', () => {
     r = await agController.editTour(sStub);
     expect(r).toBe(true);
   });
+  it('does not process the editTour message from client', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    const sStub = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+            }),
+          }),
+        }),
+      },
+    };
+    global.setInterval = jest.fn((cb) => cb());
+    r = await agController.editTour(sStub);
+    expect(r).toBe(true);
+  });
   it('handles error when process the editTour message from client', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
@@ -242,7 +310,7 @@ describe('AgControler', () => {
       socket: {
         id: '123',
         listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-        transmit: () => {},
+        transmit: () => { },
         receiver: () => ({
           createConsumer: () => ({
             next: () => Promise.resolve({
@@ -270,7 +338,7 @@ describe('AgControler', () => {
       socket: {
         id: '123',
         listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-        transmit: () => {},
+        transmit: () => { },
         receiver: () => ({
           createConsumer: () => ({
             next: () => Promise.resolve({
