@@ -1,5 +1,4 @@
 {
-  "clearMocks": true,
   "resetMocks": true,
   "verbose": true,
   "bail": true,
