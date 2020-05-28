@@ -1,5 +1,5 @@
 {
-  "clearMocks": true,
+  "resetMocks": true,
   "verbose": true,
   "bail": true,
   "testPathIgnorePatterns": ["/node_modules/"],
