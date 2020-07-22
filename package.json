@@ -1,10 +1,10 @@
 {
   "name": "webjamsocketserver",
   "description": "Uses latest version of socketcluster-server",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "license": "MIT",
   "engines": {
-    "node": ">=14.1.0"
+    "node": ">=14.4.0"
   },
   "contributors": [{
     "name": "Jonathan Gros-Dubois",
@@ -24,7 +24,7 @@
     "express": "latest",
     "morgan": "latest",
     "mongoose": "latest",
-    "nodemon": "2.0.3",
+    "nodemon": "latest",
     "sc-errors": "latest",
     "serve-static": "latest",
     "uuid": "latest"
@@ -63,6 +63,6 @@
     "start:docker": "./node_modules/nodemon/bin/nodemon.js /usr/src/app/server.js",
     "test:lint": "eslint . --fix",
     "test:local": "eslint . --fix && yarn test:jest && yarn cc",
-    "test:jest": "jest --no-cache --config jest.config.json --notify --detectOpenHandles --forceExit --runInBand"
+    "test:jest": "jest --no-cache --config jest.config.json --runInBand --detectOpenHandles --forceExit --runInBand"
   }
 }

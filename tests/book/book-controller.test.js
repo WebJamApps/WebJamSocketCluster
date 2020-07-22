@@ -8,4 +8,8 @@ describe('bookController', () => {
     controller.model.find = jest.fn(() => Promise.reject(new Error('bad')));
     await expect(controller.getAll()).rejects.toThrow('bad');
   });
+  it('should wait unit tests finish before exiting', async () => { // eslint-disable-line jest/expect-expect
+    const delay = (ms) => new Promise((resolve) => setTimeout(() => resolve(true), ms));
+    await delay(1000);
+  });
 });
