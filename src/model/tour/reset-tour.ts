@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   tour: [{
     date: 'Nov 17, 2019',
     datetime: new Date('November 17, 2019'),

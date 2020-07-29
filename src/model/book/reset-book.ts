@@ -1,4 +1,4 @@
-module.exports = {
+export default {
   book: [
     { 
       url: 'https://dl.dropboxusercontent.com/s/7ru06rcgv21xhkz/hiddenValleyTalentShow.png?dl=0',

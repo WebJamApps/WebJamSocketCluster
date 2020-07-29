@@ -1,11 +1,13 @@
-const mongoose = require('mongoose');
-const debug = require('debug')('WebJamSocketServer:lib-controller');
-// const AuthUtils = require('../auth/authUtils');
+import Debug from 'debug';
+import mongoose from 'mongoose';
+
+const debug = Debug('WebJamSocketServer:lib-controller');
 
 class Controller {
+  model: any;
+
   constructor(model) {
     this.model = model;
-    // this.authUtils = AuthUtils;
   }
 
   async deleteAllDocs() {
@@ -143,4 +145,4 @@ class Controller {
   // }
 }
 
-module.exports = Controller;
+export default Controller;

@@ -1,10 +1,19 @@
-const debug = require('debug')('WebJamSocketServer:AgController');
-const tourController = require('../model/tour/tour-controller');
-const tourData = require('../model/tour/reset-tour');
-const bookController = require('../model/book/book-controller');
-const bookData = require('../model/book/reset-book');
+import Debug from 'debug';
+import tourController from '../model/tour/tour-controller';
+import tourData from '../model/tour/reset-tour';
+import bookController from '../model/book/book-controller';
+import bookData from '../model/book/reset-book';
 
+const debug = Debug('WebJamSocketServer:AgController');
 class AgController {
+  server: any;
+
+  clients: any[];
+
+  tourController: any;
+
+  bookController: any;
+
   constructor(server) {
     this.server = server;
     this.clients = [];
@@ -178,4 +187,4 @@ class AgController {
     this.editTour(socket);
   }
 }
-module.exports = AgController;
+export default AgController;

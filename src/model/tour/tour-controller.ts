@@ -1,6 +1,6 @@
 // const debug = require('debug')('WebJamSocketServer:tour-controller');
-const Controller = require('../../lib/controller');
-const tourModel = require('./tour-facade');
+import Controller from '../../lib/controller';
+import tourModel from './tour-facade';
 
 class TourController extends Controller {
   // async createTour(body) {
@@ -12,4 +12,4 @@ class TourController extends Controller {
   // }
 }
 
-module.exports = new TourController(tourModel);
+export default new TourController(tourModel);

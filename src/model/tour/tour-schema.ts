@@ -1,4 +1,4 @@
-const mongoose = require('../db');
+import mongoose from '../db';
 
 const options = {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
@@ -16,4 +16,4 @@ const tourSchema = new Schema({
   more: { type: String, required: false },
 }, options);
 
-module.exports = mongoose.model('Tour', tourSchema);
+export default mongoose.model('Tour', tourSchema);
