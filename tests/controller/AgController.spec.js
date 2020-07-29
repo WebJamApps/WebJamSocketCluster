@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const AgController = require('../../controller/AgController');
+const AgController = require('../../src/controller/AgController');
 
 const testId = mongoose.Types.ObjectId();
 const aStub = {

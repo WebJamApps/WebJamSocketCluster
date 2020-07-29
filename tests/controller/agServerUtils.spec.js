@@ -1,5 +1,5 @@
-const agServerUtils = require('../../controller/agServerUtils');
-const tourController = require('../../model/tour/tour-controller');
+const agServerUtils = require('../../src/controller/agServerUtils');
+const tourController = require('../../src/model/tour/tour-controller');
 
 describe('agServerUtils', () => {
   let r;

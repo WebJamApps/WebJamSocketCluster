@@ -1,4 +1,4 @@
-const Facade = require('../../lib/facade');
+const Facade = require('../../src/lib/facade');
 
 describe('Facade', () => {
   it('gets all sorted', async () => {

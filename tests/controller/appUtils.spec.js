@@ -1,4 +1,4 @@
-const appUtils = require('../../controller/appUtils');
+const appUtils = require('../../src/controller/appUtils');
 
 describe('appUtils', () => {
   let r;

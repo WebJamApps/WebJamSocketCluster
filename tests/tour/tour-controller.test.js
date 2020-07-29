@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const controller = require('../../model/tour/tour-controller');
+const controller = require('../../src/model/tour/tour-controller');
 
 describe('TourController', () => {
   const testId = mongoose.Types.ObjectId();

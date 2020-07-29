@@ -1,4 +1,4 @@
-const controller = require('../../model/book/book-controller');
+const controller = require('../../src/model/book/book-controller');
 
 describe('bookController', () => {
   it('is defined', () => {
