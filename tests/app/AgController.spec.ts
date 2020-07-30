@@ -1,5 +1,5 @@
-const mongoose = require('mongoose');
-const AgController = require('../../src/controller/AgController');
+import mongoose from 'mongoose';
+import AgController from '../../src/app/AgController';
 
 const testId = mongoose.Types.ObjectId();
 const aStub = {
@@ -61,7 +61,7 @@ describe('AgControler', () => {
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
       },
     };
-    global.setInterval = jest.fn((cb) => cb());
+    global.setInterval = jest.fn((cb:any) => cb());
     r = await agController.sendPulse(sStub);
     expect(r).toBe(true);
   });
@@ -76,7 +76,7 @@ describe('AgControler', () => {
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
       },
     };
-    global.setInterval = jest.fn((cb) => cb());
+    global.setInterval = jest.fn((cb:any) => cb());
     r = await agController.handleReceiver(sStub);
     expect(r).toBe(true);
   });
@@ -156,7 +156,7 @@ describe('AgControler', () => {
         }),
       },
     };
-    global.setInterval = jest.fn((cb) => cb());
+    global.setInterval = jest.fn((cb:any) => cb());
     r = await agController.newTour(sStub);
     expect(r).toBe(true);
   });
@@ -183,7 +183,7 @@ describe('AgControler', () => {
         }),
       },
     };
-    global.setInterval = jest.fn((cb) => cb());
+    global.setInterval = jest.fn((cb:any) => cb());
     agController.handleTour = jest.fn(() => Promise.reject(new Error('bad')));
     r = await agController.newTour(sStub);
     expect(r).toBe(true);
@@ -205,7 +205,7 @@ describe('AgControler', () => {
         }),
       },
     };
-    global.setInterval = jest.fn((cb) => cb());
+    global.setInterval = jest.fn((cb:any) => cb());
     r = await agController.newTour(sStub);
     expect(r).toBe(true);
   });
@@ -232,7 +232,7 @@ describe('AgControler', () => {
         }),
       },
     };
-    global.setInterval = jest.fn((cb) => cb());
+    global.setInterval = jest.fn((cb:any) => cb());
     r = await agController.removeTour(sStub);
     expect(r).toBe(true);
   });
@@ -252,7 +252,7 @@ describe('AgControler', () => {
         }),
       },
     };
-    global.setInterval = jest.fn((cb) => cb());
+    global.setInterval = jest.fn((cb:any) => cb());
     r = await agController.removeTour(sStub);
     expect(r).toBe(true);
   });
@@ -279,7 +279,7 @@ describe('AgControler', () => {
         }),
       },
     };
-    global.setInterval = jest.fn((cb) => cb());
+    global.setInterval = jest.fn((cb:any) => cb());
     r = await agController.editTour(sStub);
     expect(r).toBe(true);
   });
@@ -299,7 +299,7 @@ describe('AgControler', () => {
         }),
       },
     };
-    global.setInterval = jest.fn((cb) => cb());
+    global.setInterval = jest.fn((cb:any) => cb());
     r = await agController.editTour(sStub);
     expect(r).toBe(true);
   });
@@ -326,7 +326,7 @@ describe('AgControler', () => {
         }),
       },
     };
-    global.setInterval = jest.fn((cb) => cb());
+    global.setInterval = jest.fn((cb:any) => cb());
     agController.updateTour = jest.fn(() => Promise.reject(new Error('bad')));
     r = await agController.editTour(sStub);
     expect(r).toBe(true);
@@ -354,7 +354,7 @@ describe('AgControler', () => {
         }),
       },
     };
-    global.setInterval = jest.fn((cb) => cb());
+    global.setInterval = jest.fn((cb:any) => cb());
     r = await agController.removeTour(sStub);
     expect(r).toBe(true);
   });

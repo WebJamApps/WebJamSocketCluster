@@ -1,7 +1,9 @@
-const debug = require('debug')('WebJamSocketServer:agServerUtils');
-const AgController = require('./AgController');
+import Debug from 'debug';
+import AgController from './AgController';
 
-exports.routing = async (agServer) => {
+const debug = Debug('WebJamSocketServer:agServerUtils');
+
+const routing = async (agServer) => {
   const agController = new AgController(agServer);
   /* istanbul ignore else */if (process.env.NODE_ENV !== 'production') await agController.resetData();
   (async () => { // SocketCluster/WebSocket connection handling
@@ -16,7 +18,7 @@ exports.routing = async (agServer) => {
   })();
   return Promise.resolve(true);
 };
-exports.setupErrorWarning = (agServer, type) => {
+const setupErrorWarning = (agServer, type) => {
   (async () => {
     let msg;
     const eConsumer = agServer.listener(type).createConsumer();
@@ -29,8 +31,8 @@ exports.setupErrorWarning = (agServer, type) => {
   })();
 };
 
-exports.handleErrAndWarn = (SOCKETCLUSTER_LOG_LEVEL, SOCKETCLUSTER_PORT, agServer) => {
-  /* istanbul ignore else */if (SOCKETCLUSTER_LOG_LEVEL >= 1) this.setupErrorWarning(agServer, 'error');
+const handleErrAndWarn = (SOCKETCLUSTER_LOG_LEVEL, SOCKETCLUSTER_PORT, agServer) => {
+  /* istanbul ignore else */if (SOCKETCLUSTER_LOG_LEVEL >= 1) setupErrorWarning(agServer, 'error');
   function colorText(message, color) {
     let fullMessage = message;
     /* istanbul ignore else */if (color) fullMessage = `\x1b[${color}m${message}\x1b[0m`;
@@ -38,7 +40,8 @@ exports.handleErrAndWarn = (SOCKETCLUSTER_LOG_LEVEL, SOCKETCLUSTER_PORT, agServe
   }
   /* istanbul ignore else */if (SOCKETCLUSTER_LOG_LEVEL >= 2) { // eslint-disable-next-line no-console
     console.log(`   ${colorText('[Active]', 32)} SocketCluster worker with PID ${process.pid} is listening on port ${SOCKETCLUSTER_PORT}`);
-    this.setupErrorWarning(agServer, 'warning');
+    setupErrorWarning(agServer, 'warning');
   }
   return Promise.resolve(true);
 };
+export default { handleErrAndWarn, setupErrorWarning, routing };

@@ -31,9 +31,9 @@
     "cc": "codeclimate analyze -f html > codeclimate.html",
     "installglobals": "yarn config set registry https://registry.yarnpkg.com -g",
     "cleaninstall": "rm -rf yarn.lock && rm -rf package-lock.json && rm -rf node_modules && yarn cache clean && yarn installglobals && yarn install",
-    "start": "DEBUG=WebJamSocketServer:* node server.js",
+    "start": "node build/index.js",
     "postinstall": "rm -rf build && tsc",
-    "ts-start": "DEBUG=WebJamSocketServer:* nodemon build/server.js",
+    "ts-start": "DEBUG=WebJamSocketServer:* nodemon build/index.js",
     "ts-watch": "tsc -w",
     "test:lint": "eslint . --fix",
     "test:local": "eslint . --fix && yarn test:jest && yarn cc",
@@ -46,6 +46,7 @@
     "@types/helmet": "^0.0.47",
     "@types/mongoose": "^5.7.31",
     "@types/morgan": "^1.9.1",
+    "@types/uuid": "^8.0.0",
     "connect": "latest",
     "debug": "latest",
     "dotenv": "latest",
@@ -58,9 +59,9 @@
     "serve-static": "latest",
     "socketcluster-client": "latest",
     "socketcluster-server": "latest",
-    "uuid": "latest",
     "supports-color": "^7.1.0",
-    "typescript": "latest"
+    "typescript": "latest",
+    "uuid": "latest"
   },
   "devDependencies": {
     "@types/jest": "^26.0.4",

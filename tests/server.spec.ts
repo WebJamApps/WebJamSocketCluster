@@ -1,9 +1,11 @@
-const httpServer = require('../src/controller/httpServer');
+import httpServer from '../src/app/httpServer';
+
+httpServer.listen = jest.fn();
+// eslint-disable-next-line import/first
+import * as server from '../src/index';
 
 describe('server', () => {
-  it('is defines the server', () => {
-    httpServer.listen = jest.fn();
-    const server = require('../src/server'); // eslint-disable-line global-require
+  it('is defines the server', () => {   
     expect(server).toBeDefined();
   });
 });

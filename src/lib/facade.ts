@@ -1,4 +1,6 @@
 class Facade {
+  Schema: any;
+
   constructor(Schema) {
     this.Schema = Schema;
   }
@@ -51,4 +53,4 @@ class Facade {
   }
 }
 
-module.exports = Facade;
+export default Facade;

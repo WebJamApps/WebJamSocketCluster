@@ -1,5 +1,6 @@
-const mongoose = require('mongoose');
-const controller = require('../../src/model/tour/tour-controller');
+/* eslint-disable spaced-comment */
+import mongoose from 'mongoose';
+import controller from '../../src/model/tour/tour-controller';
 
 describe('TourController', () => {
   const testId = mongoose.Types.ObjectId();
@@ -14,11 +15,11 @@ describe('TourController', () => {
   });
   it('throws error on make one tour', async () => {
     controller.model.create = jest.fn(() => Promise.reject(new Error('bad')));
-    await expect(controller.createDocs()).rejects.toThrow('bad');
+    await expect(controller.createDocs({})).rejects.toThrow('bad');
   });
   it('handles error on gets all tours sorted', async () => {
     controller.model.findSort = jest.fn(() => Promise.reject(new Error('bad')));
-    await expect(controller.getAllSort()).rejects.toThrow('bad');
+    await expect(controller.getAllSort({})).rejects.toThrow('bad');
   });
   it('deletes tour by id', async () => {
     controller.model.findByIdAndRemove = jest.fn(() => Promise.resolve(true));
@@ -30,7 +31,7 @@ describe('TourController', () => {
     await expect(controller.deleteById(testId)).rejects.toThrow('bad');
   });
   it('detects a bad id', async () => {
-    await expect(controller.deleteById()).rejects.toThrow('id is invalid');
+    await expect(controller.deleteById('')).rejects.toThrow('id is invalid');
   });
   it('fails to delete', async () => {
     controller.model.findByIdAndRemove = jest.fn(() => Promise.resolve());

@@ -1,8 +1,7 @@
-const Model = require('../../lib/facade');
-const bookSchema = require('./book-schema');
+import Model from '../../lib/facade';
+import bookSchema from './book-schema';
 
 class BookModel extends Model {
 
 }
-
-module.exports = new BookModel(bookSchema);
+export default new BookModel(bookSchema);

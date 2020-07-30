@@ -1,4 +1,4 @@
-const appUtils = require('../../src/controller/appUtils');
+import appUtils from '../../src/app/appUtils';
 
 describe('appUtils', () => {
   let r;
