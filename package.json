@@ -1,68 +1,89 @@
 {
   "name": "webjamsocketserver",
   "description": "Uses latest version of socketcluster-server",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "license": "MIT",
   "engines": {
-    "node": ">=14.1.0"
+    "node": ">=14.6.0"
   },
-  "contributors": [{
-    "name": "Jonathan Gros-Dubois",
-    "email": "grosjona@yahoo.com.au"
-  }, {
-    "name": "Joshua V Sherman",
-    "email": "joshua.v.sherman@gmail.com"
-  }],
+  "contributors": [
+    {
+      "name": "Jonathan Gros-Dubois",
+      "email": "grosjona@yahoo.com.au"
+    },
+    {
+      "name": "Joshua V Sherman",
+      "email": "joshua.v.sherman@gmail.com"
+    }
+  ],
+  "keywords": [
+    "websocket",
+    "server",
+    "realtime",
+    "cluster",
+    "scalable",
+    "typescript"
+  ],
+  "readmeFilename": "README.md",
+  "scripts": {
+    "start:debug": "rm -rf build && tsc && npm-run-all -p ts-start ts-watch",
+    "test": "eslint . && rm -rf coverage && npm run test:jest",
+    "cc": "codeclimate analyze -f html > codeclimate.html",
+    "installglobals": "yarn config set registry https://registry.yarnpkg.com -g",
+    "cleaninstall": "rm -rf yarn.lock && rm -rf package-lock.json && rm -rf node_modules && yarn cache clean && yarn installglobals && yarn install",
+    "start": "node build/index.js",
+    "postinstall": "rm -rf build && tsc && cp -avr ./public ./build/public",
+    "ts-start": "DEBUG=WebJamSocketServer:* nodemon build/index.js",
+    "ts-watch": "tsc -w",
+    "test:lint": "eslint . --fix",
+    "test:local": "eslint . --fix && yarn test:jest && yarn cc",
+    "test:jest": "jest --no-cache --config jest.config.json --runInBand --detectOpenHandles --forceExit --runInBand"
+  },
   "dependencies": {
-    "scc-broker-client": "latest",
-    "socketcluster-client": "latest",
-    "socketcluster-server": "latest",
+    "@types/debug": "^4.1.5",
+    "@types/express": "^4.17.7",
+    "@types/express-sslify": "^1.2.1",
+    "@types/helmet": "^0.0.47",
+    "@types/mongoose": "^5.7.31",
+    "@types/morgan": "^1.9.1",
+    "@types/uuid": "^8.0.0",
     "connect": "latest",
     "debug": "latest",
     "dotenv": "latest",
     "eetase": "latest",
     "express": "latest",
-    "morgan": "latest",
     "mongoose": "latest",
-    "nodemon": "2.0.3",
+    "morgan": "latest",
     "sc-errors": "latest",
+    "scc-broker-client": "latest",
     "serve-static": "latest",
+    "socketcluster-client": "latest",
+    "socketcluster-server": "latest",
+    "supports-color": "^7.1.0",
+    "typescript": "latest",
     "uuid": "latest"
   },
   "devDependencies": {
+    "@types/jest": "^26.0.4",
+    "@types/supertest": "^2.0.10",
+    "@typescript-eslint/eslint-plugin": "^3.6.1",
+    "@typescript-eslint/parser": "^3.6.1",
     "eslint": "latest",
     "eslint-config-airbnb": "latest",
+    "eslint-config-airbnb-typescript": "^8.0.2",
     "eslint-plugin-es": "latest",
     "eslint-plugin-import": "latest",
     "eslint-plugin-jest": "latest",
+    "eslint-plugin-json": "^2.1.1",
     "eslint-plugin-jsx-a11y": "latest",
     "eslint-plugin-node": "latest",
     "eslint-plugin-react": "latest",
     "eslint-plugin-react-hooks": "latest",
     "eslint-plugin-security": "latest",
     "jest": "latest",
-    "typescript": "latest",
-    "supertest": "latest"
-  },
-  "keywords": [
-    "websocket",
-    "server",
-    "realtime",
-    "cluster",
-    "scalable"
-  ],
-  "readmeFilename": "README.md",
-  "scripts": {
-    "test": "eslint . && rm -rf coverage && npm run test:jest",
-    "cc": "codeclimate analyze -f html > codeclimate.html",
-    "installglobals": "yarn config set registry https://registry.yarnpkg.com -g",
-    "cleaninstall": "rm -rf yarn.lock && rm -rf package-lock.json && rm -rf node_modules && yarn cache clean && yarn installglobals && yarn install",
-    "start": "DEBUG=WebJamSocketServer:* node server.js",
-    "start:debug": "DEBUG=WebJamSocketServer:* nodemon server.js",
-    "start:watch": "./node_modules/nodemon/bin/nodemon.js server.js",
-    "start:docker": "./node_modules/nodemon/bin/nodemon.js /usr/src/app/server.js",
-    "test:lint": "eslint . --fix",
-    "test:local": "eslint . --fix && yarn test:jest && yarn cc",
-    "test:jest": "jest --no-cache --config jest.config.json --notify --detectOpenHandles --forceExit --runInBand"
+    "nodemon": "latest",
+    "npm-run-all": "^4.1.5",
+    "supertest": "latest",
+    "ts-jest": "^26.1.2"
   }
 }
