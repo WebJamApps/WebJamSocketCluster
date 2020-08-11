@@ -4,7 +4,7 @@
   "version": "1.1.0",
   "license": "MIT",
   "engines": {
-    "node": ">=14.5.0"
+    "node": ">=14.6.0"
   },
   "contributors": [
     {
@@ -32,7 +32,7 @@
     "installglobals": "yarn config set registry https://registry.yarnpkg.com -g",
     "cleaninstall": "rm -rf yarn.lock && rm -rf package-lock.json && rm -rf node_modules && yarn cache clean && yarn installglobals && yarn install",
     "start": "node build/index.js",
-    "postinstall": "rm -rf build && tsc",
+    "postinstall": "rm -rf build && tsc && cp -avr ./public ./build/public",
     "ts-start": "DEBUG=WebJamSocketServer:* nodemon build/index.js",
     "ts-watch": "tsc -w",
     "test:lint": "eslint . --fix",
