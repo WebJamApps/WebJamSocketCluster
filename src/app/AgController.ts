@@ -33,7 +33,7 @@ class AgController {
     return Promise.resolve(true);
   }
 
-  handleDisconnect(socket: { listener: (arg0: string) => { (): any; new(): any; createConsumer: { (): any; new(): any; }; }; id: any; }, interval: NodeJS.Timeout) {
+  handleDisconnect(socket:any, interval: NodeJS.Timeout):Promise<boolean> {
     (async () => {
       let disconnect: { value: undefined; done: any; };
       const dConsumer = socket.listener('disconnect').createConsumer();
@@ -83,7 +83,7 @@ class AgController {
     return Promise.resolve(true);
   }
 
-  handleReceiver(socket: { id?: any; socket?: any; }) {
+  handleReceiver(socket:any) {
     (async () => {
       let receiver: { value: number; done: any; };
       const rConsumer = socket.socket.receiver('initial message').createConsumer();
@@ -161,7 +161,7 @@ class AgController {
 
   removeTour(socket: { id?: any; socket?: any; }) {
     (async () => {
-      let receiver: { value: { tour: { tourId: any; }; token: any; }; done: any; };
+      let receiver: { value: { tour:any; token: any; }; done: any; };
       const rConsumer = socket.socket.receiver('deleteTour').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
@@ -189,7 +189,7 @@ class AgController {
 
   editTour(socket: { id?: any; socket?: any; }) {
     (async () => {
-      let receiver: { value: { tourId: any; token: any; }; done: any; };
+      let receiver: { value:any; done: any; };
       const rConsumer = socket.socket.receiver('editTour').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
