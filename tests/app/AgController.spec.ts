@@ -35,7 +35,8 @@ describe('AgControler', () => {
       transmit: () => { },
       receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
     };
-    r = await agController.handleDisconnect(sStub, null);
+    const to:any = null;
+    r = await agController.handleDisconnect(sStub, to);
     expect(r).toBe(true);
   });
   it('handles disconnects and removes the client', async () => {
@@ -47,7 +48,8 @@ describe('AgControler', () => {
       transmit: () => { },
       receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
     };
-    r = await agController.handleDisconnect(sStub, null);
+    const to:any = null;
+    r = await agController.handleDisconnect(sStub, to);
     expect(r).toBe(true);
   });
   it('sends a pulse', async () => {
@@ -158,6 +160,82 @@ describe('AgControler', () => {
     };
     global.setInterval = jest.fn((cb:any) => cb());
     r = await agController.newTour(sStub);
+    expect(r).toBe(true);
+  });
+  it('process the newImage message from client', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    const sStub = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'token',
+                image: {
+                  title: 'title', url: 'url',
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    global.setInterval = jest.fn((cb:any) => cb());
+    r = await agController.newImage(sStub);
+    expect(r).toBe(true);
+  });
+  it('handles error from newImage', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    const sStub = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'token',
+                image: {
+                  title: 'title', url: 'url',
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    global.setInterval = jest.fn((cb:any) => cb());
+    agController.handleImage = jest.fn(() => Promise.reject(new Error('bad')));
+    r = await agController.newImage(sStub);
+    expect(r).toBe(true);
+  });
+  it('handles missing receiver value when process the newImage message from client', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    const sStub = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    global.setInterval = jest.fn((cb:any) => cb());
+    r = await agController.newImage(sStub);
     expect(r).toBe(true);
   });
   it('handles error from newTour', async () => {
@@ -364,6 +442,13 @@ describe('AgControler', () => {
       date: 'date', time: 'time', location: 'location', venue: 'venue',
     }, 'tourCreated');
     expect(r).toBe(true);
+  });
+  it('creates a book (image)', async () => {
+    const agController = new AgController(aStub);
+    r = await agController.handleImage('createDocs', {
+      url: 'url', title: 'title', type: 'JaMmusic',
+    }, 'imageCreated');
+    expect(r).toBe('imageCreated');
   });
   it('handles error from creates tours', async () => {
     const agController = new AgController(aStub);

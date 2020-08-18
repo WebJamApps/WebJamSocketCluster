@@ -14,7 +14,7 @@ class AgController {
 
   bookController: any;
 
-  constructor(server) {
+  constructor(server: any) {
     this.server = server;
     this.clients = [];
     this.tourController = tourController;
@@ -33,9 +33,9 @@ class AgController {
     return Promise.resolve(true);
   }
 
-  handleDisconnect(socket, interval) {
+  handleDisconnect(socket:any, interval: NodeJS.Timeout):Promise<boolean> {
     (async () => {
-      let disconnect;
+      let disconnect: { value: undefined; done: any; };
       const dConsumer = socket.listener('disconnect').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         disconnect = await dConsumer.next();// eslint-disable-line no-await-in-loop
@@ -55,7 +55,7 @@ class AgController {
     return Promise.resolve(true);
   }
 
-  sendPulse(socket) {
+  sendPulse(socket: { id?: any; socket?: any; }) {
     const interval = setInterval(() => {
       socket.socket.transmit('pulse', { number: Math.floor(Math.random() * 5) });
     }, 1000);
@@ -65,8 +65,8 @@ class AgController {
     return this.handleDisconnect(socket.socket, interval);
   }
 
-  async sendTours(socket) {
-    let allTours;
+  async sendTours(socket: { socket: { transmit: (arg0: string, arg1: any) => void; }; }) {
+    let allTours: any;
     try { allTours = await this.tourController.getAllSort({ datetime: -1 }); } catch (e) {
       debug(e.message); return Promise.resolve(e.message);
     }
@@ -74,8 +74,8 @@ class AgController {
     return Promise.resolve(true);
   }
 
-  async sendBooks(socket) {
-    let allBooks;
+  async sendBooks(socket: { socket: { transmit: (arg0: string, arg1: any) => void; }; }) {
+    let allBooks: any;
     try { allBooks = await this.bookController.getAll(); } catch (e) {
       debug(e.message); return Promise.resolve(e.message);
     }
@@ -83,9 +83,9 @@ class AgController {
     return Promise.resolve(true);
   }
 
-  handleReceiver(socket) {
+  handleReceiver(socket:any) {
     (async () => {
-      let receiver;
+      let receiver: { value: number; done: any; };
       const rConsumer = socket.socket.receiver('initial message').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
@@ -100,8 +100,8 @@ class AgController {
     return Promise.resolve(true);
   }
 
-  async handleTour(func, data, message) {
-    let r;// eslint-disable-next-line security/detect-object-injection
+  async handleTour(func: string, data: { date: any; time: any; location: any; venue: any; }, message: string) {
+    let r: any;// eslint-disable-next-line security/detect-object-injection
     try { r = await this.tourController[func](data); } catch (e) {
       debug(e.message); return Promise.resolve(e.message);
     }
@@ -109,9 +109,18 @@ class AgController {
     return Promise.resolve(true);
   }
 
-  newTour(socket) {
+  async handleImage(func: string, data: any, message: string):Promise<string> {
+    let r: any;// eslint-disable-next-line security/detect-object-injection
+    try { r = await this.bookController[func](data); } catch (e) {
+      debug(e.message); return Promise.resolve(e.message);
+    }
+    this.server.exchange.transmitPublish(message, r);
+    return Promise.resolve(message);
+  }
+
+  newTour(socket: { id?: any; socket?: any; }):Promise<boolean> {
     (async () => {
-      let receiver;
+      let receiver: { value: { token: any; tour: { date: any; time: any; location: any; venue: any; }; }; done: any; };
       const rConsumer = socket.socket.receiver('newTour').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
@@ -129,9 +138,30 @@ class AgController {
     return Promise.resolve(true);
   }
 
-  removeTour(socket) {
+  newImage(socket: { id?: any; socket?: any; }): Promise<boolean> {
     (async () => {
-      let receiver;
+      let receiver: { value: { token: string; image: any}, done: any; };
+      const rConsumer = socket.socket.receiver('newImage').createConsumer();
+      while (true) { // eslint-disable-line no-constant-condition
+        receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
+        debug(`received newImage message: ${JSON.stringify(receiver.value)}`);
+        if (!receiver.value) break;
+        try {
+          if (typeof receiver.value.token === 'string'
+            && typeof receiver.value.image.title === 'string' && typeof receiver.value.image.url === 'string'
+          ) {
+            await this.handleImage('createDocs', receiver.value.image, 'imageCreated');// eslint-disable-line no-await-in-loop
+          }
+        } catch (e) { debug(e.message); }
+        /* istanbul ignore else */if (receiver.done) break;
+      }
+    })();
+    return Promise.resolve(true);
+  }
+
+  removeTour(socket: { id?: any; socket?: any; }) {
+    (async () => {
+      let receiver: { value: { tour:any; token: any; }; done: any; };
       const rConsumer = socket.socket.receiver('deleteTour').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
@@ -148,8 +178,8 @@ class AgController {
     return Promise.resolve(true);
   }
 
-  async updateTour(data) {
-    let r;// eslint-disable-next-line security/detect-object-injection
+  async updateTour(data: { tourId: any; tour: any; }) {
+    let r: any;// eslint-disable-next-line security/detect-object-injection
     try { r = await this.tourController.findByIdAndUpdate(data.tourId, data.tour); } catch (e) {
       debug(e.message); return Promise.resolve(e.message);
     }
@@ -157,9 +187,9 @@ class AgController {
     return Promise.resolve(true);
   }
 
-  editTour(socket) {
+  editTour(socket: { id?: any; socket?: any; }) {
     (async () => {
-      let receiver;
+      let receiver: { value:any; done: any; };
       const rConsumer = socket.socket.receiver('editTour').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
@@ -176,7 +206,7 @@ class AgController {
     return Promise.resolve(true);
   }
 
-  addSocket(socket) {
+  addSocket(socket: { id: any; }): void {
     this.clients.push(socket.id);
     debug('clientIds');
     debug(this.clients);
@@ -185,6 +215,7 @@ class AgController {
     this.newTour(socket);
     this.removeTour(socket);
     this.editTour(socket);
+    this.newImage(socket);
   }
 }
 export default AgController;
