@@ -16,9 +16,9 @@ class Controller {
     return Promise.resolve(true);
   }
 
-  async createDocs(body) {
+  async createDocs(body: any):Promise<any> {
     debug('createDocs');
-    let result;
+    let result: any;
     try { result = await this.model.create(body); } catch (e) { return Promise.reject(e); }
     debug(result);
     return Promise.resolve(result);
