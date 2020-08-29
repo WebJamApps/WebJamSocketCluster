@@ -50,7 +50,7 @@ describe('TourController', () => {
     await expect(controller.findByIdAndUpdate(testId, {})).rejects.toThrow('Id Not Found');
   });
   it('should wait unit tests finish before exiting', async () => { // eslint-disable-line jest/expect-expect
-    const delay = (ms) => new Promise((resolve) => setTimeout(() => resolve(true), ms));
+    const delay = (ms: any) => new Promise((resolve) => setTimeout(() => resolve(true), ms));
     await delay(1000);
   });
 });

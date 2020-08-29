@@ -3,7 +3,7 @@ import AgController from './AgController';
 
 const debug = Debug('WebJamSocketServer:agServerUtils');
 
-const routing = async (agServer) => {
+const routing = async (agServer: any): Promise<any> => {
   const agController = new AgController(agServer);
   /* istanbul ignore else */if (process.env.NODE_ENV !== 'production') await agController.resetData();
   (async () => { // SocketCluster/WebSocket connection handling
@@ -18,7 +18,7 @@ const routing = async (agServer) => {
   })();
   return Promise.resolve(true);
 };
-const setupErrorWarning = (agServer, type) => {
+const setupErrorWarning = (agServer: any, type: any): any => {
   (async () => {
     let msg;
     const eConsumer = agServer.listener(type).createConsumer();
@@ -31,9 +31,9 @@ const setupErrorWarning = (agServer, type) => {
   })();
 };
 
-const handleErrAndWarn = (SOCKETCLUSTER_LOG_LEVEL, SOCKETCLUSTER_PORT, agServer) => {
+const handleErrAndWarn = (SOCKETCLUSTER_LOG_LEVEL: any, SOCKETCLUSTER_PORT: any, agServer: any): any => {
   /* istanbul ignore else */if (SOCKETCLUSTER_LOG_LEVEL >= 1) setupErrorWarning(agServer, 'error');
-  function colorText(message, color) {
+  function colorText(message: any, color: any) {
     let fullMessage = message;
     /* istanbul ignore else */if (color) fullMessage = `\x1b[${color}m${message}\x1b[0m`;
     return fullMessage;
