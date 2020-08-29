@@ -15,24 +15,25 @@ import agServerUtils from './app/agServerUtils';
 const debug = Debug('WebJamSocketServer:server');
 dotenv.config();
 const ENVIRONMENT = process.env.ENV || process.env.NODE_ENV;
-const SOCKETCLUSTER_PORT = process.env.SOCKETCLUSTER_PORT || process.env.PORT;
+const SOCKETCLUSTER_PORT = Number(process.env.SOCKETCLUSTER_PORT) || Number(process.env.PORT);
 // const SOCKETCLUSTER_WS_ENGINE = process.env.SOCKETCLUSTER_WS_ENGINE || 'ws';
 // const SOCKETCLUSTER_SOCKET_CHANNEL_LIMIT = Number(process.env.SOCKETCLUSTER_SOCKET_CHANNEL_LIMIT) || 1000;
 const SOCKETCLUSTER_LOG_LEVEL = process.env.SOCKETCLUSTER_LOG_LEVEL || 2;
-
+let mE = process.env.SCC_MAPPING_ENGINE;
+if (mE !== 'skeletonRendezvous' && mE !== 'simple') mE = undefined;
 const SCC_INSTANCE_ID = v4();
-const SCC_STATE_SERVER_HOST = process.env.SCC_STATE_SERVER_HOST || null;
-const SCC_STATE_SERVER_PORT = process.env.SCC_STATE_SERVER_PORT || null;
-const SCC_MAPPING_ENGINE = process.env.SCC_MAPPING_ENGINE || null;
-const SCC_CLIENT_POOL_SIZE = process.env.SCC_CLIENT_POOL_SIZE || null;
-const SCC_AUTH_KEY = process.env.SCC_AUTH_KEY || null;
-const SCC_INSTANCE_IP = process.env.SCC_INSTANCE_IP || null;
-const SCC_INSTANCE_IP_FAMILY = process.env.SCC_INSTANCE_IP_FAMILY || null;
-const SCC_STATE_SERVER_CONNECT_TIMEOUT = Number(process.env.SCC_STATE_SERVER_CONNECT_TIMEOUT) || null;
-const SCC_STATE_SERVER_ACK_TIMEOUT = Number(process.env.SCC_STATE_SERVER_ACK_TIMEOUT) || null;
-const SCC_STATE_SERVER_RECONNECT_RANDOMNESS = Number(process.env.SCC_STATE_SERVER_RECONNECT_RANDOMNESS) || null;
-const SCC_PUB_SUB_BATCH_DURATION = Number(process.env.SCC_PUB_SUB_BATCH_DURATION) || null;
-const SCC_BROKER_RETRY_DELAY = Number(process.env.SCC_BROKER_RETRY_DELAY) || null;
+const SCC_STATE_SERVER_HOST = process.env.SCC_STATE_SERVER_HOST || undefined;
+const SCC_STATE_SERVER_PORT = Number(process.env.SCC_STATE_SERVER_PORT) || undefined;
+const SCC_MAPPING_ENGINE = mE;
+const SCC_CLIENT_POOL_SIZE = Number(process.env.SCC_CLIENT_POOL_SIZE) || undefined;
+const SCC_AUTH_KEY = process.env.SCC_AUTH_KEY || undefined;
+const SCC_INSTANCE_IP = process.env.SCC_INSTANCE_IP || undefined;
+const SCC_INSTANCE_IP_FAMILY = process.env.SCC_INSTANCE_IP_FAMILY || undefined;
+const SCC_STATE_SERVER_CONNECT_TIMEOUT = Number(process.env.SCC_STATE_SERVER_CONNECT_TIMEOUT) || undefined;
+const SCC_STATE_SERVER_ACK_TIMEOUT = Number(process.env.SCC_STATE_SERVER_ACK_TIMEOUT) || undefined;
+const SCC_STATE_SERVER_RECONNECT_RANDOMNESS = Number(process.env.SCC_STATE_SERVER_RECONNECT_RANDOMNESS) || undefined;
+const SCC_PUB_SUB_BATCH_DURATION = Number(process.env.SCC_PUB_SUB_BATCH_DURATION) || undefined;
+const SCC_BROKER_RETRY_DELAY = Number(process.env.SCC_BROKER_RETRY_DELAY) || undefined;
 
 const agOptions = {};
 
@@ -71,8 +72,8 @@ agServerUtils.handleErrAndWarn(SOCKETCLUSTER_LOG_LEVEL, SOCKETCLUSTER_PORT, agSe
   });
   if (SOCKETCLUSTER_LOG_LEVEL >= 1) {
     (async () => {
-      const { error } = sccClient.listener('error').once();
-      debug(`sccClient error: ${error}`);
+      const { error } = await sccClient.listener('error').once();
+      debug(`sccClient error: ${error.message}`);
     })();
   }
 }
