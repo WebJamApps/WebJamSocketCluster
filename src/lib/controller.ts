@@ -6,11 +6,11 @@ const debug = Debug('WebJamSocketServer:lib-controller');
 class Controller {
   model: any;
 
-  constructor(model) {
+  constructor(model: any) {
     this.model = model;
   }
 
-  async deleteAllDocs() {
+  async deleteAllDocs(): Promise<boolean> {
     debug('deleteAllDocs');
     try { await this.model.deleteMany({}); } catch (e) { return Promise.reject(e); }
     return Promise.resolve(true);
@@ -44,7 +44,7 @@ class Controller {
   //   return res.status(200).json(updatedBook);
   // }
   //
-  async getAll() {
+  async getAll(): Promise<any> {
     let collection;
     try {
       collection = await this.model.find({});
@@ -52,7 +52,7 @@ class Controller {
     return Promise.resolve(collection);
   }
 
-  async getAllSort(sort) {
+  async getAllSort(sort: any): Promise<any> {
     let collection;
     try {
       collection = await this.model.findSort({}, sort);
@@ -102,26 +102,26 @@ class Controller {
   //   return res.status(201).json(created);
   // }
   //
-  findByIdAndUpdate(id, body) {
+  findByIdAndUpdate(id: any, body: any): any {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return Promise.reject(new Error('Update id is invalid'));
     }
     return this.model.findByIdAndUpdate(id, body)
-      .then((doc) => {
+      .then((doc: any) => {
         if (!doc) return Promise.reject(new Error('Id Not Found'));
         return Promise.resolve(doc);
       })
-      .catch((e) => Promise.reject(e));
+      .catch((e: Error) => Promise.reject(e));
   }
 
-  deleteById(id) {
+  deleteById(id: any): any {
     if (!mongoose.Types.ObjectId.isValid(id)) { return Promise.reject(new Error('id is invalid')); }
     return this.model.findByIdAndRemove(id)
-      .then((doc) => {
+      .then((doc: any) => {
         if (!doc) { return Promise.reject(new Error('Delete id not found')); }
         return Promise.resolve(doc);
       })
-      .catch((e) => Promise.reject(e));
+      .catch((e: Error) => Promise.reject(e));
   }
   // findByIdAndRemove(req, res) {
   //   if (!mongoose.Types.ObjectId.isValid(req.params.id)) {

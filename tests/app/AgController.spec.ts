@@ -4,7 +4,7 @@ import AgController from '../../src/app/AgController';
 const testId = mongoose.Types.ObjectId();
 const aStub = {
   exchange: { transmitPublish: () => { } },
-  listener: (name) => ({
+  listener: (name: any) => ({
     once: () => {
       if (name === 'error') return Promise.resolve({ error: 'bad' });
       if (name === 'warning') Promise.resolve({ warning: 'too hot' });
