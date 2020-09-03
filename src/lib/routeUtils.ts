@@ -1,6 +1,6 @@
-exports.setRoot = function setRoot(router, controller, authUtils) {
+exports.setRoot = function setRoot(router: any, controller: any, authUtils: any) {
   router.route('/')
-    .get((...args) => controller.find(...args))
-    .post(authUtils.ensureAuthenticated, (...args) => controller.create(...args))
-    .delete(authUtils.ensureAuthenticated, (...args) => controller.deleteMany(...args));
+    .get((...args: any) => controller.find(...args))
+    .post(authUtils.ensureAuthenticated, (...args: any) => controller.create(...args))
+    .delete(authUtils.ensureAuthenticated, (...args: any) => controller.deleteMany(...args));
 };

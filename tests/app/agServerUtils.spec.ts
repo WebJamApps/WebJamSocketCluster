@@ -5,7 +5,7 @@ describe('agServerUtils', () => {
   let r;
   const aStub = {
     exchange: { transmitPublish: () => {} },
-    listener: (name) => ({
+    listener: (name: any) => ({
       once: () => {
         if (name === 'error') return Promise.resolve({ error: 'bad' });
         if (name === 'warning') Promise.resolve({ warning: 'too hot' });
@@ -40,7 +40,7 @@ describe('agServerUtils', () => {
     expect(r).toBe(true);
   });
   it('should wait unit tests finish before exiting', async () => { // eslint-disable-line jest/expect-expect
-    const delay = (ms) => new Promise((resolve) => setTimeout(() => resolve(true), ms));
+    const delay = (ms: any) => new Promise((resolve) => setTimeout(() => resolve(true), ms));
     await delay(1000);
   });
 });
