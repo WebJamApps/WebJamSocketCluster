@@ -55,7 +55,7 @@
     "dotenv": "latest",
     "eetase": "latest",
     "express": "latest",
-    "mongoose": "latest",
+    "mongoose": "5.11.7",
     "morgan": "latest",
     "sc-errors": "latest",
     "scc-broker-client": "latest",
