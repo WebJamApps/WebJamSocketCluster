@@ -3,7 +3,7 @@
   "notify": true,
   "verbose": true,
   "bail": true,
-  "testPathIgnorePatterns": ["/node_modules/", "/build", "/public"],
+  "testPathIgnorePatterns": ["/node_modules/", "/build", "/JaMmusic"],
   "collectCoverageFrom": [
     "src/**/*.{js,jsx,ts,tsx}"
   ],
