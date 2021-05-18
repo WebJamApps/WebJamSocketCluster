@@ -6,7 +6,7 @@ mongoose.Promise = global.Promise;// use es6 default promise library in mongoose
 mongoose.set('useCreateIndex', true);
 mongoose.set('useFindAndModify', false);
 const mongoOptions = {
-  keepAlive: true, useNewUrlParser: true, autoIndex: true, useUnifiedTopology: true,
+  keepAlive: true, useNewUrlParser: true, autoIndex: true, useUnifiedTopology: true, 
 };
 /* istanbul ignore if */
 if (process.env.NODE_ENV === 'production') mongoOptions.autoIndex = false;
