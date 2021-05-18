@@ -2,6 +2,7 @@ import Debug from 'debug';
 import dotenv from 'dotenv';
 import socketClusterServer from 'socketcluster-server';
 import express from 'express';
+import enforce from 'express-sslify';
 import serveStatic from 'serve-static';
 import path from 'path';
 import morgan from 'morgan';
@@ -16,11 +17,9 @@ const debug = Debug('WebJamSocketServer:server');
 dotenv.config();
 const ENVIRONMENT = process.env.ENV || process.env.NODE_ENV;
 const SOCKETCLUSTER_PORT = Number(process.env.SOCKETCLUSTER_PORT) || Number(process.env.PORT);
-// const SOCKETCLUSTER_WS_ENGINE = process.env.SOCKETCLUSTER_WS_ENGINE || 'ws';
-// const SOCKETCLUSTER_SOCKET_CHANNEL_LIMIT = Number(process.env.SOCKETCLUSTER_SOCKET_CHANNEL_LIMIT) || 1000;
 const SOCKETCLUSTER_LOG_LEVEL = process.env.SOCKETCLUSTER_LOG_LEVEL || 2;
 let mE = process.env.SCC_MAPPING_ENGINE;
-if (mE !== 'skeletonRendezvous' && mE !== 'simple') mE = undefined;
+/* istanbul ignore else */ if (mE !== 'skeletonRendezvous' && mE !== 'simple') mE = undefined;
 const SCC_INSTANCE_ID = v4();
 const SCC_STATE_SERVER_HOST = process.env.SCC_STATE_SERVER_HOST || undefined;
 const SCC_STATE_SERVER_PORT = Number(process.env.SCC_STATE_SERVER_PORT) || undefined;
@@ -34,21 +33,20 @@ const SCC_STATE_SERVER_ACK_TIMEOUT = Number(process.env.SCC_STATE_SERVER_ACK_TIM
 const SCC_STATE_SERVER_RECONNECT_RANDOMNESS = Number(process.env.SCC_STATE_SERVER_RECONNECT_RANDOMNESS) || undefined;
 const SCC_PUB_SUB_BATCH_DURATION = Number(process.env.SCC_PUB_SUB_BATCH_DURATION) || undefined;
 const SCC_BROKER_RETRY_DELAY = Number(process.env.SCC_BROKER_RETRY_DELAY) || undefined;
-
 const agOptions = {};
-
 /* istanbul ignore if */if (process.env.SOCKETCLUSTER_OPTIONS) {
   const envOptions = JSON.parse(process.env.SOCKETCLUSTER_OPTIONS);
   Object.assign(agOptions, envOptions);
 }
-
 const agServer = socketClusterServer.attach(httpServer, agOptions);
 const expressApp = express();
-// console.log(expressApp);
 /* istanbul ignore if */if (ENVIRONMENT === 'dev' || ENVIRONMENT === 'development') {
   expressApp.use(morgan('dev'));// Log every HTTP request. See https://github.com/expressjs/morgan for available formats.
 }
-expressApp.use(serveStatic(path.resolve(__dirname, 'public')));
+expressApp.use(serveStatic(path.resolve(__dirname, 'JaMmusic')));
+/* istanbul ignore next */
+if (process.env.NODE_ENV === 'production' && process.env.BUILD_BRANCH === 'master') expressApp.use(enforce.HTTPS({ trustProtoHeader: true }));
+expressApp.use(express.static(path.normalize(path.join(__dirname, '../JaMmusic/dist'))));
 appUtils.setup(expressApp, httpServer);
 httpServer.listen(SOCKETCLUSTER_PORT);
 agServerUtils.routing(agServer);
