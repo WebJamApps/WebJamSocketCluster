@@ -28,9 +28,9 @@ const aStub = {
   }),
 };
 
-describe.only('AgControler', () => {
+describe('AgControler', () => {
   let r;
-  it.only('handles undefined disconnects', async () => {
+  it('handles undefined disconnects', async () => {
     const agController = new AgController(aStub);
     const sStub = {
       id: '123',
@@ -55,8 +55,10 @@ describe.only('AgControler', () => {
       receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
     };
     const to:any = null;
-    r = await agController.handleDisconnect(sStub, to);
-    expect(r).toBe(true);
+    agController.handleDisconnect(sStub, to);
+    await delay(2000);
+    expect(agController.clients.length).toBe(0);
+    await delay(1000);
   });
   it('sends a pulse', async () => {
     const agController = new AgController(aStub);

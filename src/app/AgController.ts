@@ -39,14 +39,16 @@ class AgController {
       const dConsumer = socket.listener('disconnect').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         disconnect = await dConsumer.next();// eslint-disable-line no-await-in-loop
-        debug('received disconnect:');
-        debug(disconnect.value);
-        debug(socket.id);
+        console.log('received disconnect:');
+        console.log(disconnect.value);
+        console.log(socket.id);
         clearInterval(interval);
         if (disconnect.value !== undefined) {
+          console.log(this.clients);
           const index = this.clients.indexOf(socket.id);
+          console.log(index);
           if (index !== -1) this.clients.splice(index, 1);
-          debug(this.clients);
+          console.log(this.clients);
         }
         this.server.exchange.transmitPublish('sample', this.clients.length);
         /* istanbul ignore else */if (disconnect.done) break;
