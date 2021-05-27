@@ -1,9 +1,11 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose from 'mongoose';
 import AgController from '../../src/app/AgController';
 
 const testId = mongoose.Types.ObjectId();
+const delay = (ms: any) => new Promise((resolve) => setTimeout(() => resolve(true), ms));
 const aStub = {
-  exchange: { transmitPublish: () => { } },
+  exchange: { transmitPublish: jest.fn() },
   listener: (name: any) => ({
     once: () => {
       if (name === 'error') return Promise.resolve({ error: 'bad' });
@@ -25,9 +27,10 @@ const aStub = {
     }),
   }),
 };
-describe('AgControler', () => {
+
+describe.only('AgControler', () => {
   let r;
-  it('handles undefined disconnects', async () => {
+  it.only('handles undefined disconnects', async () => {
     const agController = new AgController(aStub);
     const sStub = {
       id: '123',
@@ -36,8 +39,11 @@ describe('AgControler', () => {
       receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
     };
     const to:any = null;
-    r = await agController.handleDisconnect(sStub, to);
-    expect(r).toBe(true);
+    agController.server.exchange.transmitPublish = jest.fn();
+    agController.handleDisconnect(sStub, to);
+    await delay(1000);
+    expect(agController.server.exchange.transmitPublish).toHaveBeenCalled();
+    await delay(1000);
   });
   it('handles disconnects and removes the client', async () => {
     const agController = new AgController(aStub);

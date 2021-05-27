@@ -13,7 +13,6 @@ const bookSchema = new Schema({
   numberPages: { type: Number, required: false },
   dateOfPub: { type: Number, required: false },
   url: { type: String, required: false },
-  // isbn is the orderable number from a bookstore
   isbn: { type: String, required: false },
   siteLocation: { type: String, required: false },
   numberOfCopies: { type: Number, required: false },
