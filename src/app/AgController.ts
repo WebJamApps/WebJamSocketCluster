@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Debug from 'debug';
 import tourController from '../model/tour/tour-controller';
 import tourData from '../model/tour/reset-tour';
@@ -39,16 +40,10 @@ class AgController {
       const dConsumer = socket.listener('disconnect').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         disconnect = await dConsumer.next();// eslint-disable-line no-await-in-loop
-        console.log('received disconnect:');
-        console.log(disconnect.value);
-        console.log(socket.id);
         clearInterval(interval);
         if (disconnect.value !== undefined) {
-          console.log(this.clients);
           const index = this.clients.indexOf(socket.id);
-          console.log(index);
           if (index !== -1) this.clients.splice(index, 1);
-          console.log(this.clients);
         }
         this.server.exchange.transmitPublish('sample', this.clients.length);
         /* istanbul ignore else */if (disconnect.done) break;
@@ -192,11 +187,9 @@ class AgController {
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received editTour message: ${receiver.value}`);
         if (!receiver.value) break;
-        try {
-          if (typeof receiver.value.tourId === 'string' && typeof receiver.value.token === 'string') {
-            await this.updateTour(receiver.value);// eslint-disable-line no-await-in-loop
-          }
-        } catch (e) { debug(e.message); }
+        if (typeof receiver.value.tourId === 'string' && typeof receiver.value.token === 'string') {
+          await this.updateTour(receiver.value);// eslint-disable-line no-await-in-loop
+        }
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
