@@ -152,6 +152,31 @@ class AgController {
     })();
   }
 
+  async updateImage(data: { imageId: string; image: Record<string, unknown>; }):Promise<string> {
+    let r: any;// eslint-disable-next-line security/detect-object-injection
+    try { r = await this.bookController.findByIdAndUpdate(data.imageId, data.image); } catch (e) {
+      debug(e.message); return e.message;// TODO handle error messages by sending this back to the UI
+    }
+    this.server.exchange.transmitPublish('imageUpdated', r);
+    return 'image updated';
+  }
+
+  editImage(socket: { id?: any; socket?: any; }):void {
+    (async () => {
+      let receiver: { value:any; done: any; };
+      const rConsumer = socket.socket.receiver('editImage').createConsumer();
+      while (true) { // eslint-disable-line no-constant-condition
+        receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
+        debug(`received editImage message: ${receiver.value}`);
+        if (!receiver.value) break;
+        if (typeof receiver.value.imageId === 'string' && typeof receiver.value.token === 'string') {
+          await this.updateImage(receiver.value);// eslint-disable-line no-await-in-loop
+        }
+        /* istanbul ignore else */if (receiver.done) break;
+      }
+    })();
+  }
+
   removeTour(socket: { id?: any; socket?: any; }):void {
     (async () => {
       let receiver: { value: { tour:any; token: any; }; done: any; };

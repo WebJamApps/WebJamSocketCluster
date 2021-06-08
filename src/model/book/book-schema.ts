@@ -6,7 +6,7 @@ const options = {
 
 const { Schema } = mongoose;
 
-const bookSchema = new Schema({
+const bookSchema = new Schema({ // images are books in the database
   title: { type: String, required: true },
   type: { type: String, required: true },
   author: { type: String, required: false },

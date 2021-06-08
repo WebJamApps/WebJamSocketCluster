@@ -422,7 +422,7 @@ describe('AgControler', () => {
     global.setInterval = jest.fn((cb:any) => cb());
     agController.updateTour = jest.fn();
     agController.editTour(sStub);
-    delay(1000);
+    await delay(1000);
     expect(agController.updateTour).not.toHaveBeenCalled();
   });
   it('handles error when process the editTour message from client', async () => {
@@ -490,6 +490,7 @@ describe('AgControler', () => {
       date: 'date', time: 'time', location: 'location', venue: 'venue',
     }, 'tourCreated');
     expect(r).toBe('tour handled');
+    await delay(1000);
   });
   it('creates a book (image)', async () => {
     const agController = new AgController(aStub);
@@ -497,6 +498,7 @@ describe('AgControler', () => {
       url: 'url', title: 'title', type: 'JaMmusic',
     }, 'imageCreated');
     expect(r).toBe('imageCreated');
+    await delay(1000);
   });
   it('handles error from creates tours', async () => {
     const agController = new AgController(aStub);
@@ -505,5 +507,6 @@ describe('AgControler', () => {
       date: 'date', time: 'time', location: 'location', venue: 'venue',
     }, 'tourCreated');
     expect(r).toBe('bad');
+    await delay(1000);
   });
 });
