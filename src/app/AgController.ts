@@ -134,7 +134,7 @@ class AgController {
 
   newImage(socket: { id?: any; socket?: any; }): void {
     (async () => {
-      let receiver: { value: { token: string; image: any}, done: any; };
+      let receiver: { value: { token: string; image: any }, done: any; };
       const rConsumer = socket.socket.receiver('newImage').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
@@ -230,6 +230,7 @@ class AgController {
     this.removeTour(socket);
     this.editTour(socket);
     this.newImage(socket);
+    this.editImage(socket);
   }
 }
 export default AgController;
