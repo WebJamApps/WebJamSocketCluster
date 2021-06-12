@@ -106,3 +106,5 @@ dist
 codeclimate.html
 build
 JaMmusic
+.yarn
+yarn.lock
