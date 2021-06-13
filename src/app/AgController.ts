@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import Debug from 'debug';
 import tourController from '../model/tour/tour-controller';
 import tourData from '../model/tour/reset-tour';
@@ -21,7 +22,7 @@ class AgController {
     this.bookController = bookController;
   }
 
-  async resetData() {
+  async resetData():Promise<string> {
     const { tour } = tourData;
     const { book } = bookData;
     try {
@@ -29,33 +30,28 @@ class AgController {
       await this.tourController.createDocs(tour);
       await this.bookController.deleteAllDocs();
       await this.bookController.createDocs(book);
-    } catch (e) { debug(e.message); return Promise.resolve(e.message); }
-    return Promise.resolve(true);
+    } catch (e) { debug(e.message); return e.message; }
+    return 'data has been reset';
   }
 
-  handleDisconnect(socket:any, interval: NodeJS.Timeout):Promise<boolean> {
+  handleDisconnect(socket:any, interval: NodeJS.Timeout):void {
     (async () => {
       let disconnect: { value: undefined; done: any; };
       const dConsumer = socket.listener('disconnect').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         disconnect = await dConsumer.next();// eslint-disable-line no-await-in-loop
-        debug('received disconnect:');
-        debug(disconnect.value);
-        debug(socket.id);
         clearInterval(interval);
         if (disconnect.value !== undefined) {
           const index = this.clients.indexOf(socket.id);
           if (index !== -1) this.clients.splice(index, 1);
-          debug(this.clients);
         }
         this.server.exchange.transmitPublish('sample', this.clients.length);
         /* istanbul ignore else */if (disconnect.done) break;
       }
     })();
-    return Promise.resolve(true);
   }
 
-  sendPulse(socket: { id?: any; socket?: any; }) {
+  sendPulse(socket: { id?: any; socket?: any; }):void {
     const interval = setInterval(() => {
       socket.socket.transmit('pulse', { number: Math.floor(Math.random() * 5) });
     }, 1000);
@@ -65,25 +61,25 @@ class AgController {
     return this.handleDisconnect(socket.socket, interval);
   }
 
-  async sendTours(socket: { socket: { transmit: (arg0: string, arg1: any) => void; }; }) {
+  async sendTours(socket: { socket: { transmit: (arg0: string, arg1: any) => void; }; }):Promise<string> {
     let allTours: any;
     try { allTours = await this.tourController.getAllSort({ datetime: -1 }); } catch (e) {
-      debug(e.message); return Promise.resolve(e.message);
+      debug(e.message); return e.message;
     }
     socket.socket.transmit('allTours', allTours);
-    return Promise.resolve(true);
+    return 'sent tours';
   }
 
-  async sendBooks(socket: { socket: { transmit: (arg0: string, arg1: any) => void; }; }) {
+  async sendBooks(socket: { socket: { transmit: (arg0: string, arg1: any) => void; }; }):Promise<string> {
     let allBooks: any;
     try { allBooks = await this.bookController.getAll(); } catch (e) {
-      debug(e.message); return Promise.resolve(e.message);
+      debug(e.message); return e.message;
     }
     socket.socket.transmit('allBooks', allBooks);
-    return Promise.resolve(true);
+    return 'sent books';
   }
 
-  handleReceiver(socket:any) {
+  handleReceiver(socket:any):void {
     (async () => {
       let receiver: { value: number; done: any; };
       const rConsumer = socket.socket.receiver('initial message').createConsumer();
@@ -97,28 +93,27 @@ class AgController {
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
-    return Promise.resolve(true);
   }
 
-  async handleTour(func: string, data: { date: any; time: any; location: any; venue: any; }, message: string) {
+  async handleTour(func: string, data: { date: any; time: any; location: any; venue: any; }, message: string):Promise<string> {
     let r: any;// eslint-disable-next-line security/detect-object-injection
     try { r = await this.tourController[func](data); } catch (e) {
-      debug(e.message); return Promise.resolve(e.message);
+      debug(e.message); return e.message;
     }
     this.server.exchange.transmitPublish(message, r);
-    return Promise.resolve(true);
+    return 'tour handled';
   }
 
   async handleImage(func: string, data: any, message: string):Promise<string> {
     let r: any;// eslint-disable-next-line security/detect-object-injection
     try { r = await this.bookController[func](data); } catch (e) {
-      debug(e.message); return Promise.resolve(e.message);
+      debug(e.message); return e.message;
     }
     this.server.exchange.transmitPublish(message, r);
-    return Promise.resolve(message);
+    return message;
   }
 
-  newTour(socket: { id?: any; socket?: any; }):Promise<boolean> {
+  newTour(socket: { id?: any; socket?: any; }):void {
     (async () => {
       let receiver: { value: { token: any; tour: { date: any; time: any; location: any; venue: any; }; }; done: any; };
       const rConsumer = socket.socket.receiver('newTour').createConsumer();
@@ -135,12 +130,11 @@ class AgController {
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
-    return Promise.resolve(true);
   }
 
-  newImage(socket: { id?: any; socket?: any; }): Promise<boolean> {
+  newImage(socket: { id?: any; socket?: any; }): void {
     (async () => {
-      let receiver: { value: { token: string; image: any}, done: any; };
+      let receiver: { value: { token: string; image: any }, done: any; };
       const rConsumer = socket.socket.receiver('newImage').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
@@ -156,10 +150,34 @@ class AgController {
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
-    return Promise.resolve(true);
   }
 
-  removeTour(socket: { id?: any; socket?: any; }) {
+  async updateImage(data: { imageId: string; image: Record<string, unknown>; }):Promise<string> {
+    let r: any;// eslint-disable-next-line security/detect-object-injection
+    try { r = await this.bookController.findByIdAndUpdate(data.imageId, data.image); } catch (e) {
+      debug(e.message); return e.message;// TODO handle error messages by sending this back to the UI
+    }
+    this.server.exchange.transmitPublish('imageUpdated', r);
+    return 'image updated';
+  }
+
+  editImage(socket: { id?: any; socket?: any; }):void {
+    (async () => {
+      let receiver: { value:any; done: any; };
+      const rConsumer = socket.socket.receiver('editImage').createConsumer();
+      while (true) { // eslint-disable-line no-constant-condition
+        receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
+        debug(`received editImage message: ${receiver.value}`);
+        if (!receiver.value) break;
+        if (typeof receiver.value.imageId === 'string' && typeof receiver.value.token === 'string') {
+          await this.updateImage(receiver.value);// eslint-disable-line no-await-in-loop
+        }
+        /* istanbul ignore else */if (receiver.done) break;
+      }
+    })();
+  }
+
+  removeTour(socket: { id?: any; socket?: any; }):void {
     (async () => {
       let receiver: { value: { tour:any; token: any; }; done: any; };
       const rConsumer = socket.socket.receiver('deleteTour').createConsumer();
@@ -175,19 +193,18 @@ class AgController {
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
-    return Promise.resolve(true);
   }
 
-  async updateTour(data: { tourId: any; tour: any; }) {
+  async updateTour(data: { tourId: any; tour: any; }):Promise<string> {
     let r: any;// eslint-disable-next-line security/detect-object-injection
     try { r = await this.tourController.findByIdAndUpdate(data.tourId, data.tour); } catch (e) {
-      debug(e.message); return Promise.resolve(e.message);
+      debug(e.message); return e.message;
     }
     this.server.exchange.transmitPublish('tourUpdated', r);
-    return Promise.resolve(true);
+    return 'tour updated';
   }
 
-  editTour(socket: { id?: any; socket?: any; }) {
+  editTour(socket: { id?: any; socket?: any; }):void {
     (async () => {
       let receiver: { value:any; done: any; };
       const rConsumer = socket.socket.receiver('editTour').createConsumer();
@@ -195,15 +212,12 @@ class AgController {
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received editTour message: ${receiver.value}`);
         if (!receiver.value) break;
-        try {
-          if (typeof receiver.value.tourId === 'string' && typeof receiver.value.token === 'string') {
-            await this.updateTour(receiver.value);// eslint-disable-line no-await-in-loop
-          }
-        } catch (e) { debug(e.message); }
+        if (typeof receiver.value.tourId === 'string' && typeof receiver.value.token === 'string') {
+          await this.updateTour(receiver.value);// eslint-disable-line no-await-in-loop
+        }
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
-    return Promise.resolve(true);
   }
 
   addSocket(socket: { id: any; }): void {
@@ -216,6 +230,7 @@ class AgController {
     this.removeTour(socket);
     this.editTour(socket);
     this.newImage(socket);
+    this.editImage(socket);
   }
 }
 export default AgController;

@@ -4,8 +4,11 @@ httpServer.listen = jest.fn();
 // eslint-disable-next-line import/first
 import * as server from '../src/index';
 
+const delay = (ms: any) => new Promise((resolve) => setTimeout(() => resolve(true), ms));
+
 describe('server', () => {
-  it('is defines the server', () => {   
+  it('is defines the server', async () => {   
     expect(server).toBeDefined();
+    await delay(2000);
   });
 });
