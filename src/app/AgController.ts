@@ -4,6 +4,7 @@ import TourController from '../model/tour/tour-controller';
 import tourData from '../model/tour/reset-tour';
 import BookController from '../model/book/book-controller';
 import bookData from '../model/book/reset-book';
+import mongoose from '../model/db';
 
 const debug = Debug('WebJamSocketServer:AgController');
 class AgController {
@@ -151,7 +152,7 @@ class AgController {
     })();
   }
 
-  async updateImage(data: { imageId: string; image: Record<string, unknown>; }):Promise<string> {
+  async updateImage(data: { imageId: mongoose.Types.ObjectId; image: Record<string, unknown>; }):Promise<string> {
     let r: any;// eslint-disable-next-line security/detect-object-injection
     try { r = await this.bookController.findByIdAndUpdate(data.imageId, data.image); } catch (e) {
       debug(e.message); return e.message;// TODO handle error messages by sending this back to the UI
