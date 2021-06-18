@@ -161,22 +161,6 @@ class AgController {
     return 'image updated';
   }
 
-  editImage(socket: { id?: any; socket?: any; }):void {
-    (async () => {
-      let receiver: { value:any; done: any; };
-      const rConsumer = socket.socket.receiver('editImage').createConsumer();
-      while (true) { // eslint-disable-line no-constant-condition
-        receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
-        debug(`received editImage message: ${receiver.value}`);
-        if (!receiver.value) break;
-        if (typeof receiver.value.imageId === 'string' && typeof receiver.value.token === 'string') {
-          await this.updateImage(receiver.value);// eslint-disable-line no-await-in-loop
-        }
-        /* istanbul ignore else */if (receiver.done) break;
-      }
-    })();
-  }
-
   removeImage(socket: { id?: any; socket?: any; }):void {
     (async () => {
       let receiver: { value: { imageId:string; token: string; }; done: any; };
@@ -222,20 +206,56 @@ class AgController {
     return 'tour updated';
   }
 
-  editTour(socket: { id?: any; socket?: any; }):void {
+  // eslint-disable-next-line class-methods-use-this
+  editDoc(socket: { id?: any; socket?: any; }, message:string, func:(...args:any)=>any):void {
     (async () => {
       let receiver: { value:any; done: any; };
-      const rConsumer = socket.socket.receiver('editTour').createConsumer();
+      const rConsumer = socket.socket.receiver(message).createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
-        debug(`received editTour message: ${receiver.value}`);
+        debug(`received ${message} message: ${receiver.value}`);
         if (!receiver.value) break;
-        if (typeof receiver.value.tourId === 'string' && typeof receiver.value.token === 'string') {
-          await this.updateTour(receiver.value);// eslint-disable-line no-await-in-loop
+        if (typeof receiver.value.token === 'string') {
+          // eslint-disable-next-line security/detect-object-injection
+          await func(receiver.value);// eslint-disable-line no-await-in-loop
         }
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
+  }
+
+  editImage(socket: { id?: any; socket?: any; }):void {
+    this.editDoc(socket, 'editImage', this.updateImage);
+    // (async () => {
+    //   let receiver: { value:any; done: any; };
+    //   const rConsumer = socket.socket.receiver('editImage').createConsumer();
+    //   while (true) { // eslint-disable-line no-constant-condition
+    //     receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
+    //     debug(`received editImage message: ${receiver.value}`);
+    //     if (!receiver.value) break;
+    //     if (typeof receiver.value.imageId === 'string' && typeof receiver.value.token === 'string') {
+    //       await this.updateImage(receiver.value);// eslint-disable-line no-await-in-loop
+    //     }
+    //     /* istanbul ignore else */if (receiver.done) break;
+    //   }
+    // })();
+  }
+
+  editTour(socket: { id?: any; socket?: any; }):void {
+    this.editDoc(socket, 'editTour', this.updateTour);
+    // (async () => {
+    //   let receiver: { value:any; done: any; };
+    //   const rConsumer = socket.socket.receiver('editTour').createConsumer();
+    //   while (true) { // eslint-disable-line no-constant-condition
+    //     receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
+    //     debug(`received editTour message: ${receiver.value}`);
+    //     if (!receiver.value) break;
+    //     if (typeof receiver.value.tourId === 'string' && typeof receiver.value.token === 'string') {
+    //       await this.updateTour(receiver.value);// eslint-disable-line no-await-in-loop
+    //     }
+    //     /* istanbul ignore else */if (receiver.done) break;
+    //   }
+    // })();
   }
 
   addSocket(socket: { id: any; }): void {
