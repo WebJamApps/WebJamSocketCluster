@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Debug from 'debug';
-import tourController from '../model/tour/tour-controller';
+import TourController from '../model/tour/tour-controller';
 import tourData from '../model/tour/reset-tour';
-import bookController from '../model/book/book-controller';
+import BookController from '../model/book/book-controller';
 import bookData from '../model/book/reset-book';
+import mongoose from '../model/db';
 
 const debug = Debug('WebJamSocketServer:AgController');
 class AgController {
@@ -11,15 +12,13 @@ class AgController {
 
   clients: any[];
 
-  tourController: any;
+  tourController = TourController;
 
-  bookController: any;
+  bookController = BookController;
 
   constructor(server: any) {
     this.server = server;
     this.clients = [];
-    this.tourController = tourController;
-    this.bookController = bookController;
   }
 
   async resetData():Promise<string> {
@@ -97,20 +96,11 @@ class AgController {
 
   async handleTour(func: string, data: { date: any; time: any; location: any; venue: any; }, message: string):Promise<string> {
     let r: any;// eslint-disable-next-line security/detect-object-injection
-    try { r = await this.tourController[func](data); } catch (e) {
+    try { r = await (this.tourController as any)[func](data); } catch (e) {
       debug(e.message); return e.message;
     }
     this.server.exchange.transmitPublish(message, r);
     return 'tour handled';
-  }
-
-  async handleImage(func: string, data: any, message: string):Promise<string> {
-    let r: any;// eslint-disable-next-line security/detect-object-injection
-    try { r = await this.bookController[func](data); } catch (e) {
-      debug(e.message); return e.message;
-    }
-    this.server.exchange.transmitPublish(message, r);
-    return message;
   }
 
   newTour(socket: { id?: any; socket?: any; }):void {
@@ -130,6 +120,16 @@ class AgController {
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
+  }
+
+  async handleImage(func: string, data: any, message: string):Promise<string> {
+    let r: any;
+    // eslint-disable-next-line security/detect-object-injection
+    try { r = await (this.bookController as any)[func](data); } catch (e) {
+      debug(e.message); return e.message;
+    }
+    this.server.exchange.transmitPublish(message, r);
+    return message;
   }
 
   newImage(socket: { id?: any; socket?: any; }): void {
@@ -152,12 +152,12 @@ class AgController {
     })();
   }
 
-  async updateImage(data: { imageId: string; image: Record<string, unknown>; }):Promise<string> {
+  async updateImage(data: { imageId: mongoose.Types.ObjectId; image: Record<string, unknown>; }):Promise<string> {
     let r: any;// eslint-disable-next-line security/detect-object-injection
     try { r = await this.bookController.findByIdAndUpdate(data.imageId, data.image); } catch (e) {
       debug(e.message); return e.message;// TODO handle error messages by sending this back to the UI
     }
-    this.server.exchange.transmitPublish('imageUpdated', r);
+    this.server.exchange.transmitPublish('imageUpdated', r);// this r is what was updated and the UI should now update redux
     return 'image updated';
   }
 
@@ -172,6 +172,24 @@ class AgController {
         if (typeof receiver.value.imageId === 'string' && typeof receiver.value.token === 'string') {
           await this.updateImage(receiver.value);// eslint-disable-line no-await-in-loop
         }
+        /* istanbul ignore else */if (receiver.done) break;
+      }
+    })();
+  }
+
+  removeImage(socket: { id?: any; socket?: any; }):void {
+    (async () => {
+      let receiver: { value: { imageId:string; token: string; }; done: any; };
+      const rConsumer = socket.socket.receiver('deleteImage').createConsumer();
+      while (true) { // eslint-disable-line no-constant-condition
+        receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
+        debug(`received deleteImage message: ${receiver.value}`);
+        if (!receiver.value) break;
+        try {
+          if (typeof receiver.value.imageId === 'string' && typeof receiver.value.token === 'string') {
+            await this.handleImage('deleteById', receiver.value.imageId, 'tourDeleted');// eslint-disable-line no-await-in-loop
+          }
+        } catch (e) { debug(e.message); }
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
@@ -231,6 +249,7 @@ class AgController {
     this.editTour(socket);
     this.newImage(socket);
     this.editImage(socket);
+    this.removeImage(socket);
   }
 }
 export default AgController;

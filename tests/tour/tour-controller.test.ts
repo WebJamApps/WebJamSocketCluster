@@ -31,7 +31,8 @@ describe('TourController', () => {
     await expect(controller.deleteById(testId)).rejects.toThrow('bad');
   });
   it('detects a bad id', async () => {
-    await expect(controller.deleteById('')).rejects.toThrow('id is invalid');
+    const anyId:any = '';
+    await expect(controller.deleteById(anyId)).rejects.toThrow('id is invalid');
   });
   it('fails to delete', async () => {
     controller.model.findByIdAndRemove = jest.fn(() => Promise.resolve());
@@ -43,7 +44,8 @@ describe('TourController', () => {
     expect(r).toBe(true);
   });
   it('updates a tour by id prevents with invalid id', async () => {
-    await expect(controller.findByIdAndUpdate('123', {})).rejects.toThrow('Update id is invalid');
+    const anyId:any = '123';
+    await expect(controller.findByIdAndUpdate(anyId, {})).rejects.toThrow('Update id is invalid');
   });
   it('updates a tour by id but none found to update', async () => {
     controller.model.findByIdAndUpdate = jest.fn(() => Promise.resolve());

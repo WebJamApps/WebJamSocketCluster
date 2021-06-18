@@ -102,7 +102,7 @@ class Controller {
   //   return res.status(201).json(created);
   // }
   //
-  findByIdAndUpdate(id: any, body: any): any {
+  findByIdAndUpdate(id: mongoose.Types.ObjectId, body: any): Promise<any> {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return Promise.reject(new Error('Update id is invalid'));
     }
@@ -114,7 +114,7 @@ class Controller {
       .catch((e: Error) => Promise.reject(e));
   }
 
-  deleteById(id: any): any {
+  deleteById(id: mongoose.Types.ObjectId): Promise<any> {
     if (!mongoose.Types.ObjectId.isValid(id)) { return Promise.reject(new Error('id is invalid')); }
     return this.model.findByIdAndRemove(id)
       .then((doc: any) => {
