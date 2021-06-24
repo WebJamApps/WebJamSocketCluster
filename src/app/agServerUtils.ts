@@ -1,9 +1,10 @@
 import Debug from 'debug';
+import type socketClusterServer from 'socketcluster-server';
 import AgController from './AgController';
 
 const debug = Debug('WebJamSocketServer:agServerUtils');
 
-const routing = async (agServer: any): Promise<any> => {
+const routing = async (agServer:socketClusterServer.AGServer): Promise<boolean> => {
   const agController = new AgController(agServer);
   /* istanbul ignore else */if (process.env.NODE_ENV !== 'production') await agController.resetData();
   (async () => { // SocketCluster/WebSocket connection handling
@@ -18,7 +19,7 @@ const routing = async (agServer: any): Promise<any> => {
   })();
   return Promise.resolve(true);
 };
-const setupErrorWarning = (agServer: any, type: any): any => {
+const setupErrorWarning = (agServer: socketClusterServer.AGServer, type: any): void => {
   (async () => {
     let msg;
     const eConsumer = agServer.listener(type).createConsumer();
@@ -31,9 +32,9 @@ const setupErrorWarning = (agServer: any, type: any): any => {
   })();
 };
 
-const handleErrAndWarn = (SOCKETCLUSTER_LOG_LEVEL: any, SOCKETCLUSTER_PORT: any, agServer: any): any => {
+const handleErrAndWarn = (SOCKETCLUSTER_LOG_LEVEL: any, SOCKETCLUSTER_PORT: any, agServer: socketClusterServer.AGServer): Promise<boolean> => {
   /* istanbul ignore else */if (SOCKETCLUSTER_LOG_LEVEL >= 1) setupErrorWarning(agServer, 'error');
-  function colorText(message: any, color: any) {
+  function colorText(message: string, color: number) {
     let fullMessage = message;
     /* istanbul ignore else */if (color) fullMessage = `\x1b[${color}m${message}\x1b[0m`;
     return fullMessage;
