@@ -94,19 +94,20 @@ describe('AgControler', () => {
   //   r = await agController.handleReceiver(sStub);
   //   expect(r).toBe(true);
   // });
-  // it('gets all tours', async () => {
-  //   const agController = new AgController(aStub);
-  //   const sStub = {
-  //     socket: {
-  //       id: '123',
-  //       listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-  //       transmit: () => { },
-  //       receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
-  //     },
-  //   };
-  //   r = await agController.sendTours(sStub);
-  //   expect(r).toBe(true);
-  // });
+  it('gets all tours', async () => {
+    const agController = new AgController(aStub);
+    const sStub:any = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
+      },
+    };
+    agController.tourController.getAllSort = jest.fn(() => Promise.resolve([]));
+    r = await agController.sendTours(sStub);
+    expect(r).toBe('sent tours');
+  });
   it('handles error when gets all tours', async () => {
     const agController = new AgController(aStub);
     const sStub:any = {
