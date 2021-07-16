@@ -63,8 +63,8 @@
     "scc-broker-client": "latest",
     "serve-static": "latest",
     "snyk": "^1.630.0",
-    "socketcluster-client": "latest",
-    "socketcluster-server": "latest",
+    "socketcluster-client": "^16.0.3",
+    "socketcluster-server": "^16.0.2",
     "supports-color": "latest",
     "typescript": "latest",
     "uuid": "latest"
