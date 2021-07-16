@@ -1,10 +1,16 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import Debug from 'debug';
+import type socketClusterServer from 'socketcluster-server';
 import TourController from '../model/tour/tour-controller';
 import tourData from '../model/tour/reset-tour';
 import BookController from '../model/book/book-controller';
 import bookData from '../model/book/reset-book';
 import mongoose from '../model/db';
+
+export interface IClient {
+  socket:any, 
+  listener: (arg0: string) => { (): any; new(): any; createConsumer: { (): any; new(): any; }; }; id: any; 
+}
 
 const debug = Debug('WebJamSocketServer:AgController');
 class AgController {
@@ -16,7 +22,7 @@ class AgController {
 
   bookController = BookController;
 
-  constructor(server: any) {
+  constructor(server: socketClusterServer.AGServer) {
     this.server = server;
     this.clients = [];
   }
@@ -33,15 +39,15 @@ class AgController {
     return 'data has been reset';
   }
 
-  handleDisconnect(socket:any, interval: NodeJS.Timeout):void {
+  handleDisconnect(client: IClient, interval: NodeJS.Timeout):void {
     (async () => {
       let disconnect: { value: undefined; done: any; };
-      const dConsumer = socket.listener('disconnect').createConsumer();
+      const dConsumer = client.listener('disconnect').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         disconnect = await dConsumer.next();// eslint-disable-line no-await-in-loop
         clearInterval(interval);
         if (disconnect.value !== undefined) {
-          const index = this.clients.indexOf(socket.id);
+          const index = this.clients.indexOf(client.id);
           if (index !== -1) this.clients.splice(index, 1);
         }
         this.server.exchange.transmitPublish('sample', this.clients.length);
@@ -50,44 +56,44 @@ class AgController {
     })();
   }
 
-  sendPulse(socket: { id?: any; socket?: any; }):void {
+  sendPulse(client:IClient):void {
     const interval = setInterval(() => {
-      socket.socket.transmit('pulse', { number: Math.floor(Math.random() * 5) });
+      client.socket.transmit('pulse', { number: Math.floor(Math.random() * 5) });
     }, 1000);
     debug(`num clients: ${this.clients.length}`);
-    socket.socket.transmit('num_clients', this.clients.length);
+    client.socket.transmit('num_clients', this.clients.length);
     this.server.exchange.transmitPublish('sample', this.clients.length);
-    return this.handleDisconnect(socket.socket, interval);
+    return this.handleDisconnect(client.socket, interval);
   }
 
-  async sendTours(socket: { socket: { transmit: (arg0: string, arg1: any) => void; }; }):Promise<string> {
+  async sendTours(client:IClient):Promise<string> {
     let allTours: any;
     try { allTours = await this.tourController.getAllSort({ datetime: -1 }); } catch (e) {
       debug(e.message); return e.message;
     }
-    socket.socket.transmit('allTours', allTours);
+    client.socket.transmit('allTours', allTours);
     return 'sent tours';
   }
 
-  async sendBooks(socket: { socket: { transmit: (arg0: string, arg1: any) => void; }; }):Promise<string> {
+  async sendBooks(client: IClient):Promise<string> {
     let allBooks: any;
     try { allBooks = await this.bookController.getAll(); } catch (e) {
       debug(e.message); return e.message;
     }
-    socket.socket.transmit('allBooks', allBooks);
+    client.socket.transmit('allBooks', allBooks);
     return 'sent books';
   }
 
-  handleReceiver(socket:any):void {
+  handleReceiver(client:IClient):void {
     (async () => {
       let receiver: { value: number; done: any; };
-      const rConsumer = socket.socket.receiver('initial message').createConsumer();
+      const rConsumer = client.socket.receiver('initial message').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received initial message: ${receiver.value}`);
         if (receiver.value === 123) {
-          await this.sendTours(socket);// eslint-disable-line no-await-in-loop
-          await this.sendBooks(socket);// eslint-disable-line no-await-in-loop
+          await this.sendTours(client);// eslint-disable-line no-await-in-loop
+          await this.sendBooks(client);// eslint-disable-line no-await-in-loop
         } else break;
         /* istanbul ignore else */if (receiver.done) break;
       }
@@ -103,10 +109,10 @@ class AgController {
     return 'tour handled';
   }
 
-  newTour(socket: { id?: any; socket?: any; }):void {
+  newTour(client: IClient):void {
     (async () => {
       let receiver: { value: { token: any; tour: { date: any; time: any; location: any; venue: any; }; }; done: any; };
-      const rConsumer = socket.socket.receiver('newTour').createConsumer();
+      const rConsumer = client.socket.receiver('newTour').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received newTour message: ${receiver.value}`);
@@ -122,7 +128,7 @@ class AgController {
     })();
   }
 
-  async handleImage(func: string, data: any, message: string):Promise<string> {
+  async handleImage(func: string, data: Record<string, unknown> | string, message: string):Promise<string> {
     let r: any;
     // eslint-disable-next-line security/detect-object-injection
     try { r = await (this.bookController as any)[func](data); } catch (e) {
@@ -132,10 +138,10 @@ class AgController {
     return message;
   }
 
-  newImage(socket: { id?: any; socket?: any; }): void {
+  newImage(client:IClient): void {
     (async () => {
       let receiver: { value: { token: string; image: any }, done: any; };
-      const rConsumer = socket.socket.receiver('newImage').createConsumer();
+      const rConsumer = client.socket.receiver('newImage').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received newImage message: ${JSON.stringify(receiver.value)}`);
@@ -161,26 +167,10 @@ class AgController {
     return 'image updated';
   }
 
-  editImage(socket: { id?: any; socket?: any; }):void {
-    (async () => {
-      let receiver: { value:any; done: any; };
-      const rConsumer = socket.socket.receiver('editImage').createConsumer();
-      while (true) { // eslint-disable-line no-constant-condition
-        receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
-        debug(`received editImage message: ${receiver.value}`);
-        if (!receiver.value) break;
-        if (typeof receiver.value.imageId === 'string' && typeof receiver.value.token === 'string') {
-          await this.updateImage(receiver.value);// eslint-disable-line no-await-in-loop
-        }
-        /* istanbul ignore else */if (receiver.done) break;
-      }
-    })();
-  }
-
-  removeImage(socket: { id?: any; socket?: any; }):void {
+  removeImage(client:IClient):void {
     (async () => {
       let receiver: { value: { imageId:string; token: string; }; done: any; };
-      const rConsumer = socket.socket.receiver('deleteImage').createConsumer();
+      const rConsumer = client.socket.receiver('deleteImage').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received deleteImage message: ${receiver.value}`);
@@ -195,10 +185,10 @@ class AgController {
     })();
   }
 
-  removeTour(socket: { id?: any; socket?: any; }):void {
+  removeTour(client:IClient):void {
     (async () => {
       let receiver: { value: { tour:any; token: any; }; done: any; };
-      const rConsumer = socket.socket.receiver('deleteTour').createConsumer();
+      const rConsumer = client.socket.receiver('deleteTour').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received deleteTour message: ${receiver.value}`);
@@ -222,34 +212,40 @@ class AgController {
     return 'tour updated';
   }
 
-  editTour(socket: { id?: any; socket?: any; }):void {
+  // eslint-disable-next-line class-methods-use-this
+  editDoc(client:IClient, message:string, func:(...args:any)=>any):void {
     (async () => {
       let receiver: { value:any; done: any; };
-      const rConsumer = socket.socket.receiver('editTour').createConsumer();
+      const rConsumer = client.socket.receiver(message).createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
-        debug(`received editTour message: ${receiver.value}`);
+        debug(`received ${message} message: ${receiver.value}`);
         if (!receiver.value) break;
-        if (typeof receiver.value.tourId === 'string' && typeof receiver.value.token === 'string') {
-          await this.updateTour(receiver.value);// eslint-disable-line no-await-in-loop
+        if (typeof receiver.value.token === 'string') {
+          // eslint-disable-next-line security/detect-object-injection
+          await func(receiver.value);// eslint-disable-line no-await-in-loop
         }
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
   }
 
-  addSocket(socket: { id: any; }): void {
-    this.clients.push(socket.id);
+  editImage(client:IClient):void { this.editDoc(client, 'editImage', this.updateImage); }
+
+  editTour(client:IClient):void { this.editDoc(client, 'editTour', this.updateTour); }
+
+  addSocket(client:IClient): void {
+    this.clients.push(client.id);
     debug('clientIds');
     debug(this.clients);
-    this.handleReceiver(socket);
-    this.sendPulse(socket);
-    this.newTour(socket);
-    this.removeTour(socket);
-    this.editTour(socket);
-    this.newImage(socket);
-    this.editImage(socket);
-    this.removeImage(socket);
+    this.handleReceiver(client);
+    this.sendPulse(client);
+    this.newTour(client);
+    this.removeTour(client);
+    this.editTour(client);
+    this.newImage(client);
+    this.editImage(client);
+    this.removeImage(client);
   }
 }
 export default AgController;

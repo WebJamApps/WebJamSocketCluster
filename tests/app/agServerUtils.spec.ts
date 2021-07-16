@@ -3,7 +3,7 @@ import tourController from '../../src/model/tour/tour-controller';
 
 describe('agServerUtils', () => {
   let r;
-  const aStub = {
+  const aStub:any = {
     exchange: { transmitPublish: () => {} },
     listener: (name: any) => ({
       once: () => {
