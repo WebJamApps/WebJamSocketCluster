@@ -213,26 +213,28 @@ class AgController {
   }
 
   // eslint-disable-next-line class-methods-use-this
-  editDoc(client:IClient, message:string, func:(...args:any)=>any):void {
+  editDoc(client:IClient, message:string):void {
     (async () => {
       let receiver: { value:any; done: any; };
       const rConsumer = client.socket.receiver(message).createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
-        debug(`received ${message} message: ${receiver.value}`);
+        const obj = JSON.stringify(receiver.value);
+        debug(`received ${message} message: ${obj}`);
         if (!receiver.value) break;
         if (typeof receiver.value.token === 'string') {
           // eslint-disable-next-line security/detect-object-injection
-          await func(receiver.value);// eslint-disable-line no-await-in-loop
+          if (message === 'editTour') await this.updateTour(receiver.value);// eslint-disable-line no-await-in-loop
+          else this.updateImage(receiver.value);
         }
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
   }
 
-  editImage(client:IClient):void { this.editDoc(client, 'editImage', this.updateImage); }
+  editImage(client:IClient):void { this.editDoc(client, 'editImage'); }
 
-  editTour(client:IClient):void { this.editDoc(client, 'editTour', this.updateTour); }
+  editTour(client:IClient):void { this.editDoc(client, 'editTour'); }
 
   addSocket(client:IClient): void {
     this.clients.push(client.id);
