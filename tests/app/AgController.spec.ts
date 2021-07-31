@@ -74,6 +74,8 @@ describe('AgControler', () => {
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
       },
     };
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     global.setInterval = jest.fn((cb:any) => cb());
     agController.server.exchange.transmitPublish = jest.fn();
     agController.sendPulse(sStub);
@@ -370,6 +372,8 @@ describe('AgControler', () => {
         }),
       },
     };
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     global.setInterval = jest.fn((cb:any) => cb());
     agController.updateTour = jest.fn();
     agController.editTour(sStub);
@@ -398,6 +402,8 @@ describe('AgControler', () => {
         }),
       },
     };
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     global.setInterval = jest.fn((cb:any) => cb());
     agController.updateTour = jest.fn();
     agController.editTour(sStub);
@@ -420,6 +426,8 @@ describe('AgControler', () => {
         }),
       },
     };
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     global.setInterval = jest.fn((cb:any) => cb());
     agController.updateTour = jest.fn();
     agController.editTour(sStub);
@@ -449,6 +457,8 @@ describe('AgControler', () => {
         }),
       },
     };
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     global.setInterval = jest.fn((cb:any) => cb());
     agController.tourController.findByIdAndUpdate = jest.fn(() => Promise.reject(new Error('bad')));
     agController.server.exchange.transmitPublish = jest.fn();
@@ -479,6 +489,8 @@ describe('AgControler', () => {
         }),
       },
     };
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     global.setInterval = jest.fn((cb:any) => cb());
     agController.handleTour = jest.fn();
     agController.removeTour(sStub);
