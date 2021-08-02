@@ -81,23 +81,10 @@ describe('AgControler', () => {
     agController.sendPulse(sStub);
     expect(agController.server.exchange.transmitPublish).toHaveBeenCalled();
   });
-  // it('accepts the initial message from client', async () => {
-  //   const agController = new AgController(aStub);
-  //   agController.clients = ['123'];
-  //   const sStub = {
-  //     socket: {
-  //       id: '123',
-  //       listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-  //       transmit: () => { },
-  //       receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
-  //     },
-  //   };
-  //   global.setInterval = jest.fn((cb:any) => cb());
-  //   r = await agController.handleReceiver(sStub);
-  //   expect(r).toBe(true);
-  // });
-  it('gets all tours', async () => {
+  it('accepts the initial message from client', async () => {
     const agController = new AgController(aStub);
+    agController.bookController.getAll = jest.fn(() => Promise.resolve([]));
+    agController.clients = ['123'];
     const sStub:any = {
       socket: {
         id: '123',
@@ -106,8 +93,25 @@ describe('AgControler', () => {
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
       },
     };
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    global.setInterval = jest.fn((cb:any) => cb());
+    agController.handleReceiver(sStub);
+    await delay(1000);
+    expect(agController.bookController.getAll).toHaveBeenCalled();
+  });
+  it('gets all tours', async () => {
+    const agController = new AgController(aStub);
+    const cStub:any = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
+      },
+    };
     agController.tourController.getAllSort = jest.fn(() => Promise.resolve([]));
-    r = await agController.sendTours(sStub);
+    r = await agController.sendTours(cStub);
     expect(r).toBe('sent tours');
   });
   it('handles error when gets all tours', async () => {
