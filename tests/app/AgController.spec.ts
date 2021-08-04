@@ -154,33 +154,38 @@ describe('AgControler', () => {
     r = await agController.updateTour({ tourId: testId, tour: {} });
     expect(r).toBe('bad');
   });
-  // it('process the newTour message from client', async () => {
-  //   const agController = new AgController(aStub);
-  //   agController.clients = ['123'];
-  //   const sStub = {
-  //     socket: {
-  //       id: '123',
-  //       listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-  //       transmit: () => { },
-  //       receiver: () => ({
-  //         createConsumer: () => ({
-  //           next: () => Promise.resolve({
-  //             value: {
-  //               token: 'token',
-  //               tour: {
-  //                 date: 'date', time: 'time', location: 'location', venue: 'venue',
-  //               },
-  //             },
-  //             done: true,
-  //           }),
-  //         }),
-  //       }),
-  //     },
-  //   };
-  //   global.setInterval = jest.fn((cb:any) => cb());
-  //   r = await agController.newTour(sStub);
-  //   expect(r).toBe(true);
-  // });
+  it('process the newTour message from client', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.tourController.createDocs = jest.fn(() => Promise.resolve([]));
+    const cStub:any = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'token',
+                tour: {
+                  date: 'date', time: 'time', location: 'location', venue: 'venue',
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    global.setInterval = jest.fn((cb:any) => cb());
+    agController.newTour(cStub);
+    await delay(2000);
+    expect(agController.tourController.createDocs).toHaveBeenCalled();
+    await delay(2000);
+  });
   // it('process the newImage message from client', async () => {
   //   const agController = new AgController(aStub);
   //   agController.clients = ['123'];
