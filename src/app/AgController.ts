@@ -117,12 +117,12 @@ class AgController {
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received newTour message: ${receiver.value}`);
         if (!receiver.value) break;
-        try {
-          if (typeof receiver.value.token === 'string' && typeof receiver.value.tour.date === 'string' && typeof receiver.value.tour.time === 'string'
+        // try {
+        if (typeof receiver.value.token === 'string' && typeof receiver.value.tour.date === 'string' && typeof receiver.value.tour.time === 'string'
             && typeof receiver.value.tour.location === 'string' && typeof receiver.value.tour.venue === 'string') {
-            await this.handleTour('createDocs', receiver.value.tour, 'tourCreated');// eslint-disable-line no-await-in-loop
-          }
-        } catch (e) { debug(e.message); }
+          await this.handleTour('createDocs', receiver.value.tour, 'tourCreated');// eslint-disable-line no-await-in-loop
+        }
+        // } catch (e) { debug(e.message); }
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
@@ -146,13 +146,13 @@ class AgController {
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received newImage message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
-        try {
-          if (typeof receiver.value.token === 'string'
+        // try {
+        if (typeof receiver.value.token === 'string'
             && typeof receiver.value.image.title === 'string' && typeof receiver.value.image.url === 'string'
-          ) {
-            await this.handleImage('createDocs', receiver.value.image, 'imageCreated');// eslint-disable-line no-await-in-loop
-          }
-        } catch (e) { debug(e.message); }
+        ) {
+          await this.handleImage('createDocs', receiver.value.image, 'imageCreated');// eslint-disable-line no-await-in-loop
+        }
+        // } catch (e) { debug(e.message); }
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
