@@ -260,6 +260,57 @@ describe('AgControler', () => {
     agController.newImage(cStub);
     expect(agController.bookController.createDocs).not.toHaveBeenCalled();
   });
+  it('process the removeImage message from client', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.bookController.deleteById = jest.fn(() => Promise.resolve());
+    const cStub:any = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'token',
+                imageId: 'id',
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
+    agController.removeImage(cStub);
+    await delay(2000);
+    expect(agController.bookController.deleteById).toHaveBeenCalled();
+  });
+  it('handles missing receiver value when process the removeImage message from client', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.bookController.deleteById = jest.fn(() => Promise.resolve());
+    const cStub:any = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
+    agController.removeImage(cStub);
+    expect(agController.bookController.deleteById).not.toHaveBeenCalled();
+  });
   // it('process the deleteTour message from client', async () => {
   //   const agController = new AgController(aStub);
   //   agController.clients = ['123'];
@@ -307,6 +358,60 @@ describe('AgControler', () => {
   //   r = await agController.removeTour(sStub);
   //   expect(r).toBe(true);
   // });
+  it('processes the updateImage message from client', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    const sStub:any = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                imageId: '123',
+                token: 'token',
+                image: {
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    const setIntervalMock: any = jest.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
+    agController.updateImage = jest.fn();
+    agController.editDoc(sStub, 'updateImage');
+    await delay(1000);
+    expect(agController.updateImage).toHaveBeenCalled();
+  });
+  it('does not processes the updateImage message from client if receiver has no value', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    const sStub:any = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    const setIntervalMock: any = jest.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
+    agController.updateImage = jest.fn();
+    agController.editDoc(sStub, 'updateImage');
+    await delay(1000);
+    expect(agController.updateImage).not.toHaveBeenCalled();
+  });
   it('processes the editTour message from client', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
@@ -333,7 +438,7 @@ describe('AgControler', () => {
     const setIntervalMock: any = jest.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
     agController.updateTour = jest.fn();
-    agController.editTour(sStub);
+    agController.editDoc(sStub, 'editTour');
     await delay(1000);
     expect(agController.updateTour).toHaveBeenCalled();
   });
@@ -359,35 +464,10 @@ describe('AgControler', () => {
         }),
       },
     };
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    global.setInterval = jest.fn((cb:any) => cb());
+    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
     agController.updateTour = jest.fn();
-    agController.editTour(sStub);
-    await delay(1000);
-    expect(agController.updateTour).not.toHaveBeenCalled();
-  });
-  it('does not process the editTour message from client when receiver has no value', async () => {
-    const agController = new AgController(aStub);
-    agController.clients = ['123'];
-    const sStub:any = {
-      socket: {
-        id: '123',
-        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-        transmit: () => { },
-        receiver: () => ({
-          createConsumer: () => ({
-            next: () => Promise.resolve({
-            }),
-          }),
-        }),
-      },
-    };
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    global.setInterval = jest.fn((cb:any) => cb());
-    agController.updateTour = jest.fn();
-    agController.editTour(sStub);
+    agController.editDoc(sStub, 'editTour');
     await delay(1000);
     expect(agController.updateTour).not.toHaveBeenCalled();
   });
@@ -414,12 +494,11 @@ describe('AgControler', () => {
         }),
       },
     };
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    global.setInterval = jest.fn((cb:any) => cb());
+    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
     agController.tourController.findByIdAndUpdate = jest.fn(() => Promise.reject(new Error('bad')));
     agController.server.exchange.transmitPublish = jest.fn();
-    agController.editTour(sStub);
+    agController.editDoc(sStub, 'editTour');
     await delay(1000);
     expect(agController.server.exchange.transmitPublish).not.toHaveBeenCalled();
   });
@@ -446,9 +525,8 @@ describe('AgControler', () => {
         }),
       },
     };
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    global.setInterval = jest.fn((cb:any) => cb());
+    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
     agController.handleTour = jest.fn();
     agController.removeTour(sStub);
     await delay(1000);
