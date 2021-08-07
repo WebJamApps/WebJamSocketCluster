@@ -74,9 +74,8 @@ describe('AgControler', () => {
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
       },
     };
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    global.setInterval = jest.fn((cb:any) => cb());
+    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
     agController.server.exchange.transmitPublish = jest.fn();
     agController.sendPulse(sStub);
     expect(agController.server.exchange.transmitPublish).toHaveBeenCalled();

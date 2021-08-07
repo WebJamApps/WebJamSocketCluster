@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import Debug from 'debug';
 import type socketClusterServer from 'socketcluster-server';
 import TourController from '../model/tour/tour-controller';
@@ -118,13 +117,11 @@ class AgController {
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received newImage message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
-        // try {
         if (typeof receiver.value.token === 'string'
             && typeof receiver.value.image.title === 'string' && typeof receiver.value.image.url === 'string'
         ) {
           await this.handleImage('createDocs', receiver.value.image, 'imageCreated');// eslint-disable-line no-await-in-loop
         }
-        // } catch (e) { debug(e.message); }
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
@@ -172,12 +169,10 @@ class AgController {
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received newTour message: ${receiver.value}`);
         if (!receiver.value) break;
-        // try {
         if (typeof receiver.value.token === 'string' && typeof receiver.value.tour.date === 'string' && typeof receiver.value.tour.time === 'string'
             && typeof receiver.value.tour.location === 'string' && typeof receiver.value.tour.venue === 'string') {
           await this.handleTour('createDocs', receiver.value.tour, 'tourCreated');// eslint-disable-line no-await-in-loop
         }
-        // } catch (e) { debug(e.message); }
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
@@ -228,10 +223,6 @@ class AgController {
       }
     })();
   }
-
-  // editImage(client:IClient):void { this.editDoc(client, 'editImage'); }
-
-  // editTour(client:IClient):void { this.editDoc(client, 'editTour'); }
 
   addSocket(client:IClient): void {
     this.clients.push(client.id);
