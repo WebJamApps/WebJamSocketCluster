@@ -141,12 +141,12 @@ describe('AgControler', () => {
     r = await agController.sendBooks(sStub);
     expect(r).toBe('bad');
   });
-  // it('updates a tours', async () => {
-  //   const agController = new AgController(aStub);
-  //   agController.tourController.findByIdAndUpdate = jest.fn(() => Promise.resolve(true));
-  //   r = await agController.updateTour({ tourId: testId, tour: {} });
-  //   expect(r).toBe(true);
-  // });
+  it('updates a tours', async () => {
+    const agController = new AgController(aStub);
+    agController.tourController.findByIdAndUpdate = jest.fn(() => Promise.resolve(true));
+    r = await agController.updateTour({ tourId: testId, tour: {} });
+    expect(r).toBe('tour updated');
+  });
   it('handles error from updates a tours', async () => {
     const agController = new AgController(aStub);
     agController.tourController.findByIdAndUpdate = jest.fn(() => Promise.reject(new Error('bad')));
@@ -311,53 +311,58 @@ describe('AgControler', () => {
     agController.removeImage(cStub);
     expect(agController.bookController.deleteById).not.toHaveBeenCalled();
   });
-  // it('process the deleteTour message from client', async () => {
-  //   const agController = new AgController(aStub);
-  //   agController.clients = ['123'];
-  //   const sStub = {
-  //     socket: {
-  //       id: '123',
-  //       listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-  //       transmit: () => { },
-  //       receiver: () => ({
-  //         createConsumer: () => ({
-  //           next: () => Promise.resolve({
-  //             value: {
-  //               token: 'token',
-  //               tour: {
-  //                 tourId: '123',
-  //               },
-  //             },
-  //             done: true,
-  //           }),
-  //         }),
-  //       }),
-  //     },
-  //   };
-  //   global.setInterval = jest.fn((cb:any) => cb());
-  //   r = await agController.removeTour(sStub);
-  //   expect(r).toBe(true);
-  // });
-  // it('does not process the deleteTour message from client', async () => {
-  //   const agController = new AgController(aStub);
-  //   agController.clients = ['123'];
-  //   const sStub = {
-  //     socket: {
-  //       id: '123',
-  //       listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-  //       transmit: () => { },
-  //       receiver: () => ({
-  //         createConsumer: () => ({
-  //           next: () => Promise.resolve({
-  //           }),
-  //         }),
-  //       }),
-  //     },
-  //   };
-  //   global.setInterval = jest.fn((cb:any) => cb());
-  //   r = await agController.removeTour(sStub);
-  //   expect(r).toBe(true);
-  // });
+  it('process the removeTour message from client', async () => {
+    const agController = new AgController(aStub);
+    agController.handleTour = jest.fn();
+    agController.clients = ['123'];
+    const cStub:any = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'token',
+                tour: {
+                  tourId: '123',
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
+    agController.removeTour(cStub);
+    await delay(1000);
+    expect(agController.handleTour).toHaveBeenCalled();
+  });
+  it('does not process the removeTour message from client', async () => {
+    const agController = new AgController(aStub);
+    agController.handleTour = jest.fn();
+    agController.clients = ['123'];
+    const cStub:any = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+            }),
+          }),
+        }),
+      },
+    };
+    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
+    agController.removeTour(cStub);
+    expect(agController.handleTour).not.toHaveBeenCalled();
+  });
   it('processes the updateImage message from client', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
