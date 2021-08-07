@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import Debug from 'debug';
 import type socketClusterServer from 'socketcluster-server';
 import TourController from '../model/tour/tour-controller';
@@ -100,34 +99,6 @@ class AgController {
     })();
   }
 
-  async handleTour(func: string, data: { date: any; time: any; location: any; venue: any; }, message: string):Promise<string> {
-    let r: any;// eslint-disable-next-line security/detect-object-injection
-    try { r = await (this.tourController as any)[func](data); } catch (e) {
-      debug(e.message); return e.message;
-    }
-    this.server.exchange.transmitPublish(message, r);
-    return 'tour handled';
-  }
-
-  newTour(client: IClient):void {
-    (async () => {
-      let receiver: { value: { token: any; tour: { date: any; time: any; location: any; venue: any; }; }; done: any; };
-      const rConsumer = client.socket.receiver('newTour').createConsumer();
-      while (true) { // eslint-disable-line no-constant-condition
-        receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
-        debug(`received newTour message: ${receiver.value}`);
-        if (!receiver.value) break;
-        try {
-          if (typeof receiver.value.token === 'string' && typeof receiver.value.tour.date === 'string' && typeof receiver.value.tour.time === 'string'
-            && typeof receiver.value.tour.location === 'string' && typeof receiver.value.tour.venue === 'string') {
-            await this.handleTour('createDocs', receiver.value.tour, 'tourCreated');// eslint-disable-line no-await-in-loop
-          }
-        } catch (e) { debug(e.message); }
-        /* istanbul ignore else */if (receiver.done) break;
-      }
-    })();
-  }
-
   async handleImage(func: string, data: Record<string, unknown> | string, message: string):Promise<string> {
     let r: any;
     // eslint-disable-next-line security/detect-object-injection
@@ -146,13 +117,11 @@ class AgController {
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received newImage message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
-        try {
-          if (typeof receiver.value.token === 'string'
+        if (typeof receiver.value.token === 'string'
             && typeof receiver.value.image.title === 'string' && typeof receiver.value.image.url === 'string'
-          ) {
-            await this.handleImage('createDocs', receiver.value.image, 'imageCreated');// eslint-disable-line no-await-in-loop
-          }
-        } catch (e) { debug(e.message); }
+        ) {
+          await this.handleImage('createDocs', receiver.value.image, 'imageCreated');// eslint-disable-line no-await-in-loop
+        }
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
@@ -175,11 +144,35 @@ class AgController {
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received deleteImage message: ${receiver.value}`);
         if (!receiver.value) break;
-        try {
-          if (typeof receiver.value.imageId === 'string' && typeof receiver.value.token === 'string') {
-            await this.handleImage('deleteById', receiver.value.imageId, 'tourDeleted');// eslint-disable-line no-await-in-loop
-          }
-        } catch (e) { debug(e.message); }
+        if (typeof receiver.value.imageId === 'string' && typeof receiver.value.token === 'string') {
+          await this.handleImage('deleteById', receiver.value.imageId, 'tourDeleted');// eslint-disable-line no-await-in-loop
+        }
+        /* istanbul ignore else */if (receiver.done) break;
+      }
+    })();
+  }
+
+  async handleTour(func: string, data: { date: any; time: any; location: any; venue: any; }, message: string):Promise<string> {
+    let r: any;// eslint-disable-next-line security/detect-object-injection
+    try { r = await (this.tourController as any)[func](data); } catch (e) {
+      debug(e.message); return e.message;
+    }
+    this.server.exchange.transmitPublish(message, r);
+    return 'tour handled';
+  }
+
+  newTour(client: IClient):void {
+    (async () => {
+      let receiver: { value: { token: any; tour: { date: any; time: any; location: any; venue: any; }; }; done: any; };
+      const rConsumer = client.socket.receiver('newTour').createConsumer();
+      while (true) { // eslint-disable-line no-constant-condition
+        receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
+        debug(`received newTour message: ${receiver.value}`);
+        if (!receiver.value) break;
+        if (typeof receiver.value.token === 'string' && typeof receiver.value.tour.date === 'string' && typeof receiver.value.tour.time === 'string'
+            && typeof receiver.value.tour.location === 'string' && typeof receiver.value.tour.venue === 'string') {
+          await this.handleTour('createDocs', receiver.value.tour, 'tourCreated');// eslint-disable-line no-await-in-loop
+        }
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
@@ -212,29 +205,24 @@ class AgController {
     return 'tour updated';
   }
 
-  // eslint-disable-next-line class-methods-use-this
-  editDoc(client:IClient, message:string):void {
+  editDoc(client:IClient, action:string):void {
     (async () => {
       let receiver: { value:any; done: any; };
-      const rConsumer = client.socket.receiver(message).createConsumer();
+      const rConsumer = client.socket.receiver(action).createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         const obj = JSON.stringify(receiver.value);
-        debug(`received ${message} message: ${obj}`);
+        debug(`received ${action} message: ${obj}`);
         if (!receiver.value) break;
         if (typeof receiver.value.token === 'string') {
           // eslint-disable-next-line security/detect-object-injection
-          if (message === 'editTour') await this.updateTour(receiver.value);// eslint-disable-line no-await-in-loop
+          if (action === 'editTour') await this.updateTour(receiver.value);// eslint-disable-line no-await-in-loop
           else this.updateImage(receiver.value);
         }
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
   }
-
-  editImage(client:IClient):void { this.editDoc(client, 'editImage'); }
-
-  editTour(client:IClient):void { this.editDoc(client, 'editTour'); }
 
   addSocket(client:IClient): void {
     this.clients.push(client.id);
@@ -244,9 +232,9 @@ class AgController {
     this.sendPulse(client);
     this.newTour(client);
     this.removeTour(client);
-    this.editTour(client);
+    this.editDoc(client, 'editTour');
     this.newImage(client);
-    this.editImage(client);
+    this.editDoc(client, 'editImage');
     this.removeImage(client);
   }
 }

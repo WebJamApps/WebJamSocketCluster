@@ -1,4 +1,3 @@
-/* eslint-disable spaced-comment */
 import mongoose from 'mongoose';
 import controller from '../../src/model/tour/tour-controller';
 
