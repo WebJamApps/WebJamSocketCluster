@@ -169,7 +169,7 @@ class AgController {
 
   newTour(client: IClient):void {
     (async () => {
-      let receiver: { value: { token: string; tour: { date: any; time: StringConstructor; location: string; venue: string; }; }; done: any; };
+      let receiver: { value: { token: string; tour: { date: string; time: string; location: string; venue: string; }; }; done: any; };
       const rConsumer = client.socket.receiver('newTour').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop

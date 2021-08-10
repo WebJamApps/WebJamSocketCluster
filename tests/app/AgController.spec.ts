@@ -152,7 +152,7 @@ describe('AgControler', () => {
     r = await agController.updateTour({ tourId: testId, tour: {} });
     expect(r).toBe('bad');
   });
-  it('process the newTour message from client', async () => {
+  it('does not process the newTour message from client when token is not valid', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
     agController.tourController.createDocs = jest.fn(() => Promise.resolve([]));
@@ -179,9 +179,48 @@ describe('AgControler', () => {
     const setIntervalMock:any = jest.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
     agController.newTour(cStub);
-    await delay(2000);
+    await delay(1000);
+    expect(agController.tourController.createDocs).not.toHaveBeenCalled();
+  });
+  it('processes the newTour message from client', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.tourController.createDocs = jest.fn(() => Promise.resolve([]));
+    const cStub:any = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'token',
+                tour: {
+                  date: 'date', time: 'time', location: 'location', venue: 'venue',
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
+    agController.jwt.verify = jest.fn(() => '123');
+    const getMock:any = jest.fn(() => ({
+      set: () => ({
+        set: () => Promise.resolve({
+          body: 
+      { userType: JSON.parse(process.env.userRoles || '{}').roles[0] }, 
+        }), 
+      }), 
+    }));
+    agController.superagent.get = getMock;
+    agController.newTour(cStub);
+    await delay(1000);
     expect(agController.tourController.createDocs).toHaveBeenCalled();
-    await delay(2000);
   });
   it('handles missing receiver value when process the newTour message from client', async () => {
     const agController = new AgController(aStub);
