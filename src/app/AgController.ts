@@ -1,4 +1,6 @@
 import Debug from 'debug';
+import JWT from 'jsonwebtoken';
+import Superagent from 'superagent';
 import type socketClusterServer from 'socketcluster-server';
 import TourController from '../model/tour/tour-controller';
 import tourData from '../model/tour/reset-tour';
@@ -14,6 +16,10 @@ export interface IClient {
 const debug = Debug('WebJamSocketServer:AgController');
 class AgController {
   server: any;
+
+  jwt = JWT;
+
+  superagent = Superagent;
 
   clients: any[];
 
@@ -127,12 +133,14 @@ class AgController {
     })();
   }
 
-  async updateImage(data: { imageId: mongoose.Types.ObjectId; image: Record<string, unknown>; }):Promise<string> {
+  async updateImage(data: { imageId: mongoose.Types.ObjectId; image: Record<string, unknown>; }, client:IClient):Promise<string> {
     let r: any;// eslint-disable-next-line security/detect-object-injection
     try { r = await this.bookController.findByIdAndUpdate(data.imageId, data.image); } catch (e) {
-      debug(e.message); return e.message;// TODO handle error messages by sending this back to the UI
+      debug(e.message); 
+      client.socket.transmit('socketError', { updateImage: e.message });// send error back to client
+      return e.message;
     }
-    this.server.exchange.transmitPublish('imageUpdated', r);// this r is what was updated and the UI should now update redux
+    this.server.exchange.transmitPublish('imageUpdated', r);
     return 'image updated';
   }
 
@@ -163,15 +171,35 @@ class AgController {
 
   newTour(client: IClient):void {
     (async () => {
-      let receiver: { value: { token: any; tour: { date: any; time: any; location: any; venue: any; }; }; done: any; };
+      let receiver: { value: { token: string; tour: { date: string; time: string; location: string; venue: string; }; }; done: any; };
       const rConsumer = client.socket.receiver('newTour').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
-        debug(`received newTour message: ${receiver.value}`);
+        let decoded, user, goodRoles;
+        debug(`received newTour message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
+        try {
+          decoded = this.jwt.verify(receiver.value.token, process.env.HashString || /* istanbul ignore next */'');
+          // eslint-disable-next-line no-await-in-loop
+          user = await this.superagent.get(`${process.env.BackendUrl}/user/${decoded.sub}`)
+            .set('Accept', 'application/json').set('Authorization', `Bearer ${receiver.value.token}`);
+          goodRoles = JSON.parse(process.env.userRoles || /* istanbul ignore next */'{}').roles;
+        } catch (e) {
+          debug(`${e.message}`); 
+          client.socket.transmit('socketError', { newTour: e.message });// send error back to client
+          break; 
+        } 
+        debug(JSON.stringify(user.body));
+        if (!goodRoles || !user || !user.body || !user.body.userType || goodRoles.indexOf(user.body.userType) === -1) { 
+          client.socket.transmit('socketError', { newTour: 'not allowed' });// send error back to client 
+          break; 
+        }
         if (typeof receiver.value.token === 'string' && typeof receiver.value.tour.date === 'string' && typeof receiver.value.tour.time === 'string'
             && typeof receiver.value.tour.location === 'string' && typeof receiver.value.tour.venue === 'string') {
           await this.handleTour('createDocs', receiver.value.tour, 'tourCreated');// eslint-disable-line no-await-in-loop
+        } else {
+          client.socket.transmit('socketError', { newTour: 'invalid request' });// send error back to client
+          break; 
         }
         /* istanbul ignore else */if (receiver.done) break;
       }
@@ -217,7 +245,7 @@ class AgController {
         if (typeof receiver.value.token === 'string') {
           // eslint-disable-next-line security/detect-object-injection
           if (action === 'editTour') await this.updateTour(receiver.value);// eslint-disable-line no-await-in-loop
-          else this.updateImage(receiver.value);
+          else this.updateImage(receiver.value, client);
         }
         /* istanbul ignore else */if (receiver.done) break;
       }

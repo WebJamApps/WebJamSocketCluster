@@ -57,6 +57,7 @@
     "eetase": "latest",
     "express": "latest",
     "express-sslify": "latest",
+    "jsonwebtoken": "^8.5.1",
     "mongoose": "latest",
     "morgan": "latest",
     "sc-errors": "latest",
@@ -65,6 +66,7 @@
     "snyk": "^1.667.0",
     "socketcluster-client": "^16.0.3",
     "socketcluster-server": "^16.0.2",
+    "superagent": "^6.1.0",
     "supports-color": "latest",
     "typescript": "latest",
     "uuid": "latest"

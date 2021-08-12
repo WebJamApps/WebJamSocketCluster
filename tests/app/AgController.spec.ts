@@ -29,7 +29,12 @@ const aStub:any = {
 };
 
 describe('AgControler', () => {
-  let r;
+  let r, clientStub:any = {
+    id: '123',
+    listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+    transmit: () => { },
+    receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
+  };
   afterEach(async () => {
     await delay(1000);
   });
@@ -51,14 +56,14 @@ describe('AgControler', () => {
   it('handles disconnects and removes the client', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
-    const sStub:any = {
+    clientStub = {
       id: '123',
       listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
       transmit: () => { },
       receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
     };
     const to:any = null;
-    agController.handleDisconnect(sStub, to);
+    agController.handleDisconnect(clientStub, to);
     await delay(2000);
     expect(agController.clients.length).toBe(0);
     await delay(1000);
@@ -152,7 +157,7 @@ describe('AgControler', () => {
     r = await agController.updateTour({ tourId: testId, tour: {} });
     expect(r).toBe('bad');
   });
-  it('process the newTour message from client', async () => {
+  it('does not process the newTour message from client when token is not valid', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
     agController.tourController.createDocs = jest.fn(() => Promise.resolve([]));
@@ -179,9 +184,129 @@ describe('AgControler', () => {
     const setIntervalMock:any = jest.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
     agController.newTour(cStub);
-    await delay(2000);
+    await delay(1000);
+    expect(agController.tourController.createDocs).not.toHaveBeenCalled();
+  });
+  it('processes the newTour message from client', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.tourController.createDocs = jest.fn(() => Promise.resolve([]));
+    const cStub:any = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'token',
+                tour: {
+                  date: 'date', time: 'time', location: 'location', venue: 'venue',
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
+    agController.jwt.verify = jest.fn(() => '123');
+    const getMock:any = jest.fn(() => ({
+      set: () => ({
+        set: () => Promise.resolve({
+          body: 
+      { userType: JSON.parse(process.env.userRoles || '{}').roles[0] }, 
+        }), 
+      }), 
+    }));
+    agController.superagent.get = getMock;
+    agController.newTour(cStub);
+    await delay(1000);
     expect(agController.tourController.createDocs).toHaveBeenCalled();
-    await delay(2000);
+  });
+  it('return the not allowed socketError when processes the newTour message from client', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.tourController.createDocs = jest.fn(() => Promise.resolve([]));
+    clientStub = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: jest.fn(),
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'token',
+                tour: {
+                  date: 'date', time: 'time', location: 'location', venue: 'venue',
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
+    agController.jwt.verify = jest.fn(() => '123');
+    const getMock:any = jest.fn(() => ({
+      set: () => ({
+        set: () => Promise.resolve({
+          body: 
+      { userType: 'cool' }, 
+        }), 
+      }), 
+    }));
+    agController.superagent.get = getMock;
+    agController.newTour(clientStub);
+    await delay(1000);
+    expect(clientStub.socket.transmit).toHaveBeenCalledWith('socketError', { newTour: 'not allowed' });
+  });
+
+  it('return the invalid request socketError when processes the newTour message from client', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.tourController.createDocs = jest.fn(() => Promise.resolve([]));
+    clientStub = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: jest.fn(),
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'token',
+                tour: {
+                  time: 'time', location: 'location', venue: 'venue',
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
+    agController.jwt.verify = jest.fn(() => '123');
+    const getMock:any = jest.fn(() => ({
+      set: () => ({
+        set: () => Promise.resolve({
+          body: 
+      { userType: JSON.parse(process.env.userRoles || '{}').roles[0] }, 
+        }), 
+      }), 
+    }));
+    agController.superagent.get = getMock;
+    agController.newTour(clientStub);
+    await delay(1000);
+    expect(clientStub.socket.transmit).toHaveBeenCalledWith('socketError', { newTour: 'invalid request' });
   });
   it('handles missing receiver value when process the newTour message from client', async () => {
     const agController = new AgController(aStub);
@@ -554,21 +679,53 @@ describe('AgControler', () => {
     await delay(1000);
   });
   it('updateImage when id not found', async () => {
+    clientStub = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
     const agController = new AgController(aStub);
     r = await agController.updateImage({
       imageId: mongoose.Types.ObjectId(),
       image: {}, 
-    });
+    }, clientStub);
     expect(r).toBe('Id Not Found');
     await delay(1000);
   });
   it('updateImage success', async () => {
+    clientStub = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
     const agController = new AgController(aStub);
     agController.bookController.findByIdAndUpdate = jest.fn(() => Promise.resolve());
     r = await agController.updateImage({
       imageId: mongoose.Types.ObjectId(),
       image: {}, 
-    });
+    }, clientStub);
     expect(r).toBe('image updated');
     await delay(1000);
   });
