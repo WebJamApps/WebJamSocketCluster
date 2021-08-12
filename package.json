@@ -63,7 +63,7 @@
     "sc-errors": "latest",
     "scc-broker-client": "latest",
     "serve-static": "latest",
-    "snyk": "^1.667.0",
+    "snyk": "latest",
     "socketcluster-client": "^16.0.3",
     "socketcluster-server": "^16.0.2",
     "superagent": "^6.1.0",
