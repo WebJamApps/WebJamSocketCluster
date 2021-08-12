@@ -50,6 +50,7 @@
     "@types/morgan": "^1.9.1",
     "@types/scc-broker-client": "latest",
     "@types/socketcluster-server": "latest",
+    "@types/superagent": "^4.1.12",
     "@types/uuid": "latest",
     "connect": "latest",
     "debug": "latest",
