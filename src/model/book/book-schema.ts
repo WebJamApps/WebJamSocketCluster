@@ -6,14 +6,13 @@ const options = {
 
 const { Schema } = mongoose;
 
-const bookSchema = new Schema({
+const bookSchema = new Schema({ // images are books in the database
   title: { type: String, required: true },
   type: { type: String, required: true },
   author: { type: String, required: false },
   numberPages: { type: Number, required: false },
   dateOfPub: { type: Number, required: false },
   url: { type: String, required: false },
-  // isbn is the orderable number from a bookstore
   isbn: { type: String, required: false },
   siteLocation: { type: String, required: false },
   numberOfCopies: { type: Number, required: false },
