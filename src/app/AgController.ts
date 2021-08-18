@@ -153,7 +153,7 @@ class AgController {
         debug(`received deleteImage message: ${receiver.value}`);
         if (!receiver.value) break;
         if (typeof receiver.value.imageId === 'string' && typeof receiver.value.token === 'string') {
-          await this.handleImage('deleteById', receiver.value.imageId, 'tourDeleted');// eslint-disable-line no-await-in-loop
+          await this.handleImage('deleteById', receiver.value.imageId, 'imageDeleted');// eslint-disable-line no-await-in-loop
         }
         /* istanbul ignore else */if (receiver.done) break;
       }
