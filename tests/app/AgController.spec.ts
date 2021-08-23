@@ -386,6 +386,7 @@ describe('AgControler', () => {
   });
   it('process the removeImage message from client', async () => {
     const agController = new AgController(aStub);
+    agController.handleImage = jest.fn();
     agController.clients = ['123'];
     agController.bookController.deleteById = jest.fn(() => Promise.resolve());
     const cStub:any = {
@@ -398,7 +399,7 @@ describe('AgControler', () => {
             next: () => Promise.resolve({
               value: {
                 token: 'token',
-                imageId: 'id',
+                image: { id: 'id' },
               },
               done: true,
             }),
@@ -410,7 +411,7 @@ describe('AgControler', () => {
     global.setInterval = setIntervalMock;
     agController.removeImage(cStub);
     await delay(2000);
-    expect(agController.bookController.deleteById).toHaveBeenCalled();
+    expect(agController.handleImage).toHaveBeenCalled();
   });
   it('handles missing receiver value when process the removeImage message from client', async () => {
     const agController = new AgController(aStub);
@@ -697,7 +698,7 @@ describe('AgControler', () => {
     };
     const agController = new AgController(aStub);
     r = await agController.updateImage({
-      imageId: mongoose.Types.ObjectId(),
+      id: mongoose.Types.ObjectId(),
       image: {}, 
     }, clientStub);
     expect(r).toBe('Id Not Found');
@@ -723,7 +724,7 @@ describe('AgControler', () => {
     const agController = new AgController(aStub);
     agController.bookController.findByIdAndUpdate = jest.fn(() => Promise.resolve());
     r = await agController.updateImage({
-      imageId: mongoose.Types.ObjectId(),
+      id: mongoose.Types.ObjectId(),
       image: {}, 
     }, clientStub);
     expect(r).toBe('image updated');
