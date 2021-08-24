@@ -152,12 +152,8 @@ class AgController {
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received deleteImage message: ${receiver.value}`);
         if (!receiver.value) break;
-        try {
-          if (typeof receiver.value.token === 'string' && typeof receiver.value.image.id === 'string') {
-            await this.handleImage('deleteById', receiver.value.image.id, 'imageDeleted');// eslint-disable-line no-await-in-loop
-          }
-        } catch (e) {
-          debug(e);
+        if (typeof receiver.value.token === 'string' && typeof receiver.value.image.id === 'string') {
+          await this.handleImage('deleteById', receiver.value.image.id, 'imageDeleted');// eslint-disable-line no-await-in-loop
         }
         /* istanbul ignore else */if (receiver.done) break;
       }
