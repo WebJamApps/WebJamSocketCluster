@@ -146,14 +146,16 @@ class AgController {
 
   removeImage(client:IClient):void {
     (async () => {
-      let receiver: { value: { image: any; token: string; }; done: any; };
+      let receiver: { value: { data: string; token: string; }; done: any; };
       const rConsumer = client.socket.receiver('deleteImage').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received deleteImage message: ${receiver.value}`);
         if (!receiver.value) break;
-        if (typeof receiver.value.token === 'string' && typeof receiver.value.image.id === 'string') {
-          await this.handleImage('deleteById', receiver.value.image.id, 'imageDeleted');// eslint-disable-line no-await-in-loop
+        debug(JSON.stringify(receiver.value));
+        debug(JSON.stringify(receiver.value.data));
+        if (typeof receiver.value.token === 'string' && typeof receiver.value.data === 'string') {
+          await this.handleImage('deleteById', receiver.value.data, 'imageDeleted');// eslint-disable-line no-await-in-loop
         }
         /* istanbul ignore else */if (receiver.done) break;
       }
