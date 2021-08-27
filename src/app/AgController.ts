@@ -152,8 +152,6 @@ class AgController {
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received deleteImage message: ${receiver.value}`);
         if (!receiver.value) break;
-        debug(JSON.stringify(receiver.value));
-        debug(JSON.stringify(receiver.value.data));
         if (typeof receiver.value.token === 'string' && typeof receiver.value.data === 'string') {
           await this.handleImage('deleteById', receiver.value.data, 'imageDeleted');// eslint-disable-line no-await-in-loop
         }
