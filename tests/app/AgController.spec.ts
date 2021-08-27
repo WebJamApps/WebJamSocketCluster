@@ -399,7 +399,7 @@ describe('AgControler', () => {
             next: () => Promise.resolve({
               value: {
                 token: 'token',
-                image: { id: 'id' },
+                data: 'id',
               },
               done: true,
             }),
