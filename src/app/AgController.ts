@@ -133,9 +133,9 @@ class AgController {
     })();
   }
 
-  async updateImage(data: { imageId: mongoose.Types.ObjectId; image: Record<string, unknown>; }, client:IClient):Promise<string> {
+  async updateImage(data: { id: mongoose.Types.ObjectId; image: Record<string, unknown>; }, client:IClient):Promise<string> {
     let r: any;// eslint-disable-next-line security/detect-object-injection
-    try { r = await this.bookController.findByIdAndUpdate(data.imageId, data.image); } catch (e) {
+    try { r = await this.bookController.findByIdAndUpdate(data.id, data.image); } catch (e) {
       debug(e.message); 
       client.socket.transmit('socketError', { updateImage: e.message });// send error back to client
       return e.message;
@@ -146,14 +146,14 @@ class AgController {
 
   removeImage(client:IClient):void {
     (async () => {
-      let receiver: { value: { imageId:string; token: string; }; done: any; };
+      let receiver: { value: { data: string; token: string; }; done: any; };
       const rConsumer = client.socket.receiver('deleteImage').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received deleteImage message: ${receiver.value}`);
         if (!receiver.value) break;
-        if (typeof receiver.value.imageId === 'string' && typeof receiver.value.token === 'string') {
-          await this.handleImage('deleteById', receiver.value.imageId, 'imageDeleted');// eslint-disable-line no-await-in-loop
+        if (typeof receiver.value.token === 'string' && typeof receiver.value.data === 'string') {
+          await this.handleImage('deleteById', receiver.value.data, 'imageDeleted');// eslint-disable-line no-await-in-loop
         }
         /* istanbul ignore else */if (receiver.done) break;
       }
