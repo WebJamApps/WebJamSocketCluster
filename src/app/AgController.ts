@@ -150,7 +150,7 @@ class AgController {
       const rConsumer = client.socket.receiver('deleteImage').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
-        debug(`received deleteImage message: ${receiver.value}`);
+        debug(`received deleteImage message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
         if (typeof receiver.value.token === 'string' && typeof receiver.value.data === 'string') {
           await this.handleImage('deleteById', receiver.value.data, 'imageDeleted');// eslint-disable-line no-await-in-loop
@@ -212,7 +212,7 @@ class AgController {
       const rConsumer = client.socket.receiver('deleteTour').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
-        debug(`received deleteTour message: ${receiver.value}`);
+        debug(`received deleteTour message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
         try {
           if (typeof receiver.value.tour.tourId === 'string' && typeof receiver.value.token === 'string') {
