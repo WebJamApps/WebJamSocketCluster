@@ -1,7 +1,6 @@
 import httpServer from '../src/app/httpServer';
 
 httpServer.listen = jest.fn();
-// eslint-disable-next-line import/first
 import * as server from '../src/index';
 
 const delay = (ms: any) => new Promise((resolve) => setTimeout(() => resolve(true), ms));

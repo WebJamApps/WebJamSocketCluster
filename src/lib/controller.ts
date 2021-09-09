@@ -103,9 +103,6 @@ class Controller {
   // }
   //
   findByIdAndUpdate(id: mongoose.Types.ObjectId, body: any): Promise<any> {
-    if (!mongoose.Types.ObjectId.isValid(id)) {
-      return Promise.reject(new Error('Update id is invalid'));
-    }
     return this.model.findByIdAndUpdate(id, body)
       .then((doc: any) => {
         if (!doc) return Promise.reject(new Error('Id Not Found'));

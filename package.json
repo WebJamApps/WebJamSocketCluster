@@ -1,10 +1,10 @@
 {
   "name": "webjamsocketserver",
   "description": "Uses latest version of socketcluster-server",
-  "version": "1.5.1",
+  "version": "1.6.0",
   "license": "MIT",
   "engines": {
-    "node": ">=16.5.0"
+    "node": ">=16.8.0"
   },
   "contributors": [
     {
@@ -59,14 +59,14 @@
     "express": "latest",
     "express-sslify": "latest",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "latest",
+    "mongoose": "^6.0.4",
     "morgan": "latest",
     "sc-errors": "latest",
     "scc-broker-client": "latest",
     "serve-static": "latest",
     "snyk": "latest",
     "socketcluster-client": "^16.0.3",
-    "socketcluster-server": "^16.0.2",
+    "socketcluster-server": "^16.0.3",
     "superagent": "^6.1.0",
     "supports-color": "latest",
     "typescript": "latest",

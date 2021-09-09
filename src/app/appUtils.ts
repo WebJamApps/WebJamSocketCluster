@@ -2,9 +2,13 @@ import Debug from 'debug';
 
 const debug = Debug('WebJamSocketServer:appUtils');
 
-const handleRequest = (expressApp: any, requestData: any): any => {
+const handleRequest = (expressApp: any, requestData: any): boolean => {
   debug(requestData[0].url);
-  try { expressApp(...requestData); } catch (e) { return debug(e.message); }
+  try { expressApp(...requestData); } catch (e) { 
+    const eMessage = (e as Error).message;
+    debug(eMessage); 
+    return false; 
+  }
   return true;
 };
 
