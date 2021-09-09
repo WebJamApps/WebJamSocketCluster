@@ -42,10 +42,6 @@ describe('TourController', () => {
     const r = await controller.findByIdAndUpdate(testId, {});
     expect(r).toBe(true);
   });
-  // it('updates a tour by id prevents with invalid id', async () => {
-  //   const anyId:any = '123';
-  //   await expect(controller.findByIdAndUpdate(anyId, {})).rejects.toThrow('Update id is invalid');
-  // });
   it('updates a tour by id but none found to update', async () => {
     controller.model.findByIdAndUpdate = jest.fn(() => Promise.resolve());
     await expect(controller.findByIdAndUpdate(testId, {})).rejects.toThrow('Id Not Found');
