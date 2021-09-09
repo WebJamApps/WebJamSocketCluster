@@ -203,7 +203,6 @@ class AgController {
           client.socket.transmit('socketError', { newTour: eMessage });// send error back to client
           break; 
         } 
-        debug(JSON.stringify(user.body));
         if (!goodRoles || !user || !user.body || !user.body.userType || goodRoles.indexOf(user.body.userType) === -1) { 
           client.socket.transmit('socketError', { newTour: 'not allowed' });// send error back to client 
           break; 
