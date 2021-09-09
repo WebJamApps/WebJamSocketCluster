@@ -2,7 +2,7 @@
 import mongoose from 'mongoose';
 import AgController from '../../src/app/AgController';
 
-const testId = mongoose.Types.ObjectId();
+const testId = new mongoose.Types.ObjectId();
 const delay = (ms: any) => new Promise((resolve) => setTimeout(() => resolve(true), ms));
 const aStub:any = {
   exchange: { transmitPublish: jest.fn() },
@@ -698,7 +698,7 @@ describe('AgControler', () => {
     };
     const agController = new AgController(aStub);
     r = await agController.updateImage({
-      id: mongoose.Types.ObjectId(),
+      id: new mongoose.Types.ObjectId(),
       image: {}, 
     }, clientStub);
     expect(r).toBe('Id Not Found');
@@ -724,7 +724,7 @@ describe('AgControler', () => {
     const agController = new AgController(aStub);
     agController.bookController.findByIdAndUpdate = jest.fn(() => Promise.resolve());
     r = await agController.updateImage({
-      id: mongoose.Types.ObjectId(),
+      id: new mongoose.Types.ObjectId(),
       image: {}, 
     }, clientStub);
     expect(r).toBe('image updated');

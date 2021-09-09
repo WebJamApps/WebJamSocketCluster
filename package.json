@@ -66,7 +66,7 @@
     "serve-static": "latest",
     "snyk": "latest",
     "socketcluster-client": "^16.0.3",
-    "socketcluster-server": "^16.0.2",
+    "socketcluster-server": "^16.0.3",
     "superagent": "^6.1.0",
     "supports-color": "latest",
     "typescript": "latest",
