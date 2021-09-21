@@ -40,7 +40,11 @@ class AgController {
       await this.tourController.createDocs(tour);
       await this.bookController.deleteAllDocs();
       await this.bookController.createDocs(book);
-    } catch (e) { debug(e.message); return e.message; }
+    } catch (e) {
+      const eMessage = (e as Error).message;
+      debug(eMessage); 
+      return eMessage; 
+    }
     return 'data has been reset';
   }
 
@@ -74,7 +78,9 @@ class AgController {
   async sendTours(client:IClient):Promise<string> {
     let allTours: any;
     try { allTours = await this.tourController.getAllSort({ datetime: -1 }); } catch (e) {
-      debug(e.message); return e.message;
+      const eMessage = (e as Error).message;
+      debug(eMessage); 
+      return eMessage; 
     }
     client.socket.transmit('allTours', allTours);
     return 'sent tours';
@@ -83,7 +89,9 @@ class AgController {
   async sendBooks(client: IClient):Promise<string> {
     let allBooks: any;
     try { allBooks = await this.bookController.getAll(); } catch (e) {
-      debug(e.message); return e.message;
+      const eMessage = (e as Error).message;
+      debug(eMessage); 
+      return eMessage; 
     }
     client.socket.transmit('allBooks', allBooks);
     return 'sent books';
@@ -109,7 +117,9 @@ class AgController {
     let r: any;
     // eslint-disable-next-line security/detect-object-injection
     try { r = await (this.bookController as any)[func](data); } catch (e) {
-      debug(e.message); return e.message;
+      const eMessage = (e as Error).message;
+      debug(eMessage); 
+      return eMessage; 
     }
     this.server.exchange.transmitPublish(message, r);
     return message;
@@ -133,12 +143,13 @@ class AgController {
     })();
   }
 
-  async updateImage(data: { imageId: mongoose.Types.ObjectId; image: Record<string, unknown>; }, client:IClient):Promise<string> {
+  async updateImage(data: { id: mongoose.Types.ObjectId; image: Record<string, unknown>; }, client:IClient):Promise<string> {
     let r: any;// eslint-disable-next-line security/detect-object-injection
-    try { r = await this.bookController.findByIdAndUpdate(data.imageId, data.image); } catch (e) {
-      debug(e.message); 
-      client.socket.transmit('socketError', { updateImage: e.message });// send error back to client
-      return e.message;
+    try { r = await this.bookController.findByIdAndUpdate(data.id, data.image); } catch (e) {
+      const eMessage = (e as Error).message;
+      client.socket.transmit('socketError', { updateImage: eMessage });// send error back to client
+      debug(eMessage); 
+      return eMessage; 
     }
     this.server.exchange.transmitPublish('imageUpdated', r);
     return 'image updated';
@@ -146,14 +157,14 @@ class AgController {
 
   removeImage(client:IClient):void {
     (async () => {
-      let receiver: { value: { imageId:string; token: string; }; done: any; };
+      let receiver: { value: { data: string; token: string; }; done: any; };
       const rConsumer = client.socket.receiver('deleteImage').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
-        debug(`received deleteImage message: ${receiver.value}`);
+        debug(`received deleteImage message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
-        if (typeof receiver.value.imageId === 'string' && typeof receiver.value.token === 'string') {
-          await this.handleImage('deleteById', receiver.value.imageId, 'imageDeleted');// eslint-disable-line no-await-in-loop
+        if (typeof receiver.value.token === 'string' && typeof receiver.value.data === 'string') {
+          await this.handleImage('deleteById', receiver.value.data, 'imageDeleted');// eslint-disable-line no-await-in-loop
         }
         /* istanbul ignore else */if (receiver.done) break;
       }
@@ -163,7 +174,9 @@ class AgController {
   async handleTour(func: string, data: { date: any; time: any; location: any; venue: any; }, message: string):Promise<string> {
     let r: any;// eslint-disable-next-line security/detect-object-injection
     try { r = await (this.tourController as any)[func](data); } catch (e) {
-      debug(e.message); return e.message;
+      const eMessage = (e as Error).message;
+      debug(eMessage); 
+      return eMessage; 
     }
     this.server.exchange.transmitPublish(message, r);
     return 'tour handled';
@@ -185,11 +198,11 @@ class AgController {
             .set('Accept', 'application/json').set('Authorization', `Bearer ${receiver.value.token}`);
           goodRoles = JSON.parse(process.env.userRoles || /* istanbul ignore next */'{}').roles;
         } catch (e) {
-          debug(`${e.message}`); 
-          client.socket.transmit('socketError', { newTour: e.message });// send error back to client
+          const eMessage = (e as Error).message;
+          debug(eMessage); 
+          client.socket.transmit('socketError', { newTour: eMessage });// send error back to client
           break; 
         } 
-        debug(JSON.stringify(user.body));
         if (!goodRoles || !user || !user.body || !user.body.userType || goodRoles.indexOf(user.body.userType) === -1) { 
           client.socket.transmit('socketError', { newTour: 'not allowed' });// send error back to client 
           break; 
@@ -212,13 +225,18 @@ class AgController {
       const rConsumer = client.socket.receiver('deleteTour').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
-        debug(`received deleteTour message: ${receiver.value}`);
+        debug(`received deleteTour message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
         try {
           if (typeof receiver.value.tour.tourId === 'string' && typeof receiver.value.token === 'string') {
             await this.handleTour('deleteById', receiver.value.tour.tourId, 'tourDeleted');// eslint-disable-line no-await-in-loop
           }
-        } catch (e) { debug(e.message); }
+        } catch (e) { 
+          const eMessage = (e as Error).message;
+          client.socket.transmit('socketError', { deleteTour: eMessage });// send error back to client
+          debug(eMessage); 
+          break; 
+        }
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
@@ -227,7 +245,9 @@ class AgController {
   async updateTour(data: { tourId: any; tour: any; }):Promise<string> {
     let r: any;// eslint-disable-next-line security/detect-object-injection
     try { r = await this.tourController.findByIdAndUpdate(data.tourId, data.tour); } catch (e) {
-      debug(e.message); return e.message;
+      const eMessage = (e as Error).message;
+      debug(eMessage); 
+      return eMessage;
     }
     this.server.exchange.transmitPublish('tourUpdated', r);
     return 'tour updated';

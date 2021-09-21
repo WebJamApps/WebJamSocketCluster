@@ -4,7 +4,7 @@ jobs:
     environment:
       CC_TEST_REPORTER_ID: 6d1cee43a8aae884ab57c7ed96cb29626c590dea10c20dfd504423ff056f34e9
     docker:
-      - image: circleci/node:stretch
+      - image: cimg/node:current-browsers
     working_directory: ~/repo
     steps:
       - checkout
@@ -13,15 +13,6 @@ jobs:
           command: |
             curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
             chmod +x ./cc-test-reporter
-      - run:
-          name:        Install Chromedriver latest version
-          command:     |
-            sudo apt-get update
-            sudo apt-get install lsb-release libappindicator3-1 fonts-liberation libasound2 libnspr4 libnss3 libxss1 xdg-utils
-            curl -L -o google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-            sudo dpkg -i google-chrome.deb
-            sudo sed -i 's|HERE/chrome"|HERE/chrome" --no-sandbox|g' /opt/google/chrome/google-chrome
-            rm google-chrome.deb
       - run:
           name:        Test install
           command:     'npm install'
@@ -34,14 +25,3 @@ jobs:
       - store_artifacts:
           path:        coverage
 
-# workflows:
-#   version: 2
-#   build_and_test:
-#     jobs:
-#       # - build
-#       - test
-      #     requires:
-      #       - build
-      # - upload-coverage:
-      #     requires:
-      #        - test

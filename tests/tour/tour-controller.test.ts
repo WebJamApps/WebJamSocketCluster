@@ -2,7 +2,7 @@ import mongoose from 'mongoose';
 import controller from '../../src/model/tour/tour-controller';
 
 describe('TourController', () => {
-  const testId = mongoose.Types.ObjectId();
+  const testId = new mongoose.Types.ObjectId();
   it('deletes all tours', async () => {
     controller.model.deleteMany = jest.fn(() => Promise.resolve(true));
     const result = await controller.deleteAllDocs();
@@ -41,10 +41,6 @@ describe('TourController', () => {
     controller.model.findByIdAndUpdate = jest.fn(() => Promise.resolve(true));
     const r = await controller.findByIdAndUpdate(testId, {});
     expect(r).toBe(true);
-  });
-  it('updates a tour by id prevents with invalid id', async () => {
-    const anyId:any = '123';
-    await expect(controller.findByIdAndUpdate(anyId, {})).rejects.toThrow('Update id is invalid');
   });
   it('updates a tour by id but none found to update', async () => {
     controller.model.findByIdAndUpdate = jest.fn(() => Promise.resolve());
