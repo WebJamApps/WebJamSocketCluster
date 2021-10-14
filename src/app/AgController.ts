@@ -188,27 +188,25 @@ class AgController {
       const rConsumer = client.socket.receiver('newTour').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
-        // eslint-disable-next-line @typescript-eslint/no-unused-vars
         let decoded, user, goodRoles;
         debug(`received newTour message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
-        //TODO this seems to only work on the first time, then connection fails
-        // try {
-        //   decoded = this.jwt.verify(receiver.value.token, process.env.HashString || /* istanbul ignore next */'');
-        //   // eslint-disable-next-line no-await-in-loop
-        //   user = await this.superagent.get(`${process.env.BackendUrl}/user/${decoded.sub}`)
-        //     .set('Accept', 'application/json').set('Authorization', `Bearer ${receiver.value.token}`);
-        //   goodRoles = JSON.parse(process.env.userRoles || /* istanbul ignore next */'{}').roles;
-        // } catch (e) {
-        //   const eMessage = (e as Error).message;
-        //   debug(eMessage); 
-        //   client.socket.transmit('socketError', { newTour: eMessage });// send error back to client
-        //   break; 
-        // } 
-        // if (!goodRoles || !user || !user.body || !user.body.userType || goodRoles.indexOf(user.body.userType) === -1) { 
-        //   client.socket.transmit('socketError', { newTour: 'not allowed' });// send error back to client 
-        //   break; 
-        // }
+        try {
+          decoded = this.jwt.verify(receiver.value.token, process.env.HashString || /* istanbul ignore next */'');
+          // eslint-disable-next-line no-await-in-loop
+          user = await this.superagent.get(`${process.env.BackendUrl}/user/${decoded.sub}`)
+            .set('Accept', 'application/json').set('Authorization', `Bearer ${receiver.value.token}`);
+          goodRoles = JSON.parse(process.env.userRoles || /* istanbul ignore next */'{}').roles;
+        } catch (e) {
+          const eMessage = (e as Error).message;
+          debug(eMessage); 
+          client.socket.transmit('socketError', { newTour: eMessage });// send error back to client
+          break; 
+        } 
+        if (!goodRoles || !user || !user.body || !user.body.userType || goodRoles.indexOf(user.body.userType) === -1) { 
+          client.socket.transmit('socketError', { newTour: 'not allowed' });// send error back to client 
+          break; 
+        }
         if (typeof receiver.value.token === 'string' && typeof receiver.value.tour.date === 'string' && typeof receiver.value.tour.time === 'string'
             && typeof receiver.value.tour.location === 'string' && typeof receiver.value.tour.venue === 'string') {
           await this.handleTour('createDocs', receiver.value.tour, 'tourCreated');// eslint-disable-line no-await-in-loop
