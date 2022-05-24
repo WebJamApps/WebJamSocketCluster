@@ -213,7 +213,8 @@ describe('AgControler', () => {
     };
     const setIntervalMock:any = jest.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    agController.jwt.verify = jest.fn(() => '123');
+    const verfyMock: any = jest.fn(() => '123');
+    agController.jwt.verify = verfyMock;
     const getMock:any = jest.fn(() => ({
       set: () => ({
         set: () => Promise.resolve({
@@ -253,7 +254,8 @@ describe('AgControler', () => {
     };
     const setIntervalMock:any = jest.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    agController.jwt.verify = jest.fn(() => '123');
+    const verifyMock: any = jest.fn(() => '123');
+    agController.jwt.verify = verifyMock;
     const getMock:any = jest.fn(() => ({
       set: () => ({
         set: () => Promise.resolve({
@@ -294,7 +296,8 @@ describe('AgControler', () => {
     };
     const setIntervalMock:any = jest.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    agController.jwt.verify = jest.fn(() => '123');
+    const verifyMock: any = jest.fn(() => '123');
+    agController.jwt.verify = verifyMock;
     const getMock:any = jest.fn(() => ({
       set: () => ({
         set: () => Promise.resolve({
