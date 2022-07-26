@@ -4,7 +4,8 @@
   "version": "1.7.0",
   "license": "MIT",
   "engines": {
-      "node": ">=18.2.0 <19"
+    "node": ">=16.16.0 <19",
+    "npm": ">=8.13.2 <9"
   },
   "contributors": [
     {
@@ -91,7 +92,7 @@
     "eslint-plugin-security": "latest",
     "jest": "latest",
     "node-notifier": "^10.0.0",
-    "nodemon": "latest",
+    "nodemon": "^2.0.18",
     "npm-run-all": "latest",
     "supertest": "latest",
     "ts-jest": "latest"
