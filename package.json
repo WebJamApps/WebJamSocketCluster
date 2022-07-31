@@ -60,7 +60,7 @@
     "express": "latest",
     "express-sslify": "latest",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^6.0.4",
+    "mongoose": "^6.4.6",
     "morgan": "latest",
     "sc-errors": "latest",
     "scc-broker-client": "latest",
