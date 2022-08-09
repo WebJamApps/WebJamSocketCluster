@@ -4,7 +4,8 @@
   "version": "1.7.0",
   "license": "MIT",
   "engines": {
-      "node": ">=18.2.0 <19"
+    "node": ">=16.16.0 <19",
+    "npm": ">=8.13.2 <9"
   },
   "contributors": [
     {
@@ -59,7 +60,7 @@
     "express": "latest",
     "express-sslify": "latest",
     "jsonwebtoken": "^8.5.1",
-    "mongoose": "^6.0.4",
+    "mongoose": "^6.5.0",
     "morgan": "latest",
     "sc-errors": "latest",
     "scc-broker-client": "latest",
@@ -91,7 +92,7 @@
     "eslint-plugin-security": "latest",
     "jest": "latest",
     "node-notifier": "^10.0.0",
-    "nodemon": "latest",
+    "nodemon": "^2.0.18",
     "npm-run-all": "latest",
     "supertest": "latest",
     "ts-jest": "latest"
