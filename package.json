@@ -1,11 +1,11 @@
 {
   "name": "webjamsocketserver",
   "description": "Uses latest version of socketcluster-server",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "license": "MIT",
   "engines": {
-    "node": ">=16.16.0 <19",
-    "npm": ">=8.13.2 <9"
+    "node": ">=16.17.0 <19",
+    "npm": ">=8.15.0 <9"
   },
   "contributors": [
     {
