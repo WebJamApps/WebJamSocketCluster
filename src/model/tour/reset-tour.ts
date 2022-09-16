@@ -1,3 +1,9 @@
+const makefuture = (day:number) =>{
+  const today = new Date();
+  const future = new Date(today);
+  future.setDate(future.getDate() + day);
+  return future;
+};
 export default {
   tour: [{
     date: 'Nov 17, 2019',
@@ -5,6 +11,78 @@ export default {
     time: '1:00 pm',
     location: 'Salem, VA',
     venue: '<a href="https://parkwaybrewing.com/" rel="noopener noreferrer" target="_blank">Parkway Brewing Co.</a>',
+    tickets: 'Free',
+    more: '',
+  },
+  {
+    date: 'future 1',
+    datetime: makefuture(1),
+    time: '1:00 pm',
+    location: 'Salem, VA',
+    venue: 'future 1',
+    tickets: 'Free',
+    more: '',
+  },
+  {
+    date: 'future 2',
+    datetime: makefuture(2),
+    time: '1:00 pm',
+    location: 'Salem, VA',
+    venue: 'future 2',
+    tickets: 'Free',
+    more: '',
+  },
+  {
+    date: 'future 3',
+    datetime: makefuture(3),
+    time: '1:00 pm',
+    location: 'Salem, VA',
+    venue: 'future 3',
+    tickets: 'Free',
+    more: '',
+  },
+  {
+    date: 'future 4',
+    datetime: makefuture(4),
+    time: '1:00 pm',
+    location: 'Salem, VA',
+    venue: 'future 4',
+    tickets: 'Free',
+    more: '',
+  },
+  {
+    date: 'future 5',
+    datetime: makefuture(5),
+    time: '1:00 pm',
+    location: 'Salem, VA',
+    venue: 'future 5',
+    tickets: 'Free',
+    more: '',
+  },
+  {
+    date: 'future 6',
+    datetime: makefuture(6),
+    time: '1:00 pm',
+    location: 'Salem, VA',
+    venue: 'future 6',
+    tickets: 'Free',
+    more: '',
+  },
+  {
+    date: 'future 7',
+    datetime: makefuture(7),
+    time: '1:00 pm',
+    location: 'Salem, VA',
+    venue: 'future 7',
+    tickets: 'Free',
+    more: '',
+  },
+  {
+    date: 'future 8',
+    datetime: makefuture(8),
+    time: '1:00 pm',
+    location: 'Salem, VA',
+    venue: 'future 8',
     tickets: 'Free',
     more: '',
   },
