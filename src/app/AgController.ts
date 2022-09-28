@@ -265,7 +265,8 @@ class AgController {
         if (typeof receiver.value.token === 'string') {
           // eslint-disable-next-line security/detect-object-injection
           if (action === 'editTour') await this.updateTour(receiver.value);// eslint-disable-line no-await-in-loop
-          else this.updateImage(receiver.value, client);
+          // eslint-disable-next-line no-await-in-loop
+          else await this.updateImage(receiver.value, client);
         }
         /* istanbul ignore else */if (receiver.done) break;
       }

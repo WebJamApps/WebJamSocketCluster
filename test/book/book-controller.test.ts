@@ -9,7 +9,7 @@ describe('bookController', () => {
     await expect(controller.getAll()).rejects.toThrow('bad');
   });
   it('should wait unit tests finish before exiting', async () => { // eslint-disable-line jest/expect-expect
-    const delay = (ms: any) => new Promise((resolve) => setTimeout(() => resolve(true), ms));
+    const delay = (ms: any) => new Promise((resolve) => { setTimeout(() => resolve(true), ms); });
     await delay(1000);
   });
 });
