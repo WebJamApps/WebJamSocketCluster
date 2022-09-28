@@ -1,6 +1,6 @@
 {
   "resetMocks": true,
-  "notify": true,
+  "notify": false,
   "verbose": true,
   "bail": true,
   "testPathIgnorePatterns": ["/node_modules/", "/build", "/JaMmusic"],
@@ -9,8 +9,10 @@
   ],
   "collectCoverage": true,
   "testEnvironment": "node",
-  "testURL": "http://localhost/",
-  "roots": ["<rootDir>/tests"],
+  "testEnvironmentOptions":{
+    "url": "http://localhost/"
+  },
+  "roots": ["<rootDir>/test"],
   "moduleFileExtensions": [
     "js",
     "json",

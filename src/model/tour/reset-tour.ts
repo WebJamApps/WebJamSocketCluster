@@ -1,4 +1,4 @@
-const makefuture = (day:number) =>{
+const makefuture = (day:number) => {
   const today = new Date();
   const future = new Date(today);
   future.setDate(future.getDate() + day);
