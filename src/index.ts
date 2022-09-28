@@ -49,8 +49,8 @@ if (process.env.NODE_ENV === 'production' && process.env.BUILD_BRANCH === 'maste
 expressApp.use(express.static(path.normalize(path.join(__dirname, '../JaMmusic/dist'))));
 appUtils.setup(expressApp, httpServer);
 httpServer.listen(SOCKETCLUSTER_PORT);
-agServerUtils.routing(agServer);
-agServerUtils.handleErrAndWarn(SOCKETCLUSTER_LOG_LEVEL, SOCKETCLUSTER_PORT, agServer);
+(async () => { await agServerUtils.routing(agServer); })();
+(async () => { await agServerUtils.handleErrAndWarn(SOCKETCLUSTER_LOG_LEVEL, SOCKETCLUSTER_PORT, agServer); })();
 /* istanbul ignore if */if (SCC_STATE_SERVER_HOST) { // Setup broker client to connect to SCC.
   const sccClient = sccBrokerClient.attach(agServer.brokerEngine, {
     instanceId: SCC_INSTANCE_ID,

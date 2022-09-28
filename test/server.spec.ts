@@ -1,9 +1,9 @@
 import httpServer from '../src/app/httpServer';
-
-httpServer.listen = jest.fn();
 import * as server from '../src/index';
 
-const delay = (ms: any) => new Promise((resolve) => setTimeout(() => resolve(true), ms));
+httpServer.listen = jest.fn();
+
+const delay = (ms: any) => new Promise((resolve) => { setTimeout(() => resolve(true), ms); });
 
 describe('server', () => {
   it('is defines the server', async () => {   

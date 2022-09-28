@@ -1,15 +1,16 @@
+/* eslint-disable @typescript-eslint/unbound-method */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose from 'mongoose';
 import AgController from '../../src/app/AgController';
 
 const testId = new mongoose.Types.ObjectId();
-const delay = (ms: any) => new Promise((resolve) => setTimeout(() => resolve(true), ms));
+const delay = (ms: any) => new Promise((resolve) => { setTimeout(() => resolve(true), ms); });
 const aStub:any = {
   exchange: { transmitPublish: jest.fn() },
   listener: (name: any) => ({
     once: () => {
       if (name === 'error') return Promise.resolve({ error: 'bad' });
-      if (name === 'warning') Promise.resolve({ warning: 'too hot' });
+      if (name === 'warning') return Promise.resolve({ warning: 'too hot' });
       return Promise.resolve({ socket: { receiver: () => ({ once: () => Promise.resolve(123) }) } });
     },
     createConsumer: () => ({
@@ -68,7 +69,7 @@ describe('AgControler', () => {
     expect(agController.clients.length).toBe(0);
     await delay(1000);
   });
-  it('sends a pulse', async () => {
+  it('sends a pulse', () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
     const sStub:any = {
@@ -311,7 +312,7 @@ describe('AgControler', () => {
     await delay(1000);
     expect(clientStub.socket.transmit).toHaveBeenCalledWith('socketError', { newTour: 'invalid request' });
   });
-  it('handles missing receiver value when process the newTour message from client', async () => {
+  it('handles missing receiver value when process the newTour message from client', () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
     agController.handleTour = jest.fn();
@@ -364,7 +365,7 @@ describe('AgControler', () => {
     await delay(2000);
     expect(agController.bookController.createDocs).toHaveBeenCalled();
   });
-  it('handles missing receiver value when process the newImage message from client', async () => {
+  it('handles missing receiver value when process the newImage message from client', () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
     agController.bookController.createDocs = jest.fn(() => Promise.resolve());
@@ -416,7 +417,7 @@ describe('AgControler', () => {
     await delay(2000);
     expect(agController.handleImage).toHaveBeenCalled();
   });
-  it('handles missing receiver value when process the removeImage message from client', async () => {
+  it('handles missing receiver value when process the removeImage message from client', () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
     agController.bookController.deleteById = jest.fn(() => Promise.resolve());
@@ -469,7 +470,7 @@ describe('AgControler', () => {
     await delay(1000);
     expect(agController.handleTour).toHaveBeenCalled();
   });
-  it('does not process the removeTour message from client', async () => {
+  it('does not process the removeTour message from client', () => {
     const agController = new AgController(aStub);
     agController.handleTour = jest.fn();
     agController.clients = ['123'];
