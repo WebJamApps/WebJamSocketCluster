@@ -171,7 +171,7 @@ class AgController {
     })();
   }
 
-  async handleTour(func: string, data: { date: any; time: any; location: any; venue: any; }, message: string):Promise<string> {
+  async handleTour(func: string, data: { datetime: string; location: string; venue: string; }, message: string):Promise<string> {
     let r: any;// eslint-disable-next-line security/detect-object-injection
     try { r = await (this.tourController as any)[func](data); } catch (e) {
       const eMessage = (e as Error).message;
@@ -184,7 +184,7 @@ class AgController {
 
   newTour(client: IClient):void {
     (async () => {
-      let receiver: { value: { token: string; tour: { date: string; time: string; location: string; venue: string; }; }; done: any; };
+      let receiver: { value: { token: string; tour: { datetime: string; location: string; venue: string; }; }; done: any; };
       const rConsumer = client.socket.receiver('newTour').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
@@ -192,6 +192,8 @@ class AgController {
         debug(`received newTour message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
         try {
+          debug('token');
+          debug(receiver.value.token);
           decoded = this.jwt.verify(receiver.value.token, process.env.HashString || /* istanbul ignore next */'');
           // eslint-disable-next-line no-await-in-loop
           user = await this.superagent.get(`${process.env.BackendUrl}/user/${decoded.sub}`)
@@ -207,8 +209,9 @@ class AgController {
           client.socket.transmit('socketError', { newTour: 'not allowed' });// send error back to client 
           break; 
         }
-        if (typeof receiver.value.token === 'string' && typeof receiver.value.tour.date === 'string' && typeof receiver.value.tour.time === 'string'
-            && typeof receiver.value.tour.location === 'string' && typeof receiver.value.tour.venue === 'string') {
+        if (typeof receiver.value.token === 'string' 
+        && typeof receiver.value.tour.datetime === 'string' && typeof receiver.value.tour.venue === 'string'
+            && typeof receiver.value.tour.location === 'string') {
           await this.handleTour('createDocs', receiver.value.tour, 'tourCreated');// eslint-disable-line no-await-in-loop
         } else {
           client.socket.transmit('socketError', { newTour: 'invalid request' });// send error back to client
