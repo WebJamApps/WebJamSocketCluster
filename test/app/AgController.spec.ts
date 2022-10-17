@@ -203,7 +203,7 @@ describe('AgControler', () => {
               value: {
                 token: 'token',
                 tour: {
-                  date: 'date', time: 'time', location: 'location', venue: 'venue',
+                  datetime: new Date().toISOString(), location: 'location', venue: 'venue',
                 },
               },
               done: true,
@@ -268,7 +268,7 @@ describe('AgControler', () => {
     agController.superagent.get = getMock;
     agController.newTour(clientStub);
     await delay(1000);
-    expect(clientStub.socket.transmit).toHaveBeenCalledWith('socketError', { newTour: 'not allowed' });
+    expect(clientStub.socket.transmit).toHaveBeenCalledWith('socketError', { newTour: 'Not allowed to create new tour' });
   });
 
   it('return the invalid request socketError when processes the newTour message from client', async () => {
@@ -310,7 +310,7 @@ describe('AgControler', () => {
     agController.superagent.get = getMock;
     agController.newTour(clientStub);
     await delay(1000);
-    expect(clientStub.socket.transmit).toHaveBeenCalledWith('socketError', { newTour: 'invalid request' });
+    expect(clientStub.socket.transmit).toHaveBeenCalledWith('socketError', { newTour: 'Invalid create tour data' });
   });
   it('handles missing receiver value when process the newTour message from client', () => {
     const agController = new AgController(aStub);
@@ -737,7 +737,7 @@ describe('AgControler', () => {
   it('creates tours', async () => {
     const agController = new AgController(aStub);
     r = await agController.handleTour('createDocs', {
-      date: 'date', time: 'time', location: 'location', venue: 'venue',
+      datetime: new Date().toISOString(), location: 'location', venue: 'venue',
     }, 'tourCreated');
     expect(r).toBe('tour handled');
     await delay(1000);
@@ -746,7 +746,7 @@ describe('AgControler', () => {
     const agController = new AgController(aStub);
     agController.tourController.createDocs = jest.fn(() => Promise.reject(new Error('bad')));
     r = await agController.handleTour('createDocs', {
-      date: 'date', time: 'time', location: 'location', venue: 'venue',
+      datetime: new Date().toISOString(), location: 'location', venue: 'venue',
     }, 'tourCreated');
     expect(r).toBe('bad');
     await delay(1000);

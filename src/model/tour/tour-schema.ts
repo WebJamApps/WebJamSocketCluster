@@ -7,8 +7,8 @@ const options = {
 const { Schema } = mongoose;
 
 const tourSchema = new Schema({
-  date: { type: String, required: true },
-  time: { type: String, required: true },
+  date: { type: String, required: false },
+  time: { type: String, required: false },
   datetime: { type: Date, require: true },
   location: { type: String, required: true },
   venue: { type: String, required: true },
