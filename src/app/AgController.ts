@@ -2,7 +2,6 @@ import Debug from 'debug';
 import JWT from 'jsonwebtoken';
 import Superagent from 'superagent';
 import type socketClusterServer from 'socketcluster-server';
-import { ObjectId } from 'mongoose';
 import TourController from '../model/tour/tour-controller';
 import tourData from '../model/tour/reset-tour';
 import BookController from '../model/book/book-controller';
