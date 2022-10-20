@@ -750,7 +750,7 @@ describe('AgControler', () => {
   it('creates tours', async () => {
     const agController = new AgController(aStub);
     r = await agController.handleTour('createDocs', {
-      datetime: new Date().toISOString(), venue: 'venue',
+      datetime: new Date(), venue: 'venue', city: 'city', usState: 'state',
     }, 'tourCreated');
     expect(r).toBe('tour handled');
     await delay(1000);
@@ -759,7 +759,7 @@ describe('AgControler', () => {
     const agController = new AgController(aStub);
     agController.tourController.createDocs = jest.fn(() => Promise.reject(new Error('bad')));
     r = await agController.handleTour('createDocs', {
-      datetime: new Date().toISOString(), venue: 'venue',
+      datetime: new Date(), venue: 'venue', city: 'city', usState: 'state',
     }, 'tourCreated');
     expect(r).toBe('bad');
     await delay(1000);

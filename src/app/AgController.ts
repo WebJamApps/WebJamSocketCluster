@@ -173,7 +173,7 @@ class AgController {
 
   async handleTour(
     func: string, 
-    data: { datetime: string; venue: string; }, 
+    data: { datetime: Date; venue: string; city:string, usState:string }, 
     message: string,
   ):Promise<string> {
     let r: any;// eslint-disable-next-line security/detect-object-injection
@@ -189,7 +189,7 @@ class AgController {
   newTour(client: IClient):void {
     (async () => {
       let receiver: { value: { token: string; 
-        tour: { datetime: string; venue: string; city:string, usState: string }; }; done: any; };
+        tour: { datetime: Date; venue: string; city:string, usState: string }; }; done: any; };
       const rConsumer = client.socket.receiver('newTour').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
