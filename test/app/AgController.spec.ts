@@ -149,13 +149,23 @@ describe('AgControler', () => {
   it('updates a tours', async () => {
     const agController = new AgController(aStub);
     agController.tourController.findByIdAndUpdate = jest.fn(() => Promise.resolve(true));
-    r = await agController.updateTour({ tourId: testId, tour: {} });
-    expect(r).toBe('tour updated');
+    r = await agController.updateTour({
+      tourId: testId,
+      tour: {
+        venue: 'venue', datetime: new Date(), city: 'city', usState: 'state', 
+      }, 
+    });
+    expect(r).toBe('Gig updated');
   });
   it('handles error from updates a tours', async () => {
     const agController = new AgController(aStub);
     agController.tourController.findByIdAndUpdate = jest.fn(() => Promise.reject(new Error('bad')));
-    r = await agController.updateTour({ tourId: testId, tour: {} });
+    r = await agController.updateTour({
+      tourId: testId,
+      tour: {
+        venue: 'venue', datetime: new Date(), city: 'city', usState: 'state', 
+      }, 
+    });
     expect(r).toBe('bad');
   });
   it('does not process the newTour message from client when token is not valid', async () => {
@@ -203,7 +213,7 @@ describe('AgControler', () => {
               value: {
                 token: 'token',
                 tour: {
-                  datetime: new Date().toISOString(), location: 'location', venue: 'venue',
+                  venue: 'venue', datetime: new Date(), city: 'city', usState: 'state', 
                 },
               },
               done: true,
@@ -310,7 +320,10 @@ describe('AgControler', () => {
     agController.superagent.get = getMock;
     agController.newTour(clientStub);
     await delay(1000);
-    expect(clientStub.socket.transmit).toHaveBeenCalledWith('socketError', { newTour: 'Invalid create tour data' });
+    expect(clientStub.socket.transmit).toHaveBeenCalledWith(
+      'socketError', 
+      { newTour: 'Invalid create gig data' },
+    );
   });
   it('handles missing receiver value when process the newTour message from client', () => {
     const agController = new AgController(aStub);

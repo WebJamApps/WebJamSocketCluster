@@ -2,6 +2,7 @@ import Debug from 'debug';
 import JWT from 'jsonwebtoken';
 import Superagent from 'superagent';
 import type socketClusterServer from 'socketcluster-server';
+import { ObjectId } from 'mongoose';
 import TourController from '../model/tour/tour-controller';
 import tourData from '../model/tour/reset-tour';
 import BookController from '../model/book/book-controller';
@@ -188,7 +189,8 @@ class AgController {
 
   newTour(client: IClient):void {
     (async () => {
-      let receiver: { value: { token: string; tour: { datetime: string; venue: string; }; }; done: any; };
+      let receiver: { value: { token: string; 
+        tour: { datetime: string; venue: string; city:string, usState: string }; }; done: any; };
       const rConsumer = client.socket.receiver('newTour').createConsumer();
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
@@ -206,11 +208,10 @@ class AgController {
           if (!goodRoles || !user || !user.body || !user.body.userType || goodRoles.indexOf(user.body.userType) === -1) { 
             throw new Error('Not allowed to create new tour');
           }
-          if (typeof receiver.value.token === 'string' 
-        && typeof receiver.value.tour.datetime === 'string' && typeof receiver.value.tour.venue === 'string'
-          ) {
+          if (receiver.value.tour.datetime && receiver.value.tour.city 
+            && receiver.value.tour.usState && receiver.value.tour.venue) {
             await this.handleTour('createDocs', receiver.value.tour, 'tourCreated');// eslint-disable-line no-await-in-loop
-          } else throw new Error('Invalid create tour data');
+          } else throw new Error('Invalid create gig data');
           if (receiver.done) break;
         } catch (e) {
           const eMessage = (e as Error).message;
@@ -245,15 +246,21 @@ class AgController {
     })();
   }
 
-  async updateTour(data: { tourId: any; tour: any; }):Promise<string> {
+  async updateTour(
+    data: { tourId: mongoose.Types.ObjectId; tour: Record<string, unknown>; },
+  ):Promise<string> {
     let r: any;// eslint-disable-next-line security/detect-object-injection
-    try { r = await this.tourController.findByIdAndUpdate(data.tourId, data.tour); } catch (e) {
+    try { 
+      const { tourId, tour } = data;
+      if (!tour.venue || !tour.datetime || !tour.city || !tour.usState) throw new Error('Invalid gig data');
+      r = await this.tourController.findByIdAndUpdate(tourId, tour); 
+    } catch (e) {
       const eMessage = (e as Error).message;
       debug(eMessage); 
       return eMessage;
     }
     this.server.exchange.transmitPublish('tourUpdated', r);
-    return 'tour updated';
+    return 'Gig updated';
   }
 
   editDoc(client:IClient, action:string):void {
