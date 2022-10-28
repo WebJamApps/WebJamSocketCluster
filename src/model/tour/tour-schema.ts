@@ -7,10 +7,12 @@ const options = {
 const { Schema } = mongoose;
 
 const tourSchema = new Schema({
-  date: { type: String, required: true },
-  time: { type: String, required: true },
+  date: { type: String, required: false },
+  time: { type: String, required: false },
   datetime: { type: Date, require: true },
-  location: { type: String, required: true },
+  location: { type: String, required: false },
+  city: { type: String, required: false },
+  usState: { type: String, required: false },
   venue: { type: String, required: true },
   tickets: { type: String, required: false },
   more: { type: String, required: false },
