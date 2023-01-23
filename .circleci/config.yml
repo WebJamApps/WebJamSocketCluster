@@ -4,7 +4,7 @@ jobs:
     environment:
       CC_TEST_REPORTER_ID: 6d1cee43a8aae884ab57c7ed96cb29626c590dea10c20dfd504423ff056f34e9
     docker:
-      - image: cimg/node:18.12.0-browsers
+      - image: cimg/node:lts-browsers
     working_directory: ~/repo
     steps:
       - checkout
