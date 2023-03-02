@@ -1,11 +1,11 @@
 {
   "name": "webjamsocketserver",
   "description": "Uses latest version of socketcluster-server",
-  "version": "1.10.0",
+  "version": "1.10.2",
   "license": "MIT",
   "engines": {
-    "node": ">=18.12.0 <19",
-    "npm": ">=8.19.2 <9"
+    "node": ">=18.14.2 <19",
+    "npm": ">=9.5.0 <10"
   },
   "contributors": [
     {
@@ -40,7 +40,7 @@
     "ts-watch": "tsc -w",
     "test:lint": "eslint . --fix",
     "test:local": "eslint . --fix && npm run test:jest && npm run cc",
-    "test:jest": "jest --no-cache --config jest.config.json --runInBand --forceExit"
+    "test:jest": "jest --config jest.config.json --runInBand --forceExit"
   },
   "dependencies": {
     "@types/debug": "^4.1.5",
@@ -58,13 +58,13 @@
     "eetase": "^4.0.0",
     "express": "^4.18.1",
     "express-sslify": "^1.2.0",
-    "jsonwebtoken": "^8.5.1",
+    "jsonwebtoken": "^9.0.0",
     "mongoose": "^6.6.2",
     "morgan": "^1.10.0",
     "sc-errors": "^2.0.1",
     "scc-broker-client": "^8.2.0",
     "serve-static": "^1.15.0",
-    "snyk": "^1.1013.0",
+    "snyk": "^1.1064.0",
     "socketcluster-client": "^16.1.1",
     "socketcluster-server": "^16.2.1",
     "superagent": "^8.0.0",
