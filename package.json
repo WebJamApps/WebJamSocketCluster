@@ -4,7 +4,7 @@
   "version": "2.0.1",
   "license": "MIT",
   "engines": {
-    "node": ">=18.15.0 <19",
+    "node": ">=18.14.0 <19",
     "npm": ">=9.5.0 <10"
   },
   "contributors": [
