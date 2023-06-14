@@ -143,9 +143,19 @@ class AgController {
     })();
   }
 
-  async updateImage(data: { id: mongoose.Types.ObjectId; image: Record<string, unknown>; }, client:IClient):Promise<string> {
+  async updateImage(
+    data: { token:string; 
+      editPic: { _id: mongoose.Types.ObjectId, title:string, url:string, comments:string }; }, 
+    client:IClient,
+  ):Promise<string> {
+    const { editPic, token } = data;
+    const {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      _id, title, url, comments, 
+    } = editPic;
     let r: any;// eslint-disable-next-line security/detect-object-injection
-    try { r = await this.bookController.findByIdAndUpdate(data.id, data.image); } catch (e) {
+    if (typeof token !== 'string') throw new Error('invalid token');
+    try { r = await this.bookController.findByIdAndUpdate(_id, { title, url, comments }); } catch (e) {
       const eMessage = (e as Error).message;
       client.socket.transmit('socketError', { updateImage: eMessage });// send error back to client
       debug(eMessage); 
