@@ -68,7 +68,7 @@ httpServer.listen(SOCKETCLUSTER_PORT);
     stateServerReconnectRandomness: SCC_STATE_SERVER_RECONNECT_RANDOMNESS,
     brokerRetryDelay: SCC_BROKER_RETRY_DELAY,
   });
-  if (SOCKETCLUSTER_LOG_LEVEL >= 1) {
+  if (Number(SOCKETCLUSTER_LOG_LEVEL) >= 1) {
     (async () => {
       const { error } = await sccClient.listener('error').once();
       debug(`sccClient error: ${error.message}`);

@@ -1,21 +1,28 @@
 import Debug from 'debug';
 import type socketClusterServer from 'socketcluster-server';
-import AgController from './AgController';
+import ConsumableStream from 'consumable-stream';
+import AgController from '../AgController';
 
 const debug = Debug('WebJamSocketServer:agServerUtils');
+
+const handleConnections = async (
+  cConsumer:ConsumableStream.Consumer<socketClusterServer.AGServer.ConnectionData>, 
+  agController: AgController,
+) => {
+  while (true) { // eslint-disable-line no-constant-condition
+    const socket = await cConsumer.next();// eslint-disable-line no-await-in-loop
+    debug(`new connection with id: ${socket.value.id}`);
+    agController.addSocket(socket.value);
+    /* istanbul ignore else */if (socket.done) break;
+  }
+};
 
 const routing = async (agServer:socketClusterServer.AGServer): Promise<boolean> => {
   const agController = new AgController(agServer);
   /* istanbul ignore else */if (process.env.NODE_ENV !== 'production') await agController.resetData();
   (async () => { // SocketCluster/WebSocket connection handling
-    let socket;
     const cConsumer = agServer.listener('connection').createConsumer();
-    while (true) { // eslint-disable-line no-constant-condition
-      socket = await cConsumer.next();// eslint-disable-line no-await-in-loop
-      debug(`new connection with id: ${socket.value.id}`);
-      agController.addSocket(socket.value);
-      /* istanbul ignore else */if (socket.done) break;
-    }
+    await handleConnections(cConsumer, agController);
   })();
   return Promise.resolve(true);
 };
@@ -45,4 +52,6 @@ const handleErrAndWarn = (SOCKETCLUSTER_LOG_LEVEL: any, SOCKETCLUSTER_PORT: any,
   }
   return Promise.resolve(true);
 };
-export default { handleErrAndWarn, setupErrorWarning, routing };
+export default {
+  handleErrAndWarn, setupErrorWarning, routing, handleConnections, 
+};

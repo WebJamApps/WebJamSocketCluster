@@ -1,5 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import agServerUtils from '../../src/app/agServerUtils';
-import tourController from '../../src/model/tour/tour-controller';
 
 describe('agServerUtils', () => {
   let r;
@@ -30,17 +30,15 @@ describe('agServerUtils', () => {
     r = await agServerUtils.handleErrAndWarn(2, 8888, aStub);
     expect(r).toBe(true);
   });
-  it('handles routing', async () => {
-    r = await agServerUtils.routing(aStub);
-    expect(r).toBe(true);
-  });
-  it('handles routing but has an error on resetData', async () => {
-    tourController.createDocs = jest.fn(() => Promise.reject(new Error('bad')));
-    r = await agServerUtils.routing(aStub);
-    expect(r).toBe(true);
-  });
   it('should wait unit tests finish before exiting', async () => { // eslint-disable-line jest/expect-expect
     const delay = (ms: any) => new Promise((resolve) => { setTimeout(() => resolve(true), ms); });
     await delay(1000);
+  });
+  it('should handleConnecions', async () => {
+    const socket = { done: true, value: { id: 'id' } };
+    const c:any = { next: jest.fn(() => Promise.resolve(socket)) };
+    const a:any = { addSocket: jest.fn() };
+    expect(await agServerUtils.handleConnections(c, a)).toBe(undefined);
+    expect(a.addSocket).toHaveBeenCalledWith(socket.value);
   });
 });

@@ -4,7 +4,7 @@ import mongoose from 'mongoose';
 dotenv.config();
 mongoose.Promise = global.Promise;// use es6 default promise library in mongoose
 const mongoOptions = {
-  keepAlive: true, useNewUrlParser: true, autoIndex: true, useUnifiedTopology: true, 
+  useNewUrlParser: true, autoIndex: true, useUnifiedTopology: true, 
 };
 /* istanbul ignore if */
 if (process.env.NODE_ENV === 'production') mongoOptions.autoIndex = false;
