@@ -180,14 +180,10 @@ class AgController {
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         let decoded, user, goodRoles;
-        debug(`received newTour message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
         try {
-          debug('token');
-          debug(receiver.value.token);
           decoded = this.jwt.verify(receiver.value.token, process.env.HashString || /* istanbul ignore next */'');
-          // eslint-disable-next-line no-await-in-loop
-          user = await this.superagent.get(`${process.env.BackendUrl}/user/${decoded.sub}`)
+          user = await this.superagent.get(`${process.env.BackendUrl}/user/${decoded.sub}`) // eslint-disable-line no-await-in-loop
             .set('Accept', 'application/json').set('Authorization', `Bearer ${receiver.value.token}`);
           goodRoles = JSON.parse(process.env.userRoles || /* istanbul ignore next */'{}').roles;
           if (!goodRoles || !user || !user.body || !user.body.userType || goodRoles.indexOf(user.body.userType) === -1) { 
