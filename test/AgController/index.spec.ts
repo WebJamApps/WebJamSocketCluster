@@ -37,9 +37,6 @@ describe('AgControler', () => {
     transmit: () => { },
     receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
   };
-  // afterEach(async () => {
-  //   await delay(1000);
-  // });
   it('addSocket', () => {
     const agController = new AgController(aStub);
     agController.handleReceiver = jest.fn();
@@ -830,21 +827,4 @@ describe('AgControler', () => {
     expect(r).toBe('image updated');
     await delay(1000);
   });
-  // it('creates tours', async () => {
-  //   const agController = new AgController(aStub);
-  //   r = await utils.handleTour('createDocs', {
-  //     datetime: new Date(), venue: 'venue', city: 'city', usState: 'state',
-  //   }, 'tourCreated');
-  //   expect(r).toBe('tour handled');
-  //   await delay(1000);
-  // });
-  // it('handles error from creates tours', async () => {
-  //   const agController = new AgController(aStub);
-  //   agController.tourController.createDocs = jest.fn(() => Promise.reject(new Error('bad')));
-  //   r = await utils.handleTour('createDocs', {
-  //     datetime: new Date(), venue: 'venue', city: 'city', usState: 'state',
-  //   }, 'tourCreated');
-  //   expect(r).toBe('bad');
-  //   await delay(1000);
-  // });
 });
