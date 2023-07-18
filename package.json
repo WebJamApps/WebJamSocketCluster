@@ -59,7 +59,7 @@
     "express": "^4.18.2",
     "express-sslify": "^1.2.0",
     "jsonwebtoken": "^9.0.0",
-    "mongoose": "^7.0.1",
+    "mongoose": "^7.3.3",
     "morgan": "^1.10.0",
     "sc-errors": "^2.0.1",
     "scc-broker-client": "^8.2.0",
