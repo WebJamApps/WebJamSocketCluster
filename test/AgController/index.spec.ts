@@ -1,7 +1,8 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose from 'mongoose';
-import AgController from '../../src/app/AgController';
+import AgController from '../../src/AgController';
+import utils from '../../src/AgController/utils';
 
 const testId = new mongoose.Types.ObjectId();
 const delay = (ms: any) => new Promise((resolve) => { setTimeout(() => resolve(true), ms); });
@@ -36,8 +37,19 @@ describe('AgControler', () => {
     transmit: () => { },
     receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
   };
-  afterEach(async () => {
-    await delay(1000);
+  it('addSocket', () => {
+    const agController = new AgController(aStub);
+    agController.handleReceiver = jest.fn();
+    agController.sendPulse = jest.fn();
+    agController.newTour = jest.fn();
+    agController.removeTour = jest.fn();
+    agController.editDoc = jest.fn();
+    agController.newImage = jest.fn();
+    agController.removeImage = jest.fn();
+    const createConsumer = jest.fn(() => ({ next: jest.fn() }));
+    const cStub = { ...clientStub, socket: { receiver: () => ({ createConsumer }) } };
+    expect(agController.addSocket(cStub)).toBeUndefined();
+    expect(agController.removeImage).toHaveBeenCalled();
   });
   it('handles undefined disconnects', async () => {
     const agController = new AgController(aStub);
@@ -103,6 +115,24 @@ describe('AgControler', () => {
     agController.handleReceiver(sStub);
     await delay(1000);
     expect(agController.bookController.getAll).toHaveBeenCalled();
+  });
+  it('handleReceiver when no value', async () => {
+    const agController = new AgController(aStub);
+    agController.bookController.getAll = jest.fn(() => Promise.resolve([]));
+    agController.clients = ['123'];
+    const sStub:any = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: undefined, done: true }) }) }),
+      },
+    };
+    const setIntervalMock: any = jest.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
+    agController.handleReceiver(sStub);
+    await delay(1000);
+    expect(agController.bookController.getAll).not.toHaveBeenCalled();
   });
   it('gets all tours', async () => {
     const agController = new AgController(aStub);
@@ -328,7 +358,7 @@ describe('AgControler', () => {
   it('handles missing receiver value when process the newTour message from client', () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
-    agController.handleTour = jest.fn();
+    utils.handleTour = jest.fn();
     const cStub:any = {
       socket: {
         id: '123',
@@ -346,7 +376,7 @@ describe('AgControler', () => {
     const setIntervalMock:any = jest.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
     agController.newTour(cStub);
-    expect(agController.handleTour).not.toHaveBeenCalled();
+    expect(utils.handleTour).not.toHaveBeenCalled();
   });
   it('process the newImage message from client', async () => {
     const agController = new AgController(aStub);
@@ -453,9 +483,9 @@ describe('AgControler', () => {
     agController.removeImage(cStub);
     expect(agController.bookController.deleteById).not.toHaveBeenCalled();
   });
-  it('process the removeTour message from client', async () => {
+  it('process the removeTour message from client', () => {
     const agController = new AgController(aStub);
-    agController.handleTour = jest.fn();
+    utils.handleTour = jest.fn();
     agController.clients = ['123'];
     const cStub:any = {
       socket: {
@@ -479,13 +509,12 @@ describe('AgControler', () => {
     };
     const setIntervalMock:any = jest.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    agController.removeTour(cStub);
-    await delay(1000);
-    expect(agController.handleTour).toHaveBeenCalled();
+    utils.removeTour = jest.fn(() => Promise.resolve());
+    expect(agController.removeTour(cStub)).toBeUndefined();
   });
   it('does not process the removeTour message from client', () => {
     const agController = new AgController(aStub);
-    agController.handleTour = jest.fn();
+    utils.handleTour = jest.fn();
     agController.clients = ['123'];
     const cStub:any = {
       socket: {
@@ -503,7 +532,7 @@ describe('AgControler', () => {
     const setIntervalMock:any = jest.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
     agController.removeTour(cStub);
-    expect(agController.handleTour).not.toHaveBeenCalled();
+    expect(utils.handleTour).not.toHaveBeenCalled();
   });
   it('processes the updateImage message from client', async () => {
     const agController = new AgController(aStub);
@@ -674,10 +703,10 @@ describe('AgControler', () => {
     };
     const setIntervalMock:any = jest.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    agController.handleTour = jest.fn();
+    utils.handleTour = jest.fn();
     agController.removeTour(sStub);
     await delay(1000);
-    expect(agController.handleTour).not.toHaveBeenCalled();
+    expect(utils.handleTour).not.toHaveBeenCalled();
   });
   it('creates a book (image)', async () => {
     const agController = new AgController(aStub);
@@ -685,7 +714,6 @@ describe('AgControler', () => {
       url: 'url', title: 'title', type: 'JaMmusic',
     }, 'imageCreated');
     expect(r).toBe('imageCreated');
-    await delay(1000);
   });
   it('returns error message when creates a book (image)', async () => {
     const agController = new AgController(aStub);
@@ -714,12 +742,56 @@ describe('AgControler', () => {
       },
     };
     const agController = new AgController(aStub);
-    r = await agController.updateImage({
-      id: new mongoose.Types.ObjectId(),
-      image: {}, 
-    }, clientStub);
+    r = await agController.updateImage(
+      {
+        token: 'token',
+        editPic: {
+          _id: new mongoose.Types.ObjectId(),
+          title: 'title',
+          url: 'url',
+          comments: 'comments', 
+        },
+      }, 
+      clientStub,
+    );
     expect(r).toBe('Id Not Found');
     await delay(1000);
+  });
+  it('updateImage throws error invalid token', async () => {
+    clientStub = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    const agController = new AgController(aStub);
+    const token:any = 0;
+    let eMessage = '';
+    try {
+      await agController.updateImage(
+        {
+          token,
+          editPic: {
+            _id: new mongoose.Types.ObjectId(),
+            title: 'title',
+            url: 'url',
+            comments: 'comments', 
+          },
+        }, 
+        clientStub,
+      );
+    } catch (e) { eMessage = (e as Error).message; }
+    expect(eMessage).toBe('invalid token');
   });
   it('updateImage success', async () => {
     clientStub = {
@@ -740,28 +812,19 @@ describe('AgControler', () => {
     };
     const agController = new AgController(aStub);
     agController.bookController.findByIdAndUpdate = jest.fn(() => Promise.resolve());
-    r = await agController.updateImage({
-      id: new mongoose.Types.ObjectId(),
-      image: {}, 
-    }, clientStub);
+    r = await agController.updateImage(
+      {
+        token: 'token',
+        editPic: {
+          _id: new mongoose.Types.ObjectId(),
+          title: 'title',
+          url: 'url',
+          comments: 'comments', 
+        },
+      }, 
+      clientStub,
+    );
     expect(r).toBe('image updated');
-    await delay(1000);
-  });
-  it('creates tours', async () => {
-    const agController = new AgController(aStub);
-    r = await agController.handleTour('createDocs', {
-      datetime: new Date(), venue: 'venue', city: 'city', usState: 'state',
-    }, 'tourCreated');
-    expect(r).toBe('tour handled');
-    await delay(1000);
-  });
-  it('handles error from creates tours', async () => {
-    const agController = new AgController(aStub);
-    agController.tourController.createDocs = jest.fn(() => Promise.reject(new Error('bad')));
-    r = await agController.handleTour('createDocs', {
-      datetime: new Date(), venue: 'venue', city: 'city', usState: 'state',
-    }, 'tourCreated');
-    expect(r).toBe('bad');
     await delay(1000);
   });
 });

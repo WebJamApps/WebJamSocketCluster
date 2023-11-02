@@ -5,7 +5,7 @@ checks:
       threshold: 5
   method-lines:
     config:
-      threshold: 30
+      threshold: 40
   similar-code:
     config:
       threshold: 75

@@ -7,6 +7,7 @@ import tourData from '../model/tour/reset-tour';
 import BookController from '../model/book/book-controller';
 import bookData from '../model/book/reset-book';
 import mongoose from '../model/db';
+import utils from './utils';
 
 export interface IClient {
   socket:any, 
@@ -32,20 +33,10 @@ class AgController {
     this.clients = [];
   }
 
-  async resetData():Promise<string> {
+  async resetData():Promise<void> {
     const { tour } = tourData;
     const { book } = bookData;
-    try {
-      await this.tourController.deleteAllDocs();
-      await this.tourController.createDocs(tour);
-      await this.bookController.deleteAllDocs();
-      await this.bookController.createDocs(book);
-    } catch (e) {
-      const eMessage = (e as Error).message;
-      debug(eMessage); 
-      return eMessage; 
-    }
-    return 'data has been reset';
+    await utils.resetData(tour, book, this.tourController, this.bookController);
   }
 
   handleDisconnect(client: IClient, interval: NodeJS.Timeout):void {
@@ -143,9 +134,19 @@ class AgController {
     })();
   }
 
-  async updateImage(data: { id: mongoose.Types.ObjectId; image: Record<string, unknown>; }, client:IClient):Promise<string> {
+  async updateImage(
+    data: { token:string; 
+      editPic: { _id: mongoose.Types.ObjectId, title:string, url:string, comments:string }; }, 
+    client:IClient,
+  ):Promise<string> {
+    const { editPic, token } = data;
+    const {
+      // eslint-disable-next-line @typescript-eslint/naming-convention
+      _id, title, url, comments, 
+    } = editPic;
     let r: any;// eslint-disable-next-line security/detect-object-injection
-    try { r = await this.bookController.findByIdAndUpdate(data.id, data.image); } catch (e) {
+    if (typeof token !== 'string') throw new Error('invalid token');
+    try { r = await this.bookController.findByIdAndUpdate(_id, { title, url, comments }); } catch (e) {
       const eMessage = (e as Error).message;
       client.socket.transmit('socketError', { updateImage: eMessage });// send error back to client
       debug(eMessage); 
@@ -171,21 +172,6 @@ class AgController {
     })();
   }
 
-  async handleTour(
-    func: string, 
-    data: { datetime: Date; venue: string; city:string, usState:string }, 
-    message: string,
-  ):Promise<string> {
-    let r: any;// eslint-disable-next-line security/detect-object-injection
-    try { r = await (this.tourController as any)[func](data); } catch (e) {
-      const eMessage = (e as Error).message;
-      debug(eMessage); 
-      return eMessage; 
-    }
-    this.server.exchange.transmitPublish(message, r);
-    return 'tour handled';
-  }
-
   newTour(client: IClient):void {
     (async () => {
       let receiver: { value: { token: string; 
@@ -194,14 +180,10 @@ class AgController {
       while (true) { // eslint-disable-line no-constant-condition
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         let decoded, user, goodRoles;
-        debug(`received newTour message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
         try {
-          debug('token');
-          debug(receiver.value.token);
           decoded = this.jwt.verify(receiver.value.token, process.env.HashString || /* istanbul ignore next */'');
-          // eslint-disable-next-line no-await-in-loop
-          user = await this.superagent.get(`${process.env.BackendUrl}/user/${decoded.sub}`)
+          user = await this.superagent.get(`${process.env.BackendUrl}/user/${decoded.sub}`) // eslint-disable-line no-await-in-loop
             .set('Accept', 'application/json').set('Authorization', `Bearer ${receiver.value.token}`);
           goodRoles = JSON.parse(process.env.userRoles || /* istanbul ignore next */'{}').roles;
           if (!goodRoles || !user || !user.body || !user.body.userType || goodRoles.indexOf(user.body.userType) === -1) { 
@@ -209,7 +191,13 @@ class AgController {
           }
           if (receiver.value.tour.datetime && receiver.value.tour.city 
             && receiver.value.tour.usState && receiver.value.tour.venue) {
-            await this.handleTour('createDocs', receiver.value.tour, 'tourCreated');// eslint-disable-line no-await-in-loop
+            await utils.handleTour(// eslint-disable-line no-await-in-loop
+              'createDocs', 
+              receiver.value.tour,
+              'tourCreated', 
+              this.tourController, 
+              this.server,
+            );
           } else throw new Error('Invalid create gig data');
           if (receiver.done) break;
         } catch (e) {
@@ -230,16 +218,7 @@ class AgController {
         receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
         debug(`received deleteTour message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
-        try {
-          if (typeof receiver.value.tour.tourId === 'string' && typeof receiver.value.token === 'string') {
-            await this.handleTour('deleteById', receiver.value.tour.tourId, 'tourDeleted');// eslint-disable-line no-await-in-loop
-          }
-        } catch (e) { 
-          const eMessage = (e as Error).message;
-          client.socket.transmit('socketError', { deleteTour: eMessage });// send error back to client
-          debug(eMessage); 
-          break; 
-        }
+        await utils.removeTour(receiver, client, this.tourController, this.server);// eslint-disable-line no-await-in-loop
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
