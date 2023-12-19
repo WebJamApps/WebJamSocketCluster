@@ -1,3 +1,4 @@
+import 'module-alias/register';
 import Debug from 'debug';
 import dotenv from 'dotenv';
 import socketClusterServer from 'socketcluster-server';

@@ -28,15 +28,15 @@
   "readmeFilename": "README.md",
   "scripts": {
     "rmrf": "rm -rf build && rm -rf JaMmusic && rm -rf coverage",
-    "start:debug": "rm -rf build && tsc && npm-run-all -p ts-start ts-watch",
+    "start:debug": "rm -rf build && tsc -p tsconfig.json && npm-run-all -p ts-start ts-watch",
     "test": "eslint . && rm -rf coverage && npm run test:jest",
     "cc": "codeclimate analyze -f html > codeclimate.html",
     "build:front": "./postinstallJaM.sh && rm -rf ./JaMmusic/src && rm -rf ./JaMmusic/test",
     "build:prod": "(cd JaMmusic || exit; npm start -- build)",
     "cleaninstall": "rm -rf yarn.lock && rm -rf package-lock.json && rm -rf node_modules && npm cache clean --force && npm install",
-    "start": "node build/index.js",
-    "postinstall": "npm run rmrf && tsc && npm run build:front",
-    "ts-start": "DEBUG=WebJamSocketServer:* nodemon --trace-warnings build/index.js",
+    "start": "node build/src/index.js",
+    "postinstall": "npm run rmrf && tsc -p tsconfig.prod.json && npm run build:front",
+    "ts-start": "DEBUG=WebJamSocketServer:* nodemon --trace-warnings build/src/index.js",
     "ts-watch": "tsc -w",
     "test:lint": "eslint . --fix",
     "test:local": "eslint . --fix && npm run test:jest && npm run cc",
@@ -59,8 +59,9 @@
     "eetase": "^5.0.0",
     "express": "^4.18.2",
     "express-sslify": "^1.2.0",
-    "mongoose": "^7.5.0",
     "jsonwebtoken": "^9.0.1",
+    "module-alias": "^2.2.3",
+    "mongoose": "^7.5.0",
     "morgan": "^1.10.0",
     "sc-errors": "^2.0.1",
     "scc-broker-client": "^9.0.1",
@@ -95,5 +96,9 @@
     "npm-run-all": "^4.1.5",
     "supertest": "^6.3.3",
     "ts-jest": "^29.1.1"
+  },
+  "_moduleAliases": {
+    "src"  : "build/src",
+    "@lib": "build/src/lib"
   }
 }

@@ -5,6 +5,9 @@
       "dist",
       "build",
       "coverage",
-      "public"
-    ]
+      "public",
+      "test",
+      "JaMmusic"
+    ],
+    "include":["src"]
 }
