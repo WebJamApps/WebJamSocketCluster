@@ -34,7 +34,7 @@
     "@typescript-eslint/restrict-template-expressions":0,
     "import/extensions": 0,
     "node/no-unsupported-features/es-syntax": 0,
-    "node/no-missing-import": 0,
+    "node/no-missing-import": 0,//turn off due to using alias imports
     "no-underscore-dangle": 0,
     "no-multiple-empty-lines": [
       "error",
