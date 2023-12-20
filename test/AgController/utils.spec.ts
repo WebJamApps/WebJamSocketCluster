@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import utils from '../../src/AgController/utils';
+import utils from 'src/AgController/utils';
 
 describe('AgController/utils', () => {
   it('resetData catches error', async () => {

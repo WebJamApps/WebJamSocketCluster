@@ -1,4 +1,4 @@
-import mongoose from '../db';
+import mongoose from 'src/model/db';
 
 const options = {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
