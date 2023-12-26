@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose from 'mongoose';
-import AgController from '../../src/AgController';
-import utils from '../../src/AgController/utils';
+import utils from 'src/AgController/utils';
+import AgController from 'src/AgController';
 
 const testId = new mongoose.Types.ObjectId();
 const delay = (ms: any) => new Promise((resolve) => { setTimeout(() => resolve(true), ms); });
