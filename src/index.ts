@@ -47,7 +47,7 @@ const expressApp = express();
 expressApp.use(serveStatic(path.resolve(__dirname, 'JaMmusic')));
 /* istanbul ignore next */
 if (process.env.NODE_ENV === 'production' && process.env.BUILD_BRANCH === 'master') expressApp.use(enforce.HTTPS({ trustProtoHeader: true }));
-expressApp.use(express.static(path.normalize(path.join(__dirname, '../JaMmusic/dist'))));
+expressApp.use(express.static(path.normalize(path.join(__dirname, '../../JaMmusic/dist'))));
 appUtils.setup(expressApp, httpServer);
 httpServer.listen(SOCKETCLUSTER_PORT);
 (async () => { await agServerUtils.routing(agServer); })();

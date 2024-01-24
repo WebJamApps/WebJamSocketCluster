@@ -27,16 +27,16 @@
   ],
   "readmeFilename": "README.md",
   "scripts": {
-    "rmrf": "rm -rf build && rm -rf JaMmusic && rm -rf coverage",
-    "start:debug": "rm -rf build && tsc -p tsconfig.json && npm-run-all -p ts-start ts-watch",
-    "test": "eslint . && rm -rf coverage && npm run test:jest",
+    "rmrf": "rimraf build && rimraf JaMmusic && rimraf coverage",
+    "start:debug": "rimraf build && tsc && npm-run-all -p ts-start ts-watch",
+    "test": "eslint . && rimraf coverage && npm run test:jest",
     "cc": "codeclimate analyze -f html > codeclimate.html",
-    "build:front": "./postinstallJaM.sh && rm -rf ./JaMmusic/src && rm -rf ./JaMmusic/test",
+    "build:front": "./postinstallJaM.sh && rimraf ./JaMmusic/src && rimraf ./JaMmusic/test",
     "build:prod": "(cd JaMmusic || exit; npm start -- build)",
-    "cleaninstall": "rm -rf yarn.lock && rm -rf package-lock.json && rm -rf node_modules && npm cache clean --force && npm install",
+    "cleaninstall": "rimraf yarn.lock && rimraf package-lock.json && rimraf node_modules && npm cache clean --force && npm install",
     "start": "node build/src/index.js",
-    "postinstall": "npm run rmrf && tsc -p tsconfig.prod.json && npm run build:front",
-    "ts-start": "DEBUG=WebJamSocketServer:* nodemon --trace-warnings build/src/index.js",
+    "postinstall": "npm run rmrf && tsc && npm run build:front",
+    "ts-start": "cross-env DEBUG=WebJamSocketServer:* nodemon --trace-warnings build/src/index.js",
     "ts-watch": "tsc -w",
     "test:lint": "eslint . --fix",
     "test:local": "eslint . --fix && npm run test:jest && npm run cc",
@@ -61,8 +61,9 @@
     "express-sslify": "^1.2.0",
     "jsonwebtoken": "^9.0.1",
     "module-alias": "^2.2.3",
-    "mongoose": "^7.5.0",
+    "mongoose": "^8.0.3",
     "morgan": "^1.10.0",
+    "rimraf": "^5.0.5",
     "sc-errors": "^2.0.1",
     "scc-broker-client": "^9.0.1",
     "serve-static": "^1.15.0",
@@ -79,6 +80,7 @@
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "cross-env": "^7.0.3",
     "eslint": "^8.45.0",
     "eslint-config-airbnb": "^19.0.4",
     "eslint-config-airbnb-typescript": "^17.1.0",
@@ -98,7 +100,7 @@
     "ts-jest": "^29.1.1"
   },
   "_moduleAliases": {
-    "src"  : "build/src",
+    "src": "build/src",
     "@lib": "build/src/lib"
   }
 }
