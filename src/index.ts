@@ -4,7 +4,6 @@ import dotenv from 'dotenv';
 import socketClusterServer from 'socketcluster-server';
 import express from 'express';
 import enforce from 'express-sslify';
-// import serveStatic from 'serve-static';
 import path from 'path';
 import morgan from 'morgan';
 import { v4 } from 'uuid';
@@ -45,7 +44,6 @@ const expressApp = express();
 /* istanbul ignore if */if (ENVIRONMENT === 'dev' || ENVIRONMENT === 'development') {
   expressApp.use(morgan('dev'));// Log every HTTP request. See https://github.com/expressjs/morgan for available formats.
 }
-// expressApp.use(serveStatic(path.resolve(__dirname, '../../JaMmusic')));
 /* istanbul ignore next */
 if (process.env.NODE_ENV === 'production' && process.env.BUILD_BRANCH === 'master') expressApp.use(enforce.HTTPS({ trustProtoHeader: true }));
 expressApp.use(express.static(path.normalize(path.join(__dirname, '../../JaMmusic/dist'))));
