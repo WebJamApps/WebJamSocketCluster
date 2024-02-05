@@ -4,8 +4,8 @@
   "version": "2.1.0",
   "license": "MIT",
   "engines": {
-    "node": ">=20.9.0 <21",
-    "npm": ">=10.1.0 <11"
+    "node": ">=20.11.0 <21",
+    "npm": ">=10.2.4 <11"
   },
   "contributors": [
     {
@@ -28,15 +28,15 @@
   "readmeFilename": "README.md",
   "scripts": {
     "rmrf": "rimraf build && rimraf JaMmusic && rimraf coverage",
-    "start:debug": "rimraf build && tsc && npm-run-all -p ts-start ts-watch",
+    "start:debug": "rimraf build && tsc && concurrently --raw \"npm:ts-start\" \"npm:ts-watch\"",
     "test": "eslint . && rimraf coverage && npm run test:jest",
     "cc": "codeclimate analyze -f html > codeclimate.html",
     "build:front": "./postinstallJaM.sh && rimraf ./JaMmusic/src && rimraf ./JaMmusic/test",
     "build:prod": "(cd JaMmusic || exit; npm start -- build)",
     "cleaninstall": "rimraf yarn.lock && rimraf package-lock.json && rimraf node_modules && npm cache clean --force && npm install",
     "start": "node build/src/index.js",
-    "postinstall": "npm run rmrf && tsc && npm run build:front",
-    "ts-start": "cross-env DEBUG=WebJamSocketServer:* nodemon --trace-warnings build/src/index.js",
+    "postinstall": "npm run rmrf && tsc -p tsconfig.prod.json && npm run build:front",
+    "ts-start": "cross-env DEBUG=WebJamSocketServer:* node --watch --trace-warnings build/src/index.js",
     "ts-watch": "tsc -w",
     "test:lint": "eslint . --fix",
     "test:local": "eslint . --fix && npm run test:jest && npm run cc",
@@ -80,6 +80,7 @@
     "@types/supertest": "^2.0.12",
     "@typescript-eslint/eslint-plugin": "^6.0.0",
     "@typescript-eslint/parser": "^6.0.0",
+    "concurrently": "^8.2.2",
     "cross-env": "^7.0.3",
     "eslint": "^8.45.0",
     "eslint-config-airbnb": "^19.0.4",
@@ -94,8 +95,6 @@
     "eslint-plugin-react-hooks": "^4.6.0",
     "eslint-plugin-security": "^1.7.1",
     "jest": "^29.6.1",
-    "nodemon": "^3.0.1",
-    "npm-run-all": "^4.1.5",
     "supertest": "^6.3.3",
     "ts-jest": "^29.1.1"
   },
