@@ -9,10 +9,10 @@ import morgan from 'morgan';
 import { v4 } from 'uuid';
 import sccBrokerClient from 'scc-broker-client';
 import './model/db';
-import type { Request, Response } from 'express';
 import httpServer from './app/httpServer';
 import appUtils from './app/appUtils';
 import agServerUtils from './app/agServerUtils';
+import routeUtils from './lib/routeUtils';
 
 const debug = Debug('WebJamSocketServer:server');
 dotenv.config();
@@ -47,12 +47,7 @@ const expressApp = express();
 /* istanbul ignore next */
 if (process.env.NODE_ENV === 'production' && process.env.BUILD_BRANCH === 'master') expressApp.use(enforce.HTTPS({ trustProtoHeader: true }));
 expressApp.use(express.static(path.normalize(path.join(__dirname, '../../JaMmusic/dist'))));
-expressApp.get('/', (_req:Request, res:Response) => {
-  res.sendFile(path.normalize(path.join(__dirname, '../../JaMmusic/dist/index.html')));
-});
-expressApp.get('*', (req:Request, res:Response) => {
-  res.sendFile(path.normalize(path.join(__dirname, '../../JaMmusic/dist/index.html')));
-});
+routeUtils.setRoot(expressApp);
 appUtils.setup(expressApp, httpServer);
 httpServer.listen(SOCKETCLUSTER_PORT);
 (async () => { await agServerUtils.routing(agServer); })();
