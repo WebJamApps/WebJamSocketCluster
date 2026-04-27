@@ -2,12 +2,12 @@ import Debug from 'debug';
 import JWT from 'jsonwebtoken';
 import Superagent from 'superagent';
 import type socketClusterServer from 'socketcluster-server';
-import TourController from '../model/tour/tour-controller';
-import tourData from '../model/tour/reset-tour';
-import BookController from '../model/book/book-controller';
-import bookData from '../model/book/reset-book';
-import mongoose from '../model/db';
-import utils from './utils';
+import TourController from '../model/tour/tour-controller.js';
+import tourData from '../model/tour/reset-tour.js';
+import BookController from '../model/book/book-controller.js';
+import bookData from '../model/book/reset-book.js';
+import mongoose from '../model/db.js';
+import utils from './utils.js';
 
 export interface IClient {
   socket:any, 

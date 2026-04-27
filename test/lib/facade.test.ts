@@ -1,4 +1,4 @@
-import Facade from '../../src/lib/facade';
+import Facade from '../../src/lib/facade.js';
 
 describe('Facade', () => {
   it('gets all sorted', async () => {

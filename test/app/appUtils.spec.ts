@@ -1,4 +1,4 @@
-import appUtils from '../../src/app/appUtils';
+import appUtils from '../../src/app/appUtils.js';
 
 describe('appUtils', () => {
   let r;

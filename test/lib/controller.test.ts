@@ -1,4 +1,4 @@
-import Controller from '../../src/lib/controller';
+import Controller from '../../src/lib/controller.js';
 
 describe('Lib Controller', () => {
   const modelStub = {
