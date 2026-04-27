@@ -1,6 +1,5 @@
-// const debug = require('debug')('WebJamSocketServer:book-controller');
-import Controller from '../../lib/controller';
-import bookModel from './book-facade';
+import Controller from '../../lib/controller.js';
+import bookModel from './book-facade.js';
 
 class BookController extends Controller {
   // findCheckedOut(req, res) {

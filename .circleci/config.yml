@@ -24,4 +24,10 @@ jobs:
             ./cc-test-reporter after-build --coverage-input-type lcov --exit-code $?
       - store_artifacts:
           path:        coverage
+      - run:
+          name:        Production install + start smoke test (Heroku parity)
+          command:     |
+            rm -rf node_modules build
+            npm install --omit=dev
+            node scripts/smoke-start.mjs
 

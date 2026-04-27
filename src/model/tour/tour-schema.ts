@@ -1,4 +1,4 @@
-import mongoose from '../db';
+import mongoose from '../db.js';
 
 const options = {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
@@ -18,4 +18,4 @@ const tourSchema = new Schema({
   more: { type: String, required: false },
 }, options);
 
-export default mongoose.model('Tour', tourSchema);
+export default mongoose.models.Tour || mongoose.model('Tour', tourSchema);
