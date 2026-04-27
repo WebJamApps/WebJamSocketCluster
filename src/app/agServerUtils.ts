@@ -1,7 +1,7 @@
 import Debug from 'debug';
 import type socketClusterServer from 'socketcluster-server';
 import ConsumableStream from 'consumable-stream';
-import AgController from '../AgController';
+import AgController from '../AgController/index.js';
 
 const debug = Debug('WebJamSocketServer:agServerUtils');
 

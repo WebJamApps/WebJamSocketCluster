@@ -1,8 +1,8 @@
 import Debug from 'debug';
-import tourData from '../model/tour/reset-tour';
-import bookData from '../model/book/reset-book';
-import TourController from '../model/tour/tour-controller';
-import BookController from '../model/book/book-controller';
+import tourData from '../model/tour/reset-tour.js';
+import bookData from '../model/book/reset-book.js';
+import TourController from '../model/tour/tour-controller.js';
+import BookController from '../model/book/book-controller.js';
 
 const debug = Debug('WebJamSocketServer:AgController/utils');
 

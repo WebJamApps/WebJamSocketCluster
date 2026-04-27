@@ -1,9 +1,9 @@
-import routeUtils from 'src/lib/routeUtils';
+import routeUtils from '#src/lib/routeUtils.js';
 
 describe('routeUtils', () => {
   it('setRoot', () => {
-    const res = { sendFile: jest.fn() };
-    const req = jest.fn();
+    const res = { sendFile: vi.fn() };
+    const req = vi.fn();
     const app:any = {
       get: (url:string, cb:any) => cb(req, res),
     };

@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/unbound-method */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose from 'mongoose';
-import utils from 'src/AgController/utils';
-import AgController from 'src/AgController';
+import utils from '#src/AgController/utils.js';
+import AgController from '#src/AgController/index.js';
 
 const testId = new mongoose.Types.ObjectId();
 const delay = (ms: any) => new Promise((resolve) => { setTimeout(() => resolve(true), ms); });
 const aStub:any = {
-  exchange: { transmitPublish: jest.fn() },
+  exchange: { transmitPublish: vi.fn() },
   listener: (name: any) => ({
     once: () => {
       if (name === 'error') return Promise.resolve({ error: 'bad' });
@@ -39,14 +39,14 @@ describe('AgControler', () => {
   };
   it('addSocket', () => {
     const agController = new AgController(aStub);
-    agController.handleReceiver = jest.fn();
-    agController.sendPulse = jest.fn();
-    agController.newTour = jest.fn();
-    agController.removeTour = jest.fn();
-    agController.editDoc = jest.fn();
-    agController.newImage = jest.fn();
-    agController.removeImage = jest.fn();
-    const createConsumer = jest.fn(() => ({ next: jest.fn() }));
+    agController.handleReceiver = vi.fn();
+    agController.sendPulse = vi.fn();
+    agController.newTour = vi.fn();
+    agController.removeTour = vi.fn();
+    agController.editDoc = vi.fn();
+    agController.newImage = vi.fn();
+    agController.removeImage = vi.fn();
+    const createConsumer = vi.fn(() => ({ next: vi.fn() }));
     const cStub = { ...clientStub, socket: { receiver: () => ({ createConsumer }) } };
     expect(agController.addSocket(cStub)).toBeUndefined();
     expect(agController.removeImage).toHaveBeenCalled();
@@ -60,7 +60,7 @@ describe('AgControler', () => {
       receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
     };
     const to:any = null;
-    agController.server.exchange.transmitPublish = jest.fn();
+    agController.server.exchange.transmitPublish = vi.fn();
     agController.handleDisconnect(sStub, to);
     await delay(1000);
     expect(agController.server.exchange.transmitPublish).toHaveBeenCalled();
@@ -92,15 +92,15 @@ describe('AgControler', () => {
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: '456', done: true }) }) }),
       },
     };
-    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    agController.server.exchange.transmitPublish = jest.fn();
+    agController.server.exchange.transmitPublish = vi.fn();
     agController.sendPulse(sStub);
     expect(agController.server.exchange.transmitPublish).toHaveBeenCalled();
   });
   it('accepts the initial message from client', async () => {
     const agController = new AgController(aStub);
-    agController.bookController.getAll = jest.fn(() => Promise.resolve([]));
+    agController.bookController.getAll = vi.fn(() => Promise.resolve([]));
     agController.clients = ['123'];
     const sStub:any = {
       socket: {
@@ -110,7 +110,7 @@ describe('AgControler', () => {
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
       },
     };
-    const setIntervalMock: any = jest.fn((cb:any) => cb());
+    const setIntervalMock: any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
     agController.handleReceiver(sStub);
     await delay(1000);
@@ -118,7 +118,7 @@ describe('AgControler', () => {
   });
   it('handleReceiver when no value', async () => {
     const agController = new AgController(aStub);
-    agController.bookController.getAll = jest.fn(() => Promise.resolve([]));
+    agController.bookController.getAll = vi.fn(() => Promise.resolve([]));
     agController.clients = ['123'];
     const sStub:any = {
       socket: {
@@ -128,7 +128,7 @@ describe('AgControler', () => {
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: undefined, done: true }) }) }),
       },
     };
-    const setIntervalMock: any = jest.fn((cb:any) => cb());
+    const setIntervalMock: any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
     agController.handleReceiver(sStub);
     await delay(1000);
@@ -144,7 +144,7 @@ describe('AgControler', () => {
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
       },
     };
-    agController.tourController.getAllSort = jest.fn(() => Promise.resolve([]));
+    agController.tourController.getAllSort = vi.fn(() => Promise.resolve([]));
     r = await agController.sendTours(cStub);
     expect(r).toBe('sent tours');
   });
@@ -158,7 +158,7 @@ describe('AgControler', () => {
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
       },
     };
-    agController.tourController.getAllSort = jest.fn(() => Promise.reject(new Error('bad')));
+    agController.tourController.getAllSort = vi.fn(() => Promise.reject(new Error('bad')));
     r = await agController.sendTours(sStub);
     expect(r).toBe('bad');
   });
@@ -172,13 +172,13 @@ describe('AgControler', () => {
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
       },
     };
-    agController.bookController.getAll = jest.fn(() => Promise.reject(new Error('bad')));
+    agController.bookController.getAll = vi.fn(() => Promise.reject(new Error('bad')));
     r = await agController.sendBooks(sStub);
     expect(r).toBe('bad');
   });
   it('updates a tours', async () => {
     const agController = new AgController(aStub);
-    agController.tourController.findByIdAndUpdate = jest.fn(() => Promise.resolve(true));
+    agController.tourController.findByIdAndUpdate = vi.fn(() => Promise.resolve(true));
     r = await agController.updateTour({
       tourId: testId,
       tour: {
@@ -189,7 +189,7 @@ describe('AgControler', () => {
   });
   it('handles error from updates a tours', async () => {
     const agController = new AgController(aStub);
-    agController.tourController.findByIdAndUpdate = jest.fn(() => Promise.reject(new Error('bad')));
+    agController.tourController.findByIdAndUpdate = vi.fn(() => Promise.reject(new Error('bad')));
     r = await agController.updateTour({
       tourId: testId,
       tour: {
@@ -201,7 +201,7 @@ describe('AgControler', () => {
   it('does not process the newTour message from client when token is not valid', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
-    agController.tourController.createDocs = jest.fn(() => Promise.resolve([]));
+    agController.tourController.createDocs = vi.fn(() => Promise.resolve([]));
     const cStub:any = {
       socket: {
         id: '123',
@@ -222,7 +222,7 @@ describe('AgControler', () => {
         }),
       },
     };
-    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
     agController.newTour(cStub);
     await delay(1000);
@@ -231,7 +231,7 @@ describe('AgControler', () => {
   it('processes the newTour message from client', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
-    agController.tourController.createDocs = jest.fn(() => Promise.resolve([]));
+    agController.tourController.createDocs = vi.fn(() => Promise.resolve([]));
     const cStub:any = {
       socket: {
         id: '123',
@@ -252,11 +252,11 @@ describe('AgControler', () => {
         }),
       },
     };
-    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    const verfyMock: any = jest.fn(() => '123');
+    const verfyMock: any = vi.fn(() => '123');
     agController.jwt.verify = verfyMock;
-    const getMock:any = jest.fn(() => ({
+    const getMock:any = vi.fn(() => ({
       set: () => ({
         set: () => Promise.resolve({
           body: 
@@ -272,12 +272,12 @@ describe('AgControler', () => {
   it('return the not allowed socketError when processes the newTour message from client', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
-    agController.tourController.createDocs = jest.fn(() => Promise.resolve([]));
+    agController.tourController.createDocs = vi.fn(() => Promise.resolve([]));
     clientStub = {
       socket: {
         id: '123',
         listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-        transmit: jest.fn(),
+        transmit: vi.fn(),
         receiver: () => ({
           createConsumer: () => ({
             next: () => Promise.resolve({
@@ -293,11 +293,11 @@ describe('AgControler', () => {
         }),
       },
     };
-    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    const verifyMock: any = jest.fn(() => '123');
+    const verifyMock: any = vi.fn(() => '123');
     agController.jwt.verify = verifyMock;
-    const getMock:any = jest.fn(() => ({
+    const getMock:any = vi.fn(() => ({
       set: () => ({
         set: () => Promise.resolve({
           body: 
@@ -314,12 +314,12 @@ describe('AgControler', () => {
   it('return the invalid request socketError when processes the newTour message from client', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
-    agController.tourController.createDocs = jest.fn(() => Promise.resolve([]));
+    agController.tourController.createDocs = vi.fn(() => Promise.resolve([]));
     clientStub = {
       socket: {
         id: '123',
         listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-        transmit: jest.fn(),
+        transmit: vi.fn(),
         receiver: () => ({
           createConsumer: () => ({
             next: () => Promise.resolve({
@@ -335,11 +335,11 @@ describe('AgControler', () => {
         }),
       },
     };
-    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    const verifyMock: any = jest.fn(() => '123');
+    const verifyMock: any = vi.fn(() => '123');
     agController.jwt.verify = verifyMock;
-    const getMock:any = jest.fn(() => ({
+    const getMock:any = vi.fn(() => ({
       set: () => ({
         set: () => Promise.resolve({
           body: 
@@ -358,7 +358,7 @@ describe('AgControler', () => {
   it('handles missing receiver value when process the newTour message from client', () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
-    utils.handleTour = jest.fn();
+    utils.handleTour = vi.fn();
     const cStub:any = {
       socket: {
         id: '123',
@@ -373,7 +373,7 @@ describe('AgControler', () => {
         }),
       },
     };
-    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
     agController.newTour(cStub);
     expect(utils.handleTour).not.toHaveBeenCalled();
@@ -381,7 +381,7 @@ describe('AgControler', () => {
   it('process the newImage message from client', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
-    agController.bookController.createDocs = jest.fn(() => Promise.resolve());
+    agController.bookController.createDocs = vi.fn(() => Promise.resolve());
     const cStub:any = {
       socket: {
         id: '123',
@@ -402,7 +402,7 @@ describe('AgControler', () => {
         }),
       },
     };
-    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
     agController.newImage(cStub);
     await delay(2000);
@@ -411,7 +411,7 @@ describe('AgControler', () => {
   it('handles missing receiver value when process the newImage message from client', () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
-    agController.bookController.createDocs = jest.fn(() => Promise.resolve());
+    agController.bookController.createDocs = vi.fn(() => Promise.resolve());
     const cStub:any = {
       socket: {
         id: '123',
@@ -426,16 +426,16 @@ describe('AgControler', () => {
         }),
       },
     };
-    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
     agController.newImage(cStub);
     expect(agController.bookController.createDocs).not.toHaveBeenCalled();
   });
   it('process the removeImage message from client', async () => {
     const agController = new AgController(aStub);
-    agController.handleImage = jest.fn();
+    agController.handleImage = vi.fn();
     agController.clients = ['123'];
-    agController.bookController.deleteById = jest.fn(() => Promise.resolve());
+    agController.bookController.deleteById = vi.fn(() => Promise.resolve());
     const cStub:any = {
       socket: {
         id: '123',
@@ -454,7 +454,7 @@ describe('AgControler', () => {
         }),
       },
     };
-    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
     agController.removeImage(cStub);
     await delay(2000);
@@ -463,7 +463,7 @@ describe('AgControler', () => {
   it('handles missing receiver value when process the removeImage message from client', () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
-    agController.bookController.deleteById = jest.fn(() => Promise.resolve());
+    agController.bookController.deleteById = vi.fn(() => Promise.resolve());
     const cStub:any = {
       socket: {
         id: '123',
@@ -478,14 +478,14 @@ describe('AgControler', () => {
         }),
       },
     };
-    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
     agController.removeImage(cStub);
     expect(agController.bookController.deleteById).not.toHaveBeenCalled();
   });
   it('process the removeTour message from client', () => {
     const agController = new AgController(aStub);
-    utils.handleTour = jest.fn();
+    utils.handleTour = vi.fn();
     agController.clients = ['123'];
     const cStub:any = {
       socket: {
@@ -507,14 +507,14 @@ describe('AgControler', () => {
         }),
       },
     };
-    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    utils.removeTour = jest.fn(() => Promise.resolve());
+    utils.removeTour = vi.fn(() => Promise.resolve());
     expect(agController.removeTour(cStub)).toBeUndefined();
   });
   it('does not process the removeTour message from client', () => {
     const agController = new AgController(aStub);
-    utils.handleTour = jest.fn();
+    utils.handleTour = vi.fn();
     agController.clients = ['123'];
     const cStub:any = {
       socket: {
@@ -529,7 +529,7 @@ describe('AgControler', () => {
         }),
       },
     };
-    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
     agController.removeTour(cStub);
     expect(utils.handleTour).not.toHaveBeenCalled();
@@ -557,9 +557,9 @@ describe('AgControler', () => {
         }),
       },
     };
-    const setIntervalMock: any = jest.fn((cb:any) => cb());
+    const setIntervalMock: any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    agController.updateImage = jest.fn();
+    agController.updateImage = vi.fn();
     agController.editDoc(sStub, 'updateImage');
     await delay(1000);
     expect(agController.updateImage).toHaveBeenCalled();
@@ -581,9 +581,9 @@ describe('AgControler', () => {
         }),
       },
     };
-    const setIntervalMock: any = jest.fn((cb:any) => cb());
+    const setIntervalMock: any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    agController.updateImage = jest.fn();
+    agController.updateImage = vi.fn();
     agController.editDoc(sStub, 'updateImage');
     await delay(1000);
     expect(agController.updateImage).not.toHaveBeenCalled();
@@ -611,9 +611,9 @@ describe('AgControler', () => {
         }),
       },
     };
-    const setIntervalMock: any = jest.fn((cb:any) => cb());
+    const setIntervalMock: any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    agController.updateTour = jest.fn();
+    agController.updateTour = vi.fn();
     agController.editDoc(sStub, 'editTour');
     await delay(1000);
     expect(agController.updateTour).toHaveBeenCalled();
@@ -640,9 +640,9 @@ describe('AgControler', () => {
         }),
       },
     };
-    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    agController.updateTour = jest.fn();
+    agController.updateTour = vi.fn();
     agController.editDoc(sStub, 'editTour');
     await delay(1000);
     expect(agController.updateTour).not.toHaveBeenCalled();
@@ -670,10 +670,10 @@ describe('AgControler', () => {
         }),
       },
     };
-    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    agController.tourController.findByIdAndUpdate = jest.fn(() => Promise.reject(new Error('bad')));
-    agController.server.exchange.transmitPublish = jest.fn();
+    agController.tourController.findByIdAndUpdate = vi.fn(() => Promise.reject(new Error('bad')));
+    agController.server.exchange.transmitPublish = vi.fn();
     agController.editDoc(sStub, 'editTour');
     await delay(1000);
     expect(agController.server.exchange.transmitPublish).not.toHaveBeenCalled();
@@ -701,9 +701,9 @@ describe('AgControler', () => {
         }),
       },
     };
-    const setIntervalMock:any = jest.fn((cb:any) => cb());
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    utils.handleTour = jest.fn();
+    utils.handleTour = vi.fn();
     agController.removeTour(sStub);
     await delay(1000);
     expect(utils.handleTour).not.toHaveBeenCalled();
@@ -717,7 +717,7 @@ describe('AgControler', () => {
   });
   it('returns error message when creates a book (image)', async () => {
     const agController = new AgController(aStub);
-    agController.bookController.createDocs = jest.fn(() => Promise.reject(new Error('bad')));
+    agController.bookController.createDocs = vi.fn(() => Promise.reject(new Error('bad')));
     r = await agController.handleImage('createDocs', {
       url: 'url', title: 'title', type: 'JaMmusic',
     }, 'imageCreated');
@@ -811,7 +811,7 @@ describe('AgControler', () => {
       },
     };
     const agController = new AgController(aStub);
-    agController.bookController.findByIdAndUpdate = jest.fn(() => Promise.resolve());
+    agController.bookController.findByIdAndUpdate = vi.fn(() => Promise.resolve());
     r = await agController.updateImage(
       {
         token: 'token',

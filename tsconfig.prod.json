@@ -1,13 +1,16 @@
 {
   "extends": "./tsconfig.json",
-    "exclude": [
-      "node_modules",
-      "dist",
-      "build",
-      "coverage",
-      "public",
-      "test",
-      "JaMmusic"
-    ],
-    "include":["src"]
+  "compilerOptions": {
+    "types": ["node"]
+  },
+  "exclude": [
+    "node_modules",
+    "dist",
+    "build",
+    "coverage",
+    "public",
+    "test",
+    "JaMmusic"
+  ],
+  "include": ["src"]
 }

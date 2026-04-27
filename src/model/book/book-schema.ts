@@ -1,4 +1,4 @@
-import mongoose from 'src/model/db';
+import mongoose from '#src/model/db.js';
 
 const options = {
   timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' },
@@ -22,4 +22,4 @@ const bookSchema = new Schema({ // images are books in the database
   checkedOutByName: { type: String, required: false },
 }, options);
 
-export default mongoose.model('Book', bookSchema);
+export default mongoose.models.Book || mongoose.model('Book', bookSchema);

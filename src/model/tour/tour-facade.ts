@@ -1,5 +1,5 @@
-import Model from '../../lib/facade';
-import tourSchema from './tour-schema';
+import Model from '../../lib/facade.js';
+import tourSchema from './tour-schema.js';
 
 class TourModel extends Model {
 
