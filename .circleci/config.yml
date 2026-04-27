@@ -8,7 +8,7 @@ jobs:
       - checkout
       - run:
           name:        Test install
-          command:     'npm install'
+          command:     'npm install --ignore-scripts'
       - run:
           name:        run all tests
           command:     'npm test'
