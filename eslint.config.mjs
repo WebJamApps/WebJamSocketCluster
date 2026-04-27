@@ -9,7 +9,6 @@ export default tseslint.config(
     ignores: [
       'node_modules/**',
       'coverage/**',
-      'codeclimate.html',
       'public/**',
       'build/**',
       'JaMmusic/**',

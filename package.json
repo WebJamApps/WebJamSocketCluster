@@ -36,7 +36,6 @@
     "rmrf": "rimraf build && rimraf JaMmusic && rimraf coverage",
     "start:debug": "rimraf build && tsc && concurrently --raw \"npm:ts-start\" \"npm:ts-watch\"",
     "test": "eslint . && rimraf coverage && npm run test:unit",
-    "cc": "codeclimate analyze -f html > codeclimate.html",
     "build:front": "./postinstallJaM.sh && rimraf ./JaMmusic/src && rimraf ./JaMmusic/test",
     "build:prod": "(cd JaMmusic || exit; npm start -- build)",
     "cleaninstall": "rimraf yarn.lock && rimraf package-lock.json && rimraf node_modules && npm cache clean --force && npm install",
