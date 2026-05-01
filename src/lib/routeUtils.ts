@@ -6,7 +6,7 @@ const setRoot = (app: Express) => {
   app.get('/', (_req:Request, res:Response) => {
     res.sendFile(path.normalize(path.join(import.meta.dirname, '../../../JaMmusic/dist/index.html')));
   });
-  app.get('*', (req:Request, res:Response) => {
+  app.get('/*splat', (req:Request, res:Response) => {
     res.sendFile(path.normalize(path.join(import.meta.dirname, '../../../JaMmusic/dist/index.html')));
   });
 };
