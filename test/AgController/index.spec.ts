@@ -31,6 +31,7 @@ const aStub:any = {
 };
 
 describe('AgControler', () => {
+  afterEach(() => { vi.unstubAllGlobals(); });
   let r, clientStub:any = {
     id: '123',
     listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
@@ -256,15 +257,10 @@ describe('AgControler', () => {
     global.setInterval = setIntervalMock;
     const verfyMock: any = vi.fn(() => '123');
     agController.jwt.verify = verfyMock;
-    const getMock:any = vi.fn(() => ({
-      set: () => ({
-        set: () => Promise.resolve({
-          body: 
-      { userType: JSON.parse(process.env.userRoles || '{}').roles[0] }, 
-        }), 
-      }), 
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ userType: JSON.parse(process.env.userRoles || '{}').roles[0] }),
     }));
-    agController.superagent.get = getMock;
     agController.newTour(cStub);
     await delay(1000);
     expect(agController.tourController.createDocs).toHaveBeenCalled();
@@ -297,15 +293,10 @@ describe('AgControler', () => {
     global.setInterval = setIntervalMock;
     const verifyMock: any = vi.fn(() => '123');
     agController.jwt.verify = verifyMock;
-    const getMock:any = vi.fn(() => ({
-      set: () => ({
-        set: () => Promise.resolve({
-          body: 
-      { userType: 'cool' }, 
-        }), 
-      }), 
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ userType: 'cool' }),
     }));
-    agController.superagent.get = getMock;
     agController.newTour(clientStub);
     await delay(1000);
     expect(clientStub.socket.transmit).toHaveBeenCalledWith('socketError', { newTour: 'Not allowed to create new tour' });
@@ -339,19 +330,14 @@ describe('AgControler', () => {
     global.setInterval = setIntervalMock;
     const verifyMock: any = vi.fn(() => '123');
     agController.jwt.verify = verifyMock;
-    const getMock:any = vi.fn(() => ({
-      set: () => ({
-        set: () => Promise.resolve({
-          body: 
-      { userType: JSON.parse(process.env.userRoles || '{}').roles[0] }, 
-        }), 
-      }), 
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ userType: JSON.parse(process.env.userRoles || '{}').roles[0] }),
     }));
-    agController.superagent.get = getMock;
     agController.newTour(clientStub);
     await delay(1000);
     expect(clientStub.socket.transmit).toHaveBeenCalledWith(
-      'socketError', 
+      'socketError',
       { newTour: 'Invalid create gig data' },
     );
   });

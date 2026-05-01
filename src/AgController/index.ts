@@ -1,6 +1,5 @@
 import Debug from 'debug';
 import JWT from 'jsonwebtoken';
-import Superagent from 'superagent';
 import type socketClusterServer from 'socketcluster-server';
 import TourController from '../model/tour/tour-controller.js';
 import tourData from '../model/tour/reset-tour.js';
@@ -19,8 +18,6 @@ class AgController {
   server: any;
 
   jwt = JWT;
-
-  superagent = Superagent;
 
   clients: any[];
 
@@ -183,10 +180,13 @@ class AgController {
         if (!receiver.value) break;
         try {
           decoded = this.jwt.verify(receiver.value.token, process.env.HashString || /* istanbul ignore next */'');
-          user = await this.superagent.get(`${process.env.BackendUrl}/user/${decoded.sub}`) // eslint-disable-line no-await-in-loop
-            .set('Accept', 'application/json').set('Authorization', `Bearer ${receiver.value.token}`);
+          const userRes = await fetch(`${process.env.BackendUrl}/user/${decoded.sub}`, {
+            headers: { Accept: 'application/json', Authorization: `Bearer ${receiver.value.token}` },
+          });
+          if (!userRes.ok) throw new Error(`${userRes.status} ${userRes.statusText}`);
+          user = await userRes.json();
           goodRoles = JSON.parse(process.env.userRoles || /* istanbul ignore next */'{}').roles;
-          if (!goodRoles || !user || !user.body || !user.body.userType || goodRoles.indexOf(user.body.userType) === -1) { 
+          if (!goodRoles || !user || !user.userType || goodRoles.indexOf(user.userType) === -1) {
             throw new Error('Not allowed to create new tour');
           }
           if (receiver.value.tour.datetime && receiver.value.tour.city 
