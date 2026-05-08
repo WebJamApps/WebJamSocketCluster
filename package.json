@@ -43,6 +43,7 @@
     "postinstall": "npm run rmrf && tsc -p tsconfig.prod.json && npm run build:front",
     "ts-start": "cross-env DEBUG=WebJamSocketServer:* node --watch --trace-warnings build/src/index.js",
     "ts-watch": "tsc -w",
+    "typecheck": "tsc --noEmit",
     "test:lint": "eslint . --fix",
     "test:local": "eslint . --fix && npm run test:unit && npm run cc",
     "test:unit": "vitest run",
