@@ -40,7 +40,7 @@ async function handleTour(
 async function removeTour(receiver:any, client:any, tourController:any, server:any) {
   try {
     if (typeof receiver.value.tour.tourId === 'string' && typeof receiver.value.token === 'string') {
-      await handleTour('deleteById', receiver.value.tour.tourId, 'tourDeleted', tourController, server);// eslint-disable-line no-await-in-loop
+      await handleTour('deleteById', receiver.value.tour.tourId, 'tourDeleted', tourController, server); 
     }
   } catch (e) { 
     const eMessage = (e as Error).message;

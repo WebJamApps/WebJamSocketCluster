@@ -15,7 +15,7 @@ if (process.env.NODE_ENV === 'test') uri = process.env.TEST_DB || /* istanbul ig
 /* istanbul ignore next */
 mongoose.connection.on('error', (e) => {
   if (process.env.NODE_ENV !== 'test') throw new Error(`unable to connect to database: ${uri}`);
-  else console.log(e.message);// eslint-disable-line no-console
+  else console.log(e.message); 
 });
 
 export default mongoose;
