@@ -2,6 +2,7 @@ import js from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import nodePlugin from 'eslint-plugin-n';
 import securityPlugin from 'eslint-plugin-security';
+import sonarjs from 'eslint-plugin-sonarjs';
 import globals from 'globals';
 
 export default tseslint.config(
@@ -22,6 +23,7 @@ export default tseslint.config(
   js.configs.recommended,
   nodePlugin.configs['flat/recommended-module'],
   securityPlugin.configs.recommended,
+  sonarjs.configs.recommended,
   {
     files: ['**/*.ts'],
     extends: [...tseslint.configs.recommendedTypeChecked],
@@ -61,6 +63,16 @@ export default tseslint.config(
       'no-multiple-empty-lines': ['error', { max: 1, maxEOF: 1 }],
       'one-var': ['error', { var: 'never', let: 'always', const: 'never' }],
       'max-len': ['error', { code: 150 }],
+    },
+  },
+  {
+    // Test-only override: deeply-nested arrow chains are the clearest way to
+    // build mock factories (e.g. socketcluster's receiver/consumer/next chain),
+    // and refactoring them into named helpers reduces readability rather than
+    // improving it. Keep the rule active for src/.
+    files: ['test/**/*.ts'],
+    rules: {
+      'sonarjs/no-nested-functions': 'off',
     },
   },
 );

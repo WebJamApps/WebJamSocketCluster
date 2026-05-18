@@ -17,8 +17,8 @@ const setup = (expressApp: any, httpServer: any): any => { // Add GET /health-ch
   (async () => { // HTTP request handling
     let packet;
     const consumer = httpServer.listener('request').createConsumer();
-    while (true) { // eslint-disable-line no-constant-condition
-      packet = await consumer.next();// eslint-disable-line no-await-in-loop
+    while (true) {  
+      packet = await consumer.next(); 
       handleRequest(expressApp, packet.value);
       /* istanbul ignore else */if (packet.done) break;
     }
