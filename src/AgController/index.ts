@@ -40,8 +40,8 @@ class AgController {
     (async () => {
       let disconnect: { value: undefined; done: any; };
       const dConsumer = client.listener('disconnect').createConsumer();
-      while (true) { // eslint-disable-line no-constant-condition
-        disconnect = await dConsumer.next();// eslint-disable-line no-await-in-loop
+      while (true) {  
+        disconnect = await dConsumer.next(); 
         clearInterval(interval);
         if (disconnect.value !== undefined) {
           const index = this.clients.indexOf(client.id);
@@ -55,6 +55,9 @@ class AgController {
 
   sendPulse(client:IClient):void {
     const interval = setInterval(() => {
+      // sonarjs/pseudo-random: this is a non-security pulse heartbeat for clients
+      // (an arbitrary 0-4 number transmitted every second). Math.random is fine here.
+      // eslint-disable-next-line sonarjs/pseudo-random
       client.socket.transmit('pulse', { number: Math.floor(Math.random() * 5) });
     }, 1000);
     debug(`num clients: ${this.clients.length}`);
@@ -89,14 +92,17 @@ class AgController {
     (async () => {
       let receiver: { value: number; done: any; };
       const rConsumer = client.socket.receiver('initial message').createConsumer();
-      while (true) { // eslint-disable-line no-constant-condition
-        receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
+      while (true) {  
+        receiver = await rConsumer.next(); 
         debug(`received initial message: ${receiver.value}`);
         if (receiver.value === 123) {
-          await this.sendTours(client);// eslint-disable-line no-await-in-loop
-          await this.sendBooks(client);// eslint-disable-line no-await-in-loop
-        } else break;
-        /* istanbul ignore else */if (receiver.done) break;
+          await this.sendTours(client);
+          await this.sendBooks(client);
+        } else {
+          break;
+        }
+        /* istanbul ignore else */
+        if (receiver.done) break;
       }
     })();
   }
@@ -117,14 +123,14 @@ class AgController {
     (async () => {
       let receiver: { value: { token: string; image: any }, done: any; };
       const rConsumer = client.socket.receiver('newImage').createConsumer();
-      while (true) { // eslint-disable-line no-constant-condition
-        receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
+      while (true) {  
+        receiver = await rConsumer.next(); 
         debug(`received newImage message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
         if (typeof receiver.value.token === 'string'
             && typeof receiver.value.image.title === 'string' && typeof receiver.value.image.url === 'string'
         ) {
-          await this.handleImage('createDocs', receiver.value.image, 'imageCreated');// eslint-disable-line no-await-in-loop
+          await this.handleImage('createDocs', receiver.value.image, 'imageCreated'); 
         }
         /* istanbul ignore else */if (receiver.done) break;
       }
@@ -138,10 +144,10 @@ class AgController {
   ):Promise<string> {
     const { editPic, token } = data;
     const {
-      // eslint-disable-next-line @typescript-eslint/naming-convention
+       
       _id, title, url, comments, 
     } = editPic;
-    let r: any;// eslint-disable-next-line security/detect-object-injection
+    let r: any; 
     if (typeof token !== 'string') throw new Error('invalid token');
     try { r = await this.bookController.findByIdAndUpdate(_id, { title, url, comments }); } catch (e) {
       const eMessage = (e as Error).message;
@@ -157,12 +163,12 @@ class AgController {
     (async () => {
       let receiver: { value: { data: string; token: string; }; done: any; };
       const rConsumer = client.socket.receiver('deleteImage').createConsumer();
-      while (true) { // eslint-disable-line no-constant-condition
-        receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
+      while (true) {  
+        receiver = await rConsumer.next(); 
         debug(`received deleteImage message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
         if (typeof receiver.value.token === 'string' && typeof receiver.value.data === 'string') {
-          await this.handleImage('deleteById', receiver.value.data, 'imageDeleted');// eslint-disable-line no-await-in-loop
+          await this.handleImage('deleteById', receiver.value.data, 'imageDeleted'); 
         }
         /* istanbul ignore else */if (receiver.done) break;
       }
@@ -174,8 +180,8 @@ class AgController {
       let receiver: { value: { token: string; 
         tour: { datetime: Date; venue: string; city:string, usState: string }; }; done: any; };
       const rConsumer = client.socket.receiver('newTour').createConsumer();
-      while (true) { // eslint-disable-line no-constant-condition
-        receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
+      while (true) {  
+        receiver = await rConsumer.next(); 
         let decoded, user, goodRoles;
         if (!receiver.value) break;
         try {
@@ -191,7 +197,7 @@ class AgController {
           }
           if (receiver.value.tour.datetime && receiver.value.tour.city 
             && receiver.value.tour.usState && receiver.value.tour.venue) {
-            await utils.handleTour(// eslint-disable-line no-await-in-loop
+            await utils.handleTour( 
               'createDocs', 
               receiver.value.tour,
               'tourCreated', 
@@ -214,11 +220,11 @@ class AgController {
     (async () => {
       let receiver: { value: { tour:any; token: any; }; done: any; };
       const rConsumer = client.socket.receiver('deleteTour').createConsumer();
-      while (true) { // eslint-disable-line no-constant-condition
-        receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
+      while (true) {  
+        receiver = await rConsumer.next(); 
         debug(`received deleteTour message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
-        await utils.removeTour(receiver, client, this.tourController, this.server);// eslint-disable-line no-await-in-loop
+        await utils.removeTour(receiver, client, this.tourController, this.server); 
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
@@ -227,7 +233,7 @@ class AgController {
   async updateTour(
     data: { tourId: mongoose.Types.ObjectId; tour: Record<string, unknown>; },
   ):Promise<string> {
-    let r: any;// eslint-disable-next-line security/detect-object-injection
+    let r: any; 
     try { 
       const { tourId, tour } = data;
       if (!tour.venue || !tour.datetime || !tour.city || !tour.usState) throw new Error('Invalid gig data');
@@ -245,15 +251,15 @@ class AgController {
     (async () => {
       let receiver: { value:any; done: any; };
       const rConsumer = client.socket.receiver(action).createConsumer();
-      while (true) { // eslint-disable-line no-constant-condition
-        receiver = await rConsumer.next();// eslint-disable-line no-await-in-loop
+      while (true) {  
+        receiver = await rConsumer.next(); 
         const obj = JSON.stringify(receiver.value);
         debug(`received ${action} message: ${obj}`);
         if (!receiver.value) break;
         if (typeof receiver.value.token === 'string') {
-          // eslint-disable-next-line security/detect-object-injection
-          if (action === 'editTour') await this.updateTour(receiver.value);// eslint-disable-line no-await-in-loop
-          // eslint-disable-next-line no-await-in-loop
+           
+          if (action === 'editTour') await this.updateTour(receiver.value); 
+           
           else await this.updateImage(receiver.value, client);
         }
         /* istanbul ignore else */if (receiver.done) break;

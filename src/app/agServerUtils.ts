@@ -9,8 +9,8 @@ const handleConnections = async (
   cConsumer:ConsumableStream.Consumer<socketClusterServer.AGServer.ConnectionData>, 
   agController: AgController,
 ) => {
-  while (true) { // eslint-disable-line no-constant-condition
-    const socket = await cConsumer.next();// eslint-disable-line no-await-in-loop
+  while (true) {  
+    const socket = await cConsumer.next(); 
     debug(`new connection with id: ${socket.value.id}`);
     agController.addSocket(socket.value);
     /* istanbul ignore else */if (socket.done) break;
@@ -30,8 +30,8 @@ const setupErrorWarning = (agServer: socketClusterServer.AGServer, type: any): v
   (async () => {
     let msg;
     const eConsumer = agServer.listener(type).createConsumer();
-    while (true) { // eslint-disable-line no-constant-condition
-      msg = await eConsumer.next();// eslint-disable-line no-await-in-loop
+    while (true) {  
+      msg = await eConsumer.next(); 
       debug(type);
       debug(msg.value);
       /* istanbul ignore else */if (msg.done) break;
@@ -46,7 +46,7 @@ const handleErrAndWarn = (SOCKETCLUSTER_LOG_LEVEL: any, SOCKETCLUSTER_PORT: any,
     /* istanbul ignore else */if (color) fullMessage = `\x1b[${color}m${message}\x1b[0m`;
     return fullMessage;
   }
-  /* istanbul ignore else */if (SOCKETCLUSTER_LOG_LEVEL >= 2) { // eslint-disable-next-line no-console
+  /* istanbul ignore else */if (SOCKETCLUSTER_LOG_LEVEL >= 2) {  
     console.log(`   ${colorText('[Active]', 32)} SocketCluster worker with PID ${process.pid} is listening on port ${SOCKETCLUSTER_PORT}`);
     setupErrorWarning(agServer, 'warning');
   }
