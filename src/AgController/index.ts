@@ -192,9 +192,7 @@ class AgController {
           if (!userRes.ok) throw new Error(`${userRes.status} ${userRes.statusText}`);
           user = await userRes.json();
           goodRoles = JSON.parse(process.env.userRoles || /* istanbul ignore next */'{}').roles;
-          if (!goodRoles || !user || !user.userType || goodRoles.indexOf(user.userType) === -1) {
-            throw new Error('Not allowed to create new tour');
-          }
+          utils.assertCanCreateTour(user, goodRoles);
           if (receiver.value.tour.datetime && receiver.value.tour.city 
             && receiver.value.tour.usState && receiver.value.tour.venue) {
             await utils.handleTour( 
