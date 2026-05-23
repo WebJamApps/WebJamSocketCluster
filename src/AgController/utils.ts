@@ -49,4 +49,20 @@ async function removeTour(receiver:any, client:any, tourController:any, server:a
   }
 }
 
-export default { resetData, removeTour, handleTour };
+function assertCanCreateTour(
+  user: { userType?: string; privileges?: string[] } | null | undefined,
+  goodRoles: string[] | undefined,
+): void {
+  if (!user) throw new Error('Not allowed to create new tour');
+  if (Array.isArray(user.privileges) && user.privileges.length > 0) {
+    if (!user.privileges.includes('tour:create')) throw new Error('missing capability tour:create');
+    return;
+  }
+  if (!goodRoles || !user.userType || goodRoles.indexOf(user.userType) === -1) {
+    throw new Error('Not allowed to create new tour');
+  }
+}
+
+export default {
+  resetData, removeTour, handleTour, assertCanCreateTour,
+};
