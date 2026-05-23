@@ -302,6 +302,78 @@ describe('AgControler', () => {
     expect(clientStub.socket.transmit).toHaveBeenCalledWith('socketError', { newTour: 'Not allowed to create new tour' });
   });
 
+  it('allows newTour when user has tour:create privilege (capability path)', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.tourController.createDocs = vi.fn(() => Promise.resolve([]));
+    const cStub:any = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'token',
+                tour: {
+                  venue: 'venue', datetime: new Date(), city: 'city', usState: 'state',
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
+    agController.jwt.verify = vi.fn(() => '123') as any;
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ userType: 'unrecognized-role', privileges: ['tour:create'] }),
+    }));
+    agController.newTour(cStub);
+    await delay(1000);
+    expect(agController.tourController.createDocs).toHaveBeenCalled();
+  });
+
+  it('rejects newTour with missing capability error when privileges lack tour:create', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.tourController.createDocs = vi.fn(() => Promise.resolve([]));
+    const cStub:any = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: vi.fn(),
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'token',
+                tour: {
+                  venue: 'venue', datetime: new Date(), city: 'city', usState: 'state',
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
+    agController.jwt.verify = vi.fn(() => '123') as any;
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ userType: 'unrecognized-role', privileges: ['song:read'] }),
+    }));
+    agController.newTour(cStub);
+    await delay(1000);
+    expect(cStub.socket.transmit).toHaveBeenCalledWith('socketError', { newTour: 'missing capability tour:create' });
+  });
+
   it('return the invalid request socketError when processes the newTour message from client', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
