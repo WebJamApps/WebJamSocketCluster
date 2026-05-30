@@ -44,7 +44,7 @@ const expressApp = express();
   expressApp.use(morgan('dev'));// Log every HTTP request. See https://github.com/expressjs/morgan for available formats.
 }
 /* istanbul ignore next */
-if (process.env.NODE_ENV === 'production' && process.env.BUILD_BRANCH === 'master') expressApp.use(enforce.HTTPS({ trustProtoHeader: true }));
+if (process.env.NODE_ENV === 'production' && process.env.BUILD_BRANCH === 'main') expressApp.use(enforce.HTTPS({ trustProtoHeader: true }));
 expressApp.use(express.static(path.normalize(path.join(import.meta.dirname, '../../JaMmusic/dist'))));
 routeUtils.setRoot(expressApp);
 appUtils.setup(expressApp, httpServer);
