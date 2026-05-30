@@ -4,7 +4,7 @@ This is a parked plan for automating the manual "create gig on the music page" s
 
 ## Why
 
-There is no hosted dev environment; `master` deploys to Heroku. The current pre-merge safety net is a manual two-terminal smoke (see [`README.md`](../README.md) "Local smoke testing"). One automated end-to-end test that creates a gig would catch the highest-risk regressions on every PR — express route changes, the fetch-migrated auth call in `AgController.newTour`, mongoose CRUD, socketcluster publish, JaMmusic ↔ cluster wire format.
+There is no hosted dev environment; `main` deploys to Heroku. The current pre-merge safety net is a manual two-terminal smoke (see [`README.md`](../README.md) "Local smoke testing"). One automated end-to-end test that creates a gig would catch the highest-risk regressions on every PR — express route changes, the fetch-migrated auth call in `AgController.newTour`, mongoose CRUD, socketcluster publish, JaMmusic ↔ cluster wire format.
 
 ## Goal
 
