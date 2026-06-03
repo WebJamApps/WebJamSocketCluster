@@ -1,7 +1,7 @@
 import mongoose from 'mongoose';
-import controller from '../../src/model/tour/tour-controller.js';
+import controller from '../../src/model/gig/gig-controller.js';
 
-describe('TourController', () => {
+describe('GigController', () => {
   const testId = new mongoose.Types.ObjectId();
   it('deletes all tours', async () => {
     controller.model.deleteMany = vi.fn(() => Promise.resolve(true));

@@ -1,16 +1,16 @@
 import Debug from 'debug';
 import JWT from 'jsonwebtoken';
 import type socketClusterServer from 'socketcluster-server';
-import TourController from '../model/tour/tour-controller.js';
-import tourData from '../model/tour/reset-tour.js';
+import GigController from '../model/gig/gig-controller.js';
+import gigData from '../model/gig/reset-gig.js';
 import BookController from '../model/book/book-controller.js';
 import bookData from '../model/book/reset-book.js';
 import mongoose from '../model/db.js';
 import utils from './utils.js';
 
 export interface IClient {
-  socket:any, 
-  listener: (arg0: string) => { (): any; new(): any; createConsumer: { (): any; new(): any; }; }; id: any; 
+  socket:any,
+  listener: (arg0: string) => { (): any; new(): any; createConsumer: { (): any; new(): any; }; }; id: any;
 }
 
 const debug = Debug('WebJamSocketServer:AgController');
@@ -21,7 +21,7 @@ class AgController {
 
   clients: any[];
 
-  tourController = TourController;
+  gigController = GigController;
 
   bookController = BookController;
 
@@ -31,17 +31,17 @@ class AgController {
   }
 
   async resetData():Promise<void> {
-    const { tour } = tourData;
+    const { gig } = gigData;
     const { book } = bookData;
-    await utils.resetData(tour, book, this.tourController, this.bookController);
+    await utils.resetData(gig, book, this.gigController, this.bookController);
   }
 
   handleDisconnect(client: IClient, interval: NodeJS.Timeout):void {
     (async () => {
       let disconnect: { value: undefined; done: any; };
       const dConsumer = client.listener('disconnect').createConsumer();
-      while (true) {  
-        disconnect = await dConsumer.next(); 
+      while (true) {
+        disconnect = await dConsumer.next();
         clearInterval(interval);
         if (disconnect.value !== undefined) {
           const index = this.clients.indexOf(client.id);
@@ -66,23 +66,25 @@ class AgController {
     return this.handleDisconnect(client.socket, interval);
   }
 
-  async sendTours(client:IClient):Promise<string> {
-    let allTours: any;
-    try { allTours = await this.tourController.getAllSort({ datetime: -1 }); } catch (e) {
+  async sendGigs(client:IClient):Promise<string> {
+    let allGigs: any;
+    try { allGigs = await this.gigController.getAllSort({ datetime: -1 }); } catch (e) {
       const eMessage = (e as Error).message;
-      debug(eMessage); 
-      return eMessage; 
+      debug(eMessage);
+      return eMessage;
     }
-    client.socket.transmit('allTours', allTours);
-    return 'sent tours';
+    client.socket.transmit('allGigs', allGigs);
+    // legacy alias so any still-deployed old frontend keeps showing gigs during the rename migration
+    client.socket.transmit('allTours', allGigs);
+    return 'sent gigs';
   }
 
   async sendBooks(client: IClient):Promise<string> {
     let allBooks: any;
     try { allBooks = await this.bookController.getAll(); } catch (e) {
       const eMessage = (e as Error).message;
-      debug(eMessage); 
-      return eMessage; 
+      debug(eMessage);
+      return eMessage;
     }
     client.socket.transmit('allBooks', allBooks);
     return 'sent books';
@@ -92,11 +94,11 @@ class AgController {
     (async () => {
       let receiver: { value: number; done: any; };
       const rConsumer = client.socket.receiver('initial message').createConsumer();
-      while (true) {  
-        receiver = await rConsumer.next(); 
+      while (true) {
+        receiver = await rConsumer.next();
         debug(`received initial message: ${receiver.value}`);
         if (receiver.value === 123) {
-          await this.sendTours(client);
+          await this.sendGigs(client);
           await this.sendBooks(client);
         } else {
           break;
@@ -112,8 +114,8 @@ class AgController {
     // eslint-disable-next-line security/detect-object-injection
     try { r = await (this.bookController as any)[func](data); } catch (e) {
       const eMessage = (e as Error).message;
-      debug(eMessage); 
-      return eMessage; 
+      debug(eMessage);
+      return eMessage;
     }
     this.server.exchange.transmitPublish(message, r);
     return message;
@@ -123,14 +125,14 @@ class AgController {
     (async () => {
       let receiver: { value: { token: string; image: any }, done: any; };
       const rConsumer = client.socket.receiver('newImage').createConsumer();
-      while (true) {  
-        receiver = await rConsumer.next(); 
+      while (true) {
+        receiver = await rConsumer.next();
         debug(`received newImage message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
         if (typeof receiver.value.token === 'string'
             && typeof receiver.value.image.title === 'string' && typeof receiver.value.image.url === 'string'
         ) {
-          await this.handleImage('createDocs', receiver.value.image, 'imageCreated'); 
+          await this.handleImage('createDocs', receiver.value.image, 'imageCreated');
         }
         /* istanbul ignore else */if (receiver.done) break;
       }
@@ -138,22 +140,22 @@ class AgController {
   }
 
   async updateImage(
-    data: { token:string; 
-      editPic: { _id: mongoose.Types.ObjectId, title:string, url:string, comments:string }; }, 
+    data: { token:string;
+      editPic: { _id: mongoose.Types.ObjectId, title:string, url:string, comments:string }; },
     client:IClient,
   ):Promise<string> {
     const { editPic, token } = data;
     const {
-       
-      _id, title, url, comments, 
+
+      _id, title, url, comments,
     } = editPic;
-    let r: any; 
+    let r: any;
     if (typeof token !== 'string') throw new Error('invalid token');
     try { r = await this.bookController.findByIdAndUpdate(_id, { title, url, comments }); } catch (e) {
       const eMessage = (e as Error).message;
       client.socket.transmit('socketError', { updateImage: eMessage });// send error back to client
-      debug(eMessage); 
-      return eMessage; 
+      debug(eMessage);
+      return eMessage;
     }
     this.server.exchange.transmitPublish('imageUpdated', r);
     return 'image updated';
@@ -163,28 +165,30 @@ class AgController {
     (async () => {
       let receiver: { value: { data: string; token: string; }; done: any; };
       const rConsumer = client.socket.receiver('deleteImage').createConsumer();
-      while (true) {  
-        receiver = await rConsumer.next(); 
+      while (true) {
+        receiver = await rConsumer.next();
         debug(`received deleteImage message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
         if (typeof receiver.value.token === 'string' && typeof receiver.value.data === 'string') {
-          await this.handleImage('deleteById', receiver.value.data, 'imageDeleted'); 
+          await this.handleImage('deleteById', receiver.value.data, 'imageDeleted');
         }
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
   }
 
-  newTour(client: IClient):void {
+  // Listens on `messageName` ('newGig' and, during migration, legacy 'newTour').
+  // Tolerates both the new { gig } and legacy { tour } payload shapes.
+  newGig(client: IClient, messageName: string):void {
     (async () => {
-      let receiver: { value: { token: string; 
-        tour: { datetime: Date; venue: string; city:string, usState: string }; }; done: any; };
-      const rConsumer = client.socket.receiver('newTour').createConsumer();
-      while (true) {  
-        receiver = await rConsumer.next(); 
+      let receiver: { value: any; done: any; };
+      const rConsumer = client.socket.receiver(messageName).createConsumer();
+      while (true) {
+        receiver = await rConsumer.next();
         let decoded, user, goodRoles;
         if (!receiver.value) break;
         try {
+          const gig = receiver.value.gig ?? receiver.value.tour;
           decoded = this.jwt.verify(receiver.value.token, process.env.HashString || /* istanbul ignore next */'');
           const userRes = await fetch(`${process.env.BackendUrl}/user/${decoded.sub}`, {
             headers: { Accept: 'application/json', Authorization: `Bearer ${receiver.value.token}` },
@@ -192,56 +196,52 @@ class AgController {
           if (!userRes.ok) throw new Error(`${userRes.status} ${userRes.statusText}`);
           user = await userRes.json();
           goodRoles = JSON.parse(process.env.userRoles || /* istanbul ignore next */'{}').roles;
-          utils.assertCanCreateTour(user, goodRoles);
-          if (receiver.value.tour.datetime && receiver.value.tour.city 
-            && receiver.value.tour.usState && receiver.value.tour.venue) {
-            await utils.handleTour( 
-              'createDocs', 
-              receiver.value.tour,
-              'tourCreated', 
-              this.tourController, 
-              this.server,
-            );
+          utils.assertCanCreateGig(user, goodRoles);
+          if (gig && gig.datetime && gig.city && gig.usState && gig.venue) {
+            await utils.handleGig('createDocs', gig, 'gigCreated', this.gigController, this.server);
           } else throw new Error('Invalid create gig data');
           if (receiver.done) break;
         } catch (e) {
           const eMessage = (e as Error).message;
-          debug(eMessage); 
-          client.socket.transmit('socketError', { newTour: eMessage });// send error back to client
-          break; 
-        } 
+          debug(eMessage);
+          client.socket.transmit('socketError', { newGig: eMessage });// send error back to client
+          break;
+        }
       }
     })();
   }
 
-  removeTour(client:IClient):void {
+  // Listens on `messageName` ('deleteGig' and, during migration, legacy 'deleteTour').
+  removeGig(client:IClient, messageName: string):void {
     (async () => {
-      let receiver: { value: { tour:any; token: any; }; done: any; };
-      const rConsumer = client.socket.receiver('deleteTour').createConsumer();
-      while (true) {  
-        receiver = await rConsumer.next(); 
-        debug(`received deleteTour message: ${JSON.stringify(receiver.value)}`);
+      let receiver: { value: { gig?:any; tour?:any; token: any; }; done: any; };
+      const rConsumer = client.socket.receiver(messageName).createConsumer();
+      while (true) {
+        receiver = await rConsumer.next();
+        debug(`received ${messageName} message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
-        await utils.removeTour(receiver, client, this.tourController, this.server); 
+        await utils.removeGig(receiver, client, this.gigController, this.server);
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
   }
 
-  async updateTour(
-    data: { tourId: mongoose.Types.ObjectId; tour: Record<string, unknown>; },
+  async updateGig(
+    data: { gigId?: any; tourId?: any;
+      gig?: Record<string, unknown>; tour?: Record<string, unknown>; },
   ):Promise<string> {
-    let r: any; 
-    try { 
-      const { tourId, tour } = data;
-      if (!tour.venue || !tour.datetime || !tour.city || !tour.usState) throw new Error('Invalid gig data');
-      r = await this.tourController.findByIdAndUpdate(tourId, tour); 
+    let r: any;
+    try {
+      const id = data.gigId ?? data.tourId;
+      const gig = data.gig ?? data.tour ?? {};
+      if (!gig.venue || !gig.datetime || !gig.city || !gig.usState) throw new Error('Invalid gig data');
+      r = await this.gigController.findByIdAndUpdate(id, gig);
     } catch (e) {
       const eMessage = (e as Error).message;
-      debug(eMessage); 
+      debug(eMessage);
       return eMessage;
     }
-    this.server.exchange.transmitPublish('tourUpdated', r);
+    this.server.exchange.transmitPublish('gigUpdated', r);
     return 'Gig updated';
   }
 
@@ -249,15 +249,15 @@ class AgController {
     (async () => {
       let receiver: { value:any; done: any; };
       const rConsumer = client.socket.receiver(action).createConsumer();
-      while (true) {  
-        receiver = await rConsumer.next(); 
+      while (true) {
+        receiver = await rConsumer.next();
         const obj = JSON.stringify(receiver.value);
         debug(`received ${action} message: ${obj}`);
         if (!receiver.value) break;
         if (typeof receiver.value.token === 'string') {
-           
-          if (action === 'editTour') await this.updateTour(receiver.value); 
-           
+
+          if (action === 'editGig' || action === 'editTour') await this.updateGig(receiver.value);
+
           else await this.updateImage(receiver.value, client);
         }
         /* istanbul ignore else */if (receiver.done) break;
@@ -271,9 +271,12 @@ class AgController {
     debug(this.clients);
     this.handleReceiver(client);
     this.sendPulse(client);
-    this.newTour(client);
-    this.removeTour(client);
-    this.editDoc(client, 'editTour');
+    this.newGig(client, 'newGig');
+    this.newGig(client, 'newTour'); // legacy alias during migration
+    this.removeGig(client, 'deleteGig');
+    this.removeGig(client, 'deleteTour'); // legacy alias during migration
+    this.editDoc(client, 'editGig');
+    this.editDoc(client, 'editTour'); // legacy alias during migration
     this.newImage(client);
     this.editDoc(client, 'editImage');
     this.removeImage(client);

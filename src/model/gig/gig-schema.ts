@@ -6,7 +6,7 @@ const options = {
 
 const { Schema } = mongoose;
 
-const tourSchema = new Schema({
+const gigSchema = new Schema({
   date: { type: String, required: false },
   time: { type: String, required: false },
   datetime: { type: Date, require: true },
@@ -15,7 +15,10 @@ const tourSchema = new Schema({
   usState: { type: String, required: false },
   venue: { type: String, required: true },
   tickets: { type: String, required: false },
+  duration: { type: Number, required: false, default: 0 },
+  promoImageUrl: { type: String, required: false },
   more: { type: String, required: false },
 }, options);
 
-export default mongoose.models.Tour || mongoose.model('Tour', tourSchema);
+// Explicit collection name 'gigs' (a tours -> gigs migration moves the data).
+export default mongoose.models.Gig || mongoose.model('Gig', gigSchema, 'gigs');

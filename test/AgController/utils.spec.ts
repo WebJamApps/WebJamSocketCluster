@@ -7,29 +7,29 @@ describe('AgController/utils', () => {
     const result = await utils.resetData({} as any, {} as any, { deleteAllDocs } as any, {} as any);
     expect(result).toBe(false);
   });
-  it('handleTour is successful', async () => {
+  it('handleGig is successful', async () => {
     const transmitPublish = vi.fn();
     const server = { exchange: { transmitPublish } };
-    const tourController = { create: vi.fn(() => Promise.resolve()) };
-    await utils.handleTour('create', {} as any, 'created', tourController, server as any);
+    const gigController = { create: vi.fn(() => Promise.resolve()) };
+    await utils.handleGig('create', {} as any, 'created', gigController, server as any);
     expect(transmitPublish).toHaveBeenCalled();
   });
-  it('removeTour', async () => {
+  it('removeGig', async () => {
     const transmitPublish = vi.fn();
     const server = { exchange: { transmitPublish } };
     const client = { socket: { transmit: vi.fn() } };
     const receiver = { value: { token: 'token', tour: { tourId: 'asdf' } } };
-    const tourController = { deleteById: vi.fn(() => Promise.resolve()) };
-    await utils.removeTour(receiver, client, tourController, server);
+    const gigController = { deleteById: vi.fn(() => Promise.resolve()) };
+    await utils.removeGig(receiver, client, gigController, server);
     expect(transmitPublish).toHaveBeenCalled();
   });
-  it('removeTour catches error', async () => {
+  it('removeGig catches error', async () => {
     const transmitPublish = vi.fn();
     const server = { exchange: { transmitPublish } };
     const client = { socket: { transmit: vi.fn() } };
     const receiver = { value: { token: 'token', tour: { tourId: 'asdf' } } };
-    const tourController = { deleteById: vi.fn(() => Promise.reject(new Error('bad'))) };
-    await utils.removeTour(receiver, client, tourController, server);
+    const gigController = { deleteById: vi.fn(() => Promise.reject(new Error('bad'))) };
+    await utils.removeGig(receiver, client, gigController, server);
     expect(transmitPublish).not.toHaveBeenCalled();
     expect(client.socket.transmit).toHaveBeenCalled();
   });
