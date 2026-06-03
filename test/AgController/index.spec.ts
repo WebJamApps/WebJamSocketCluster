@@ -42,8 +42,8 @@ describe('AgControler', () => {
     const agController = new AgController(aStub);
     agController.handleReceiver = vi.fn();
     agController.sendPulse = vi.fn();
-    agController.newTour = vi.fn();
-    agController.removeTour = vi.fn();
+    agController.newGig = vi.fn();
+    agController.removeGig = vi.fn();
     agController.editDoc = vi.fn();
     agController.newImage = vi.fn();
     agController.removeImage = vi.fn();
@@ -145,9 +145,9 @@ describe('AgControler', () => {
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
       },
     };
-    agController.tourController.getAllSort = vi.fn(() => Promise.resolve([]));
-    r = await agController.sendTours(cStub);
-    expect(r).toBe('sent tours');
+    agController.gigController.getAllSort = vi.fn(() => Promise.resolve([]));
+    r = await agController.sendGigs(cStub);
+    expect(r).toBe('sent gigs');
   });
   it('handles error when gets all tours', async () => {
     const agController = new AgController(aStub);
@@ -159,8 +159,8 @@ describe('AgControler', () => {
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
       },
     };
-    agController.tourController.getAllSort = vi.fn(() => Promise.reject(new Error('bad')));
-    r = await agController.sendTours(sStub);
+    agController.gigController.getAllSort = vi.fn(() => Promise.reject(new Error('bad')));
+    r = await agController.sendGigs(sStub);
     expect(r).toBe('bad');
   });
   it('handles error when gets all books', async () => {
@@ -179,8 +179,8 @@ describe('AgControler', () => {
   });
   it('updates a tours', async () => {
     const agController = new AgController(aStub);
-    agController.tourController.findByIdAndUpdate = vi.fn(() => Promise.resolve(true));
-    r = await agController.updateTour({
+    agController.gigController.findByIdAndUpdate = vi.fn(() => Promise.resolve(true));
+    r = await agController.updateGig({
       tourId: testId,
       tour: {
         venue: 'venue', datetime: new Date(), city: 'city', usState: 'state', 
@@ -190,8 +190,8 @@ describe('AgControler', () => {
   });
   it('handles error from updates a tours', async () => {
     const agController = new AgController(aStub);
-    agController.tourController.findByIdAndUpdate = vi.fn(() => Promise.reject(new Error('bad')));
-    r = await agController.updateTour({
+    agController.gigController.findByIdAndUpdate = vi.fn(() => Promise.reject(new Error('bad')));
+    r = await agController.updateGig({
       tourId: testId,
       tour: {
         venue: 'venue', datetime: new Date(), city: 'city', usState: 'state', 
@@ -202,7 +202,7 @@ describe('AgControler', () => {
   it('does not process the newTour message from client when token is not valid', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
-    agController.tourController.createDocs = vi.fn(() => Promise.resolve([]));
+    agController.gigController.createDocs = vi.fn(() => Promise.resolve([]));
     const cStub:any = {
       socket: {
         id: '123',
@@ -225,14 +225,14 @@ describe('AgControler', () => {
     };
     const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    agController.newTour(cStub);
+    agController.newGig(cStub, 'newGig');
     await delay(1000);
-    expect(agController.tourController.createDocs).not.toHaveBeenCalled();
+    expect(agController.gigController.createDocs).not.toHaveBeenCalled();
   });
   it('processes the newTour message from client', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
-    agController.tourController.createDocs = vi.fn(() => Promise.resolve([]));
+    agController.gigController.createDocs = vi.fn(() => Promise.resolve([]));
     const cStub:any = {
       socket: {
         id: '123',
@@ -261,14 +261,14 @@ describe('AgControler', () => {
       ok: true,
       json: () => Promise.resolve({ userType: JSON.parse(process.env.userRoles || '{}').roles[0] }),
     }));
-    agController.newTour(cStub);
+    agController.newGig(cStub, 'newGig');
     await delay(1000);
-    expect(agController.tourController.createDocs).toHaveBeenCalled();
+    expect(agController.gigController.createDocs).toHaveBeenCalled();
   });
   it('return the not allowed socketError when processes the newTour message from client', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
-    agController.tourController.createDocs = vi.fn(() => Promise.resolve([]));
+    agController.gigController.createDocs = vi.fn(() => Promise.resolve([]));
     clientStub = {
       socket: {
         id: '123',
@@ -297,15 +297,15 @@ describe('AgControler', () => {
       ok: true,
       json: () => Promise.resolve({ userType: 'cool' }),
     }));
-    agController.newTour(clientStub);
+    agController.newGig(clientStub, 'newGig');
     await delay(1000);
-    expect(clientStub.socket.transmit).toHaveBeenCalledWith('socketError', { newTour: 'Not allowed to create new tour' });
+    expect(clientStub.socket.transmit).toHaveBeenCalledWith('socketError', { newGig: 'Not allowed to create new gig' });
   });
 
   it('allows newTour when user has tour:create privilege (capability path)', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
-    agController.tourController.createDocs = vi.fn(() => Promise.resolve([]));
+    agController.gigController.createDocs = vi.fn(() => Promise.resolve([]));
     const cStub:any = {
       socket: {
         id: '123',
@@ -333,15 +333,15 @@ describe('AgControler', () => {
       ok: true,
       json: () => Promise.resolve({ userType: 'unrecognized-role', privileges: ['tour:create'] }),
     }));
-    agController.newTour(cStub);
+    agController.newGig(cStub, 'newGig');
     await delay(1000);
-    expect(agController.tourController.createDocs).toHaveBeenCalled();
+    expect(agController.gigController.createDocs).toHaveBeenCalled();
   });
 
   it('rejects newTour with missing capability error when privileges lack tour:create', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
-    agController.tourController.createDocs = vi.fn(() => Promise.resolve([]));
+    agController.gigController.createDocs = vi.fn(() => Promise.resolve([]));
     const cStub:any = {
       socket: {
         id: '123',
@@ -369,15 +369,15 @@ describe('AgControler', () => {
       ok: true,
       json: () => Promise.resolve({ userType: 'unrecognized-role', privileges: ['song:read'] }),
     }));
-    agController.newTour(cStub);
+    agController.newGig(cStub, 'newGig');
     await delay(1000);
-    expect(cStub.socket.transmit).toHaveBeenCalledWith('socketError', { newTour: 'missing capability tour:create' });
+    expect(cStub.socket.transmit).toHaveBeenCalledWith('socketError', { newGig: 'missing capability gig:create' });
   });
 
   it('return the invalid request socketError when processes the newTour message from client', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
-    agController.tourController.createDocs = vi.fn(() => Promise.resolve([]));
+    agController.gigController.createDocs = vi.fn(() => Promise.resolve([]));
     clientStub = {
       socket: {
         id: '123',
@@ -406,17 +406,17 @@ describe('AgControler', () => {
       ok: true,
       json: () => Promise.resolve({ userType: JSON.parse(process.env.userRoles || '{}').roles[0] }),
     }));
-    agController.newTour(clientStub);
+    agController.newGig(clientStub, 'newGig');
     await delay(1000);
     expect(clientStub.socket.transmit).toHaveBeenCalledWith(
       'socketError',
-      { newTour: 'Invalid create gig data' },
+      { newGig: 'Invalid create gig data' },
     );
   });
   it('handles missing receiver value when process the newTour message from client', () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
-    utils.handleTour = vi.fn();
+    utils.handleGig = vi.fn();
     const cStub:any = {
       socket: {
         id: '123',
@@ -433,8 +433,8 @@ describe('AgControler', () => {
     };
     const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    agController.newTour(cStub);
-    expect(utils.handleTour).not.toHaveBeenCalled();
+    agController.newGig(cStub, 'newGig');
+    expect(utils.handleGig).not.toHaveBeenCalled();
   });
   it('process the newImage message from client', async () => {
     const agController = new AgController(aStub);
@@ -541,9 +541,9 @@ describe('AgControler', () => {
     agController.removeImage(cStub);
     expect(agController.bookController.deleteById).not.toHaveBeenCalled();
   });
-  it('process the removeTour message from client', () => {
+  it('process the removeGig message from client', () => {
     const agController = new AgController(aStub);
-    utils.handleTour = vi.fn();
+    utils.handleGig = vi.fn();
     agController.clients = ['123'];
     const cStub:any = {
       socket: {
@@ -567,12 +567,12 @@ describe('AgControler', () => {
     };
     const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    utils.removeTour = vi.fn(() => Promise.resolve());
-    expect(agController.removeTour(cStub)).toBeUndefined();
+    utils.removeGig = vi.fn(() => Promise.resolve());
+    expect(agController.removeGig(cStub, 'deleteGig')).toBeUndefined();
   });
-  it('does not process the removeTour message from client', () => {
+  it('does not process the removeGig message from client', () => {
     const agController = new AgController(aStub);
-    utils.handleTour = vi.fn();
+    utils.handleGig = vi.fn();
     agController.clients = ['123'];
     const cStub:any = {
       socket: {
@@ -589,8 +589,8 @@ describe('AgControler', () => {
     };
     const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    agController.removeTour(cStub);
-    expect(utils.handleTour).not.toHaveBeenCalled();
+    agController.removeGig(cStub, 'deleteGig');
+    expect(utils.handleGig).not.toHaveBeenCalled();
   });
   it('processes the updateImage message from client', async () => {
     const agController = new AgController(aStub);
@@ -671,10 +671,10 @@ describe('AgControler', () => {
     };
     const setIntervalMock: any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    agController.updateTour = vi.fn();
+    agController.updateGig = vi.fn();
     agController.editDoc(sStub, 'editTour');
     await delay(1000);
-    expect(agController.updateTour).toHaveBeenCalled();
+    expect(agController.updateGig).toHaveBeenCalled();
   });
   it('does not process the editTour message from client when token is missing', async () => {
     const agController = new AgController(aStub);
@@ -700,10 +700,10 @@ describe('AgControler', () => {
     };
     const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    agController.updateTour = vi.fn();
+    agController.updateGig = vi.fn();
     agController.editDoc(sStub, 'editTour');
     await delay(1000);
-    expect(agController.updateTour).not.toHaveBeenCalled();
+    expect(agController.updateGig).not.toHaveBeenCalled();
   });
   it('handles error when process the editTour message from client', async () => {
     const agController = new AgController(aStub);
@@ -730,7 +730,7 @@ describe('AgControler', () => {
     };
     const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    agController.tourController.findByIdAndUpdate = vi.fn(() => Promise.reject(new Error('bad')));
+    agController.gigController.findByIdAndUpdate = vi.fn(() => Promise.reject(new Error('bad')));
     agController.server.exchange.transmitPublish = vi.fn();
     agController.editDoc(sStub, 'editTour');
     await delay(1000);
@@ -761,10 +761,10 @@ describe('AgControler', () => {
     };
     const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
-    utils.handleTour = vi.fn();
-    agController.removeTour(sStub);
+    utils.handleGig = vi.fn();
+    agController.removeGig(sStub, 'deleteGig');
     await delay(1000);
-    expect(utils.handleTour).not.toHaveBeenCalled();
+    expect(utils.handleGig).not.toHaveBeenCalled();
   });
   it('creates a book (image)', async () => {
     const agController = new AgController(aStub);
