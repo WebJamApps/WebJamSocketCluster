@@ -5,7 +5,7 @@ const makefuture = (day:number) => {
   return future;
 };
 export default {
-  tour: [{
+  gig: [{
     date: 'Nov 17, 2019',
     datetime: new Date('November 17, 2019'),
     time: '1:00 pm',
