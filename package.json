@@ -1,12 +1,12 @@
 {
   "name": "webjamsocketserver",
   "description": "Uses latest version of socketcluster-server",
-  "version": "3.0.4",
+  "version": "3.0.5",
   "license": "MIT",
   "type": "module",
   "main": "build/src/index.js",
   "engines": {
-    "node": "24.16.0"
+    "node": "24.18.0"
   },
   "contributors": [
     {
