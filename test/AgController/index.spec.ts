@@ -47,6 +47,7 @@ describe('AgControler', () => {
     agController.editDoc = vi.fn();
     agController.newImage = vi.fn();
     agController.removeImage = vi.fn();
+    agController.requestGigsForArtist = vi.fn();
     const createConsumer = vi.fn(() => ({ next: vi.fn() }));
     const cStub = { ...clientStub, socket: { receiver: () => ({ createConsumer }) } };
     expect(agController.addSocket(cStub)).toBeUndefined();
@@ -101,7 +102,7 @@ describe('AgControler', () => {
   });
   it('accepts the initial message from client', async () => {
     const agController = new AgController(aStub);
-    agController.bookController.getAll = vi.fn(() => Promise.resolve([]));
+    agController.jamPicsController.getAll = vi.fn(() => Promise.resolve([]));
     agController.clients = ['123'];
     const sStub:any = {
       socket: {
@@ -115,11 +116,11 @@ describe('AgControler', () => {
     global.setInterval = setIntervalMock;
     agController.handleReceiver(sStub);
     await delay(1000);
-    expect(agController.bookController.getAll).toHaveBeenCalled();
+    expect(agController.jamPicsController.getAll).toHaveBeenCalled();
   });
   it('handleReceiver when no value', async () => {
     const agController = new AgController(aStub);
-    agController.bookController.getAll = vi.fn(() => Promise.resolve([]));
+    agController.jamPicsController.getAll = vi.fn(() => Promise.resolve([]));
     agController.clients = ['123'];
     const sStub:any = {
       socket: {
@@ -133,7 +134,7 @@ describe('AgControler', () => {
     global.setInterval = setIntervalMock;
     agController.handleReceiver(sStub);
     await delay(1000);
-    expect(agController.bookController.getAll).not.toHaveBeenCalled();
+    expect(agController.jamPicsController.getAll).not.toHaveBeenCalled();
   });
   it('gets all tours', async () => {
     const agController = new AgController(aStub);
@@ -145,9 +146,57 @@ describe('AgControler', () => {
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
       },
     };
-    agController.gigController.getAllSort = vi.fn(() => Promise.resolve([]));
+    agController.gigController.getAllByArtistSort = vi.fn(() => Promise.resolve([]));
     r = await agController.sendGigs(cStub);
     expect(r).toBe('sent gigs');
+  });
+  it('gets gigs for a non-default artist on a scoped channel', async () => {
+    const agController = new AgController(aStub);
+    const cStub:any = {
+      socket: {
+        id: '123',
+        transmit: vi.fn(),
+      },
+    };
+    agController.gigController.getAllByArtistSort = vi.fn(() => Promise.resolve([{ venue: 'tim venue' }]));
+    r = await agController.sendGigs(cStub, 'tim');
+    expect(agController.gigController.getAllByArtistSort).toHaveBeenCalledWith('tim', { datetime: -1 });
+    expect(cStub.socket.transmit).toHaveBeenCalledWith('allGigs:tim', [{ venue: 'tim venue' }]);
+    expect(r).toBe('sent gigs');
+  });
+  it('requestGigsForArtist calls sendGigs with the requested artist', async () => {
+    const agController = new AgController(aStub);
+    agController.sendGigs = vi.fn();
+    const cStub:any = {
+      socket: {
+        id: '123',
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({ value: { artist: 'tim' }, done: true }),
+          }),
+        }),
+      },
+    };
+    agController.requestGigsForArtist(cStub);
+    await delay(1000);
+    expect(agController.sendGigs).toHaveBeenCalledWith(cStub, 'tim');
+  });
+  it('requestGigsForArtist ignores a missing artist', async () => {
+    const agController = new AgController(aStub);
+    agController.sendGigs = vi.fn();
+    const cStub:any = {
+      socket: {
+        id: '123',
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({ value: undefined, done: true }),
+          }),
+        }),
+      },
+    };
+    agController.requestGigsForArtist(cStub);
+    await delay(1000);
+    expect(agController.sendGigs).not.toHaveBeenCalled();
   });
   it('handles error when gets all tours', async () => {
     const agController = new AgController(aStub);
@@ -159,7 +208,7 @@ describe('AgControler', () => {
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
       },
     };
-    agController.gigController.getAllSort = vi.fn(() => Promise.reject(new Error('bad')));
+    agController.gigController.getAllByArtistSort = vi.fn(() => Promise.reject(new Error('bad')));
     r = await agController.sendGigs(sStub);
     expect(r).toBe('bad');
   });
@@ -173,8 +222,23 @@ describe('AgControler', () => {
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
       },
     };
-    agController.bookController.getAll = vi.fn(() => Promise.reject(new Error('bad')));
+    agController.jamPicsController.getAll = vi.fn(() => Promise.reject(new Error('bad')));
     r = await agController.sendBooks(sStub);
+    expect(r).toBe('bad');
+  });
+  it('sends jamPics on the jamPics message', async () => {
+    const agController = new AgController(aStub);
+    const cStub:any = { socket: { id: '123', transmit: vi.fn() } };
+    agController.jamPicsController.getAll = vi.fn(() => Promise.resolve([{ title: 'a pic' }]));
+    r = await agController.sendJamPics(cStub);
+    expect(cStub.socket.transmit).toHaveBeenCalledWith('jamPics', [{ title: 'a pic' }]);
+    expect(r).toBe('sent jamPics');
+  });
+  it('handles error when gets jamPics', async () => {
+    const agController = new AgController(aStub);
+    const cStub:any = { socket: { id: '123', transmit: vi.fn() } };
+    agController.jamPicsController.getAll = vi.fn(() => Promise.reject(new Error('bad')));
+    r = await agController.sendJamPics(cStub);
     expect(r).toBe('bad');
   });
   it('updates a tours', async () => {
@@ -439,7 +503,8 @@ describe('AgControler', () => {
   it('process the newImage message from client', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
-    agController.bookController.createDocs = vi.fn(() => Promise.resolve());
+    agController.jamPicsController.createDocs = vi.fn(() => Promise.resolve());
+    agController.verifyAdminWrite = vi.fn(() => Promise.resolve());
     const cStub:any = {
       socket: {
         id: '123',
@@ -464,12 +529,75 @@ describe('AgControler', () => {
     global.setInterval = setIntervalMock;
     agController.newImage(cStub);
     await delay(2000);
-    expect(agController.bookController.createDocs).toHaveBeenCalled();
+    expect(agController.verifyAdminWrite).toHaveBeenCalledWith('token');
+    expect(agController.jamPicsController.createDocs).toHaveBeenCalled();
+  });
+  it('rejects newImage when the token is invalid (#94)', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.jamPicsController.createDocs = vi.fn(() => Promise.resolve());
+    agController.verifyAdminWrite = vi.fn(() => Promise.reject(new Error('jwt malformed')));
+    const cStub:any = {
+      socket: {
+        id: '123',
+        transmit: vi.fn(),
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'bad-token',
+                image: {
+                  title: 'title', url: 'url',
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    agController.newImage(cStub);
+    await delay(1000);
+    expect(agController.jamPicsController.createDocs).not.toHaveBeenCalled();
+    expect(cStub.socket.transmit).toHaveBeenCalledWith('socketError', { newImage: 'jwt malformed' });
+  });
+  it('rejects newImage when userType is not an allowed admin role (#94)', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.jamPicsController.createDocs = vi.fn(() => Promise.resolve());
+    agController.jwt.verify = vi.fn(() => '123') as any;
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({ userType: 'cool' }),
+    }));
+    const cStub:any = {
+      socket: {
+        id: '123',
+        transmit: vi.fn(),
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'token',
+                image: {
+                  title: 'title', url: 'url',
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    agController.newImage(cStub);
+    await delay(1000);
+    expect(agController.jamPicsController.createDocs).not.toHaveBeenCalled();
+    expect(cStub.socket.transmit).toHaveBeenCalledWith('socketError', { newImage: 'Not allowed to create new gig' });
   });
   it('handles missing receiver value when process the newImage message from client', () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
-    agController.bookController.createDocs = vi.fn(() => Promise.resolve());
+    agController.jamPicsController.createDocs = vi.fn(() => Promise.resolve());
     const cStub:any = {
       socket: {
         id: '123',
@@ -487,13 +615,14 @@ describe('AgControler', () => {
     const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
     agController.newImage(cStub);
-    expect(agController.bookController.createDocs).not.toHaveBeenCalled();
+    expect(agController.jamPicsController.createDocs).not.toHaveBeenCalled();
   });
   it('process the removeImage message from client', async () => {
     const agController = new AgController(aStub);
     agController.handleImage = vi.fn();
     agController.clients = ['123'];
-    agController.bookController.deleteById = vi.fn(() => Promise.resolve());
+    agController.jamPicsController.deleteById = vi.fn(() => Promise.resolve());
+    agController.verifyAdminWrite = vi.fn(() => Promise.resolve());
     const cStub:any = {
       socket: {
         id: '123',
@@ -516,12 +645,40 @@ describe('AgControler', () => {
     global.setInterval = setIntervalMock;
     agController.removeImage(cStub);
     await delay(2000);
+    expect(agController.verifyAdminWrite).toHaveBeenCalledWith('token');
     expect(agController.handleImage).toHaveBeenCalled();
+  });
+  it('rejects deleteImage when the token is missing/invalid (#94)', async () => {
+    const agController = new AgController(aStub);
+    agController.handleImage = vi.fn();
+    agController.clients = ['123'];
+    agController.verifyAdminWrite = vi.fn(() => Promise.reject(new Error('jwt must be provided')));
+    const cStub:any = {
+      socket: {
+        id: '123',
+        transmit: vi.fn(),
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'bad-token',
+                data: 'id',
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    agController.removeImage(cStub);
+    await delay(1000);
+    expect(agController.handleImage).not.toHaveBeenCalled();
+    expect(cStub.socket.transmit).toHaveBeenCalledWith('socketError', { deleteImage: 'jwt must be provided' });
   });
   it('handles missing receiver value when process the removeImage message from client', () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
-    agController.bookController.deleteById = vi.fn(() => Promise.resolve());
+    agController.jamPicsController.deleteById = vi.fn(() => Promise.resolve());
     const cStub:any = {
       socket: {
         id: '123',
@@ -539,9 +696,9 @@ describe('AgControler', () => {
     const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
     agController.removeImage(cStub);
-    expect(agController.bookController.deleteById).not.toHaveBeenCalled();
+    expect(agController.jamPicsController.deleteById).not.toHaveBeenCalled();
   });
-  it('process the removeGig message from client', () => {
+  it('process the removeGig message from client', async () => {
     const agController = new AgController(aStub);
     utils.handleGig = vi.fn();
     agController.clients = ['123'];
@@ -569,6 +726,9 @@ describe('AgControler', () => {
     global.setInterval = setIntervalMock;
     utils.removeGig = vi.fn(() => Promise.resolve());
     expect(agController.removeGig(cStub, 'deleteGig')).toBeUndefined();
+    await delay(1000);
+    // #94: deleteGig must be wired to the same admin-write gate as newGig/newImage.
+    expect(typeof (utils.removeGig as any).mock.calls[0][4]).toBe('function');
   });
   it('does not process the removeGig message from client', () => {
     const agController = new AgController(aStub);
@@ -595,6 +755,7 @@ describe('AgControler', () => {
   it('processes the updateImage message from client', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
+    agController.verifyAdminWrite = vi.fn(() => Promise.resolve());
     const sStub:any = {
       socket: {
         id: '123',
@@ -649,6 +810,7 @@ describe('AgControler', () => {
   it('processes the editTour message from client', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
+    agController.verifyAdminWrite = vi.fn(() => Promise.resolve());
     const sStub:any = {
       socket: {
         id: '123',
@@ -675,6 +837,34 @@ describe('AgControler', () => {
     agController.editDoc(sStub, 'editTour');
     await delay(1000);
     expect(agController.updateGig).toHaveBeenCalled();
+  });
+  it('rejects editGig when verifyAdminWrite fails (#94)', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.updateGig = vi.fn();
+    agController.verifyAdminWrite = vi.fn(() => Promise.reject(new Error('jwt malformed')));
+    const sStub:any = {
+      socket: {
+        id: '123',
+        transmit: vi.fn(),
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                gigId: '123',
+                token: 'bad-token',
+                gig: {},
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    agController.editDoc(sStub, 'editGig');
+    await delay(1000);
+    expect(agController.updateGig).not.toHaveBeenCalled();
+    expect(sStub.socket.transmit).toHaveBeenCalledWith('socketError', { editGig: 'jwt malformed' });
   });
   it('does not process the editTour message from client when token is missing', async () => {
     const agController = new AgController(aStub);
@@ -730,6 +920,7 @@ describe('AgControler', () => {
     };
     const setIntervalMock:any = vi.fn((cb:any) => cb());
     global.setInterval = setIntervalMock;
+    agController.verifyAdminWrite = vi.fn(() => Promise.resolve());
     agController.gigController.findByIdAndUpdate = vi.fn(() => Promise.reject(new Error('bad')));
     agController.server.exchange.transmitPublish = vi.fn();
     agController.editDoc(sStub, 'editTour');
@@ -775,7 +966,7 @@ describe('AgControler', () => {
   });
   it('returns error message when creates a book (image)', async () => {
     const agController = new AgController(aStub);
-    agController.bookController.createDocs = vi.fn(() => Promise.reject(new Error('bad')));
+    agController.jamPicsController.createDocs = vi.fn(() => Promise.reject(new Error('bad')));
     r = await agController.handleImage('createDocs', {
       url: 'url', title: 'title', type: 'JaMmusic',
     }, 'imageCreated');
@@ -869,7 +1060,7 @@ describe('AgControler', () => {
       },
     };
     const agController = new AgController(aStub);
-    agController.bookController.findByIdAndUpdate = vi.fn(() => Promise.resolve());
+    agController.jamPicsController.findByIdAndUpdate = vi.fn(() => Promise.resolve());
     r = await agController.updateImage(
       {
         token: 'token',
