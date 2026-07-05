@@ -18,6 +18,10 @@ const gigSchema = new Schema({
   duration: { type: Number, required: false, default: 0 },
   promoImageUrl: { type: String, required: false },
   more: { type: String, required: false },
+  // Artist/tenant slug (#237/web-jam-back#887, e.g. "josh" | "tim"). Absent on
+  // all pre-#237 records, which read as the default (josh) artist. Kept in
+  // sync with web-jam-back's mirror of this schema.
+  artist: { type: String, required: false },
 }, options);
 
 // Explicit collection name 'gigs' (a tours -> gigs migration moves the data).

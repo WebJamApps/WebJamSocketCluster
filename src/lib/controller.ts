@@ -52,10 +52,10 @@ class Controller {
     return Promise.resolve(collection);
   }
 
-  async getAllSort(sort: any): Promise<any> {
+  async getAllSort(sort: any, query: any = {}): Promise<any> {
     let collection;
     try {
-      collection = await this.model.findSort({}, sort);
+      collection = await this.model.findSort(query, sort);
     } catch (e) { return Promise.reject(e); }
     return Promise.resolve(collection);
   }

@@ -1,10 +1,10 @@
 import Debug from 'debug';
 import JWT from 'jsonwebtoken';
 import type socketClusterServer from 'socketcluster-server';
-import GigController from '../model/gig/gig-controller.js';
+import GigController, { DEFAULT_ARTIST } from '../model/gig/gig-controller.js';
 import gigData from '../model/gig/reset-gig.js';
-import BookController from '../model/book/book-controller.js';
-import bookData from '../model/book/reset-book.js';
+import JamPicsController from '../model/jamPics/jamPics-controller.js';
+import jamPicsData from '../model/jamPics/reset-jamPics.js';
 import mongoose from '../model/db.js';
 import utils from './utils.js';
 
@@ -23,7 +23,7 @@ class AgController {
 
   gigController = GigController;
 
-  bookController = BookController;
+  jamPicsController = JamPicsController;
 
   constructor(server: socketClusterServer.AGServer) {
     this.server = server;
@@ -32,8 +32,8 @@ class AgController {
 
   async resetData():Promise<void> {
     const { gig } = gigData;
-    const { book } = bookData;
-    await utils.resetData(gig, book, this.gigController, this.bookController);
+    const { jamPics } = jamPicsData;
+    await utils.resetData(gig, jamPics, this.gigController, this.jamPicsController);
   }
 
   handleDisconnect(client: IClient, interval: NodeJS.Timeout):void {
@@ -66,28 +66,72 @@ class AgController {
     return this.handleDisconnect(client.socket, interval);
   }
 
-  async sendGigs(client:IClient):Promise<string> {
-    let allGigs: any;
-    try { allGigs = await this.gigController.getAllSort({ datetime: -1 }); } catch (e) {
+  // Scoped to `artist` (default: Josh, #237). Josh's scope is backward compatible
+  // with legacy pre-#237 docs that have no `artist` field at all (see
+  // GigController.getAllByArtistSort / DEFAULT_ARTIST) so the live JaMmusic site
+  // keeps working across the wj-prod -> web-jam-data MONGO_DB_URI repoint.
+  // Non-default artists (e.g. "tim") get their own scoped message name —
+  // no client consumes that yet (TimShermanMusic#5 will).
+  async sendGigs(client:IClient, artist: string = DEFAULT_ARTIST):Promise<string> {
+    let gigs: any;
+    try { gigs = await this.gigController.getAllByArtistSort(artist, { datetime: -1 }); } catch (e) {
       const eMessage = (e as Error).message;
       debug(eMessage);
       return eMessage;
     }
-    client.socket.transmit('allGigs', allGigs);
-    // legacy alias so any still-deployed old frontend keeps showing gigs during the rename migration
-    client.socket.transmit('allTours', allGigs);
+    if (artist === DEFAULT_ARTIST) {
+      client.socket.transmit('allGigs', gigs);
+      // legacy alias so any still-deployed old frontend keeps showing gigs during the rename migration
+      client.socket.transmit('allTours', gigs);
+    } else {
+      client.socket.transmit(`allGigs:${artist}`, gigs);
+    }
     return 'sent gigs';
   }
 
+  // Requests gigs for a specific artist (#237). Josh's gigs already arrive
+  // unprompted via the 'initial message' flow below (allGigs/allTours); this is
+  // the artist-scoped path other sites (e.g. TimShermanMusic) will use.
+  requestGigsForArtist(client: IClient): void {
+    (async () => {
+      let receiver: { value: { artist?: string } | undefined; done: any; };
+      const rConsumer = client.socket.receiver('gigsForArtist').createConsumer();
+      while (true) {
+        receiver = await rConsumer.next();
+        debug(`received gigsForArtist message: ${JSON.stringify(receiver.value)}`);
+        if (receiver.value && typeof receiver.value.artist === 'string') {
+          await this.sendGigs(client, receiver.value.artist);
+        }
+        /* istanbul ignore else */if (receiver.done) break;
+      }
+    })();
+  }
+
+  // Transition alias (#237): `allBooks` now reads from the `jamPics` collection
+  // too (the WJSC Book model/wj-prod source is gone). Remove once JaMmusic#1182
+  // switches the client from allBooks -> jamPics.
   async sendBooks(client: IClient):Promise<string> {
     let allBooks: any;
-    try { allBooks = await this.bookController.getAll(); } catch (e) {
+    try { allBooks = await this.jamPicsController.getAll(); } catch (e) {
       const eMessage = (e as Error).message;
       debug(eMessage);
       return eMessage;
     }
     client.socket.transmit('allBooks', allBooks);
     return 'sent books';
+  }
+
+  // New name (#237, LOCKED — do not rename/redesign). Same source as allBooks
+  // during the transition.
+  async sendJamPics(client: IClient):Promise<string> {
+    let jamPics: any;
+    try { jamPics = await this.jamPicsController.getAll(); } catch (e) {
+      const eMessage = (e as Error).message;
+      debug(eMessage);
+      return eMessage;
+    }
+    client.socket.transmit('jamPics', jamPics);
+    return 'sent jamPics';
   }
 
   handleReceiver(client:IClient):void {
@@ -100,6 +144,7 @@ class AgController {
         if (receiver.value === 123) {
           await this.sendGigs(client);
           await this.sendBooks(client);
+          await this.sendJamPics(client);
         } else {
           break;
         }
@@ -109,10 +154,24 @@ class AgController {
     })();
   }
 
+  // #94: verify the admin JWT + role inside the socket itself. Reused as the ONE
+  // write-gate for every mutating gig/jamPics message (create/update/delete gig,
+  // newImage/editImage/deleteImage) — do not duplicate this logic elsewhere.
+  async verifyAdminWrite(token: string): Promise<void> {
+    const decoded = this.jwt.verify(token, process.env.HashString || /* istanbul ignore next */'');
+    const userRes = await fetch(`${process.env.BackendUrl}/user/${decoded.sub}`, {
+      headers: { Accept: 'application/json', Authorization: `Bearer ${token}` },
+    });
+    if (!userRes.ok) throw new Error(`${userRes.status} ${userRes.statusText}`);
+    const user = await userRes.json();
+    const goodRoles = JSON.parse(process.env.userRoles || /* istanbul ignore next */'{}').roles;
+    utils.assertCanCreateGig(user, goodRoles);
+  }
+
   async handleImage(func: string, data: Record<string, unknown> | string, message: string):Promise<string> {
     let r: any;
     // eslint-disable-next-line security/detect-object-injection
-    try { r = await (this.bookController as any)[func](data); } catch (e) {
+    try { r = await (this.jamPicsController as any)[func](data); } catch (e) {
       const eMessage = (e as Error).message;
       debug(eMessage);
       return eMessage;
@@ -132,7 +191,14 @@ class AgController {
         if (typeof receiver.value.token === 'string'
             && typeof receiver.value.image.title === 'string' && typeof receiver.value.image.url === 'string'
         ) {
-          await this.handleImage('createDocs', receiver.value.image, 'imageCreated');
+          try {
+            await this.verifyAdminWrite(receiver.value.token);
+            await this.handleImage('createDocs', receiver.value.image, 'imageCreated');
+          } catch (e) {
+            const eMessage = (e as Error).message;
+            client.socket.transmit('socketError', { newImage: eMessage });// send error back to client
+            debug(eMessage);
+          }
         }
         /* istanbul ignore else */if (receiver.done) break;
       }
@@ -151,7 +217,7 @@ class AgController {
     } = editPic;
     let r: any;
     if (typeof token !== 'string') throw new Error('invalid token');
-    try { r = await this.bookController.findByIdAndUpdate(_id, { title, url, comments }); } catch (e) {
+    try { r = await this.jamPicsController.findByIdAndUpdate(_id, { title, url, comments }); } catch (e) {
       const eMessage = (e as Error).message;
       client.socket.transmit('socketError', { updateImage: eMessage });// send error back to client
       debug(eMessage);
@@ -170,7 +236,14 @@ class AgController {
         debug(`received deleteImage message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
         if (typeof receiver.value.token === 'string' && typeof receiver.value.data === 'string') {
-          await this.handleImage('deleteById', receiver.value.data, 'imageDeleted');
+          try {
+            await this.verifyAdminWrite(receiver.value.token);
+            await this.handleImage('deleteById', receiver.value.data, 'imageDeleted');
+          } catch (e) {
+            const eMessage = (e as Error).message;
+            client.socket.transmit('socketError', { deleteImage: eMessage });// send error back to client
+            debug(eMessage);
+          }
         }
         /* istanbul ignore else */if (receiver.done) break;
       }
@@ -179,24 +252,18 @@ class AgController {
 
   // Listens on `messageName` ('newGig' and, during migration, legacy 'newTour').
   // Tolerates both the new { gig } and legacy { tour } payload shapes.
+  // artist-scoped writes (Josh or Tim) both flow through here: the artist comes
+  // from the gig payload itself (gig.artist), the schema/collection is shared.
   newGig(client: IClient, messageName: string):void {
     (async () => {
       let receiver: { value: any; done: any; };
       const rConsumer = client.socket.receiver(messageName).createConsumer();
       while (true) {
         receiver = await rConsumer.next();
-        let decoded, user, goodRoles;
         if (!receiver.value) break;
         try {
           const gig = receiver.value.gig ?? receiver.value.tour;
-          decoded = this.jwt.verify(receiver.value.token, process.env.HashString || /* istanbul ignore next */'');
-          const userRes = await fetch(`${process.env.BackendUrl}/user/${decoded.sub}`, {
-            headers: { Accept: 'application/json', Authorization: `Bearer ${receiver.value.token}` },
-          });
-          if (!userRes.ok) throw new Error(`${userRes.status} ${userRes.statusText}`);
-          user = await userRes.json();
-          goodRoles = JSON.parse(process.env.userRoles || /* istanbul ignore next */'{}').roles;
-          utils.assertCanCreateGig(user, goodRoles);
+          await this.verifyAdminWrite(receiver.value.token);
           if (gig && gig.datetime && gig.city && gig.usState && gig.venue) {
             await utils.handleGig('createDocs', gig, 'gigCreated', this.gigController, this.server);
           } else throw new Error('Invalid create gig data');
@@ -220,7 +287,7 @@ class AgController {
         receiver = await rConsumer.next();
         debug(`received ${messageName} message: ${JSON.stringify(receiver.value)}`);
         if (!receiver.value) break;
-        await utils.removeGig(receiver, client, this.gigController, this.server);
+        await utils.removeGig(receiver, client, this.gigController, this.server, (token) => this.verifyAdminWrite(token));
         /* istanbul ignore else */if (receiver.done) break;
       }
     })();
@@ -255,10 +322,15 @@ class AgController {
         debug(`received ${action} message: ${obj}`);
         if (!receiver.value) break;
         if (typeof receiver.value.token === 'string') {
-
-          if (action === 'editGig' || action === 'editTour') await this.updateGig(receiver.value);
-
-          else await this.updateImage(receiver.value, client);
+          try {
+            await this.verifyAdminWrite(receiver.value.token);
+            if (action === 'editGig' || action === 'editTour') await this.updateGig(receiver.value);
+            else await this.updateImage(receiver.value, client);
+          } catch (e) {
+            const eMessage = (e as Error).message;
+            client.socket.transmit('socketError', { [action]: eMessage });// send error back to client
+            debug(eMessage);
+          }
         }
         /* istanbul ignore else */if (receiver.done) break;
       }
@@ -271,6 +343,7 @@ class AgController {
     debug(this.clients);
     this.handleReceiver(client);
     this.sendPulse(client);
+    this.requestGigsForArtist(client);
     this.newGig(client, 'newGig');
     this.newGig(client, 'newTour'); // legacy alias during migration
     this.removeGig(client, 'deleteGig');
