@@ -6,7 +6,11 @@ const options = {
 
 const { Schema } = mongoose;
 
-const bookSchema = new Schema({ // images are books in the database
+// JaMmusic slideshow images (#237/web-jam-back#897). Field shape is a direct
+// carry-over from the old `Book` model (wj-prod `book` collection, docs with
+// `type: 'JaMmusic-music'`) — the #897 migration moved those docs verbatim
+// into this NEW `jamPics` collection in web-jam-data. Do not rename/redesign.
+const jamPicsSchema = new Schema({
   title: { type: String, required: true },
   type: { type: String, required: true },
   author: { type: String, required: false },
@@ -22,4 +26,5 @@ const bookSchema = new Schema({ // images are books in the database
   checkedOutByName: { type: String, required: false },
 }, options);
 
-export default mongoose.models.Book || mongoose.model('Book', bookSchema);
+// Explicit collection name 'jamPics' (name LOCKED, Josh 2026-07-04).
+export default mongoose.models.JamPics || mongoose.model('JamPics', jamPicsSchema, 'jamPics');
