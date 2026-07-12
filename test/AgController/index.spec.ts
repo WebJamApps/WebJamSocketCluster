@@ -648,6 +648,37 @@ describe('AgControler', () => {
     expect(agController.verifyAdminWrite).toHaveBeenCalledWith('token');
     expect(agController.handleImage).toHaveBeenCalled();
   });
+  it('surfaces a genuine deleteById failure as socketError instead of a silent no-op (#1199)', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.jamPicsController.deleteById = vi.fn(() => Promise.reject(new Error('Delete id not found')));
+    agController.verifyAdminWrite = vi.fn(() => Promise.resolve());
+    const transmit = vi.fn();
+    const cStub:any = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit,
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'token',
+                data: 'id',
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
+    agController.removeImage(cStub);
+    await delay(2000);
+    expect(transmit).toHaveBeenCalledWith('socketError', { deleteImage: 'Delete id not found' });
+    expect(aStub.exchange.transmitPublish).not.toHaveBeenCalledWith('imageDeleted', expect.anything());
+  });
   it('rejects deleteImage when the token is missing/invalid (#94)', async () => {
     const agController = new AgController(aStub);
     agController.handleImage = vi.fn();
@@ -964,14 +995,13 @@ describe('AgControler', () => {
     }, 'imageCreated');
     expect(r).toBe('imageCreated');
   });
-  it('returns error message when creates a book (image)', async () => {
+  it('rethrows the error when creating a book (image) fails (#1199)', async () => {
     const agController = new AgController(aStub);
     agController.jamPicsController.createDocs = vi.fn(() => Promise.reject(new Error('bad')));
-    r = await agController.handleImage('createDocs', {
+    await expect(agController.handleImage('createDocs', {
       url: 'url', title: 'title', type: 'JaMmusic',
-    }, 'imageCreated');
-    expect(r).toBe('bad');
-    await delay(1000);
+    }, 'imageCreated')).rejects.toThrow('bad');
+    expect(aStub.exchange.transmitPublish).not.toHaveBeenCalledWith('imageCreated', expect.anything());
   });
   it('updateImage when id not found', async () => {
     clientStub = {

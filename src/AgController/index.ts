@@ -172,9 +172,14 @@ class AgController {
     let r: any;
     // eslint-disable-next-line security/detect-object-injection
     try { r = await (this.jamPicsController as any)[func](data); } catch (e) {
-      const eMessage = (e as Error).message;
-      debug(eMessage);
-      return eMessage;
+      // Rethrow (JaMmusic#1199): swallowing this and returning the error
+      // message meant callers (newImage/removeImage) never saw the failure,
+      // so no socketError was ever sent and a bogus imageCreated/imageDeleted
+      // was still published below with the error string as its payload. Let
+      // the caller's own try/catch (which already transmits socketError)
+      // handle it.
+      debug((e as Error).message);
+      throw e;
     }
     this.server.exchange.transmitPublish(message, r);
     return message;
