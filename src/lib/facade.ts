@@ -48,8 +48,13 @@ class Facade {
   //   return this.Schema.findById(id).lean().exec();
   // }
   //
+  // Mongoose 9.x removed `findByIdAndRemove` entirely (both on Model and
+  // Query) in favor of `findByIdAndDelete` (JaMmusic#1199) — calling the old
+  // name here threw synchronously, which the caller silently swallowed, so
+  // deletes never took effect. Keep this method's own name (`findByIdAndRemove`)
+  // unchanged since Controller/GigController/JamPicsController call it.
   findByIdAndRemove(id: any): any {
-    return this.Schema.findByIdAndRemove(id).lean().exec();
+    return this.Schema.findByIdAndDelete(id).lean().exec();
   }
 }
 

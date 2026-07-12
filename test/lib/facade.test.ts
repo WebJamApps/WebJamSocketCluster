@@ -31,13 +31,20 @@ describe('Facade', () => {
     const result = await facade.find();
     expect(result.test).toBe(true);
   });
-  it('findByIdAndRemove', async () => {
+  it('findByIdAndRemove calls the model\'s findByIdAndDelete (mongoose 9.x removed findByIdAndRemove, JaMmusic#1199)', async () => {
     const schema = {
-      findByIdAndRemove: () => ({ lean: () => ({ exec: () => Promise.resolve(true) }) }),
+      findByIdAndDelete: () => ({ lean: () => ({ exec: () => Promise.resolve(true) }) }),
     };
     const facade:any = new Facade(schema);
     const result = await facade.findByIdAndRemove();
     expect(result).toBe(true);
+  });
+  it('findByIdAndRemove propagates a rejection from findByIdAndDelete', async () => {
+    const schema = {
+      findByIdAndDelete: () => ({ lean: () => ({ exec: () => Promise.reject(new Error('bad')) }) }),
+    };
+    const facade:any = new Facade(schema);
+    await expect(facade.findByIdAndRemove()).rejects.toThrow('bad');
   });
   it('findByIdAndUpdate', async () => {
     const schema = {
