@@ -500,6 +500,49 @@ describe('AgControler', () => {
     agController.newGig(cStub, 'newGig');
     expect(utils.handleGig).not.toHaveBeenCalled();
   });
+  it('keeps handling newGig on the same socket after an earlier newGig errored (#246)', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.gigController.createDocs = vi.fn(() => Promise.resolve([]));
+    agController.verifyAdminWrite = vi.fn(() => Promise.resolve());
+    const transmit = vi.fn();
+    let call = 0;
+    const cStub:any = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit,
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => {
+              call += 1;
+              // First newGig on this socket: invalid gig data -> throws, must NOT break the loop.
+              if (call === 1) {
+                return Promise.resolve({
+                  value: { token: 'token', gig: { venue: 'venue' } },
+                  done: false,
+                });
+              }
+              // Second newGig on the SAME socket/consumer: valid data -> must still be handled.
+              return Promise.resolve({
+                value: {
+                  token: 'token',
+                  gig: {
+                    venue: 'venue', datetime: new Date(), city: 'city', usState: 'state',
+                  },
+                },
+                done: true,
+              });
+            },
+          }),
+        }),
+      },
+    };
+    agController.newGig(cStub, 'newGig');
+    await delay(1000);
+    expect(transmit).toHaveBeenCalledWith('socketError', { newGig: 'Invalid create gig data' });
+    expect(agController.gigController.createDocs).toHaveBeenCalled();
+  });
   it('process the newImage message from client', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];

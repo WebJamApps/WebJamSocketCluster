@@ -277,7 +277,6 @@ class AgController {
           const eMessage = (e as Error).message;
           debug(eMessage);
           client.socket.transmit('socketError', { newGig: eMessage });// send error back to client
-          break;
         }
       }
     })();
