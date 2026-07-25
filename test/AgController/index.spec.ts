@@ -30,8 +30,19 @@ const aStub:any = {
   }),
 };
 
+const realHandleGig = utils.handleGig;
+const realRemoveGig = utils.removeGig;
+
 describe('AgControler', () => {
-  afterEach(() => { vi.unstubAllGlobals(); });
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    // Several tests replace these shared utils exports with vi.fn() stubs
+    // (e.g. line ~483) without restoring them, which otherwise leaks into
+    // later tests (like the #246 regression test) that need the real
+    // implementation and silently breaks their assertions.
+    utils.handleGig = realHandleGig;
+    utils.removeGig = realRemoveGig;
+  });
   let r, clientStub:any = {
     id: '123',
     listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),

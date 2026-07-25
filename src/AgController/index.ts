@@ -272,12 +272,12 @@ class AgController {
           if (gig && gig.datetime && gig.city && gig.usState && gig.venue) {
             await utils.handleGig('createDocs', gig, 'gigCreated', this.gigController, this.server);
           } else throw new Error('Invalid create gig data');
-          if (receiver.done) break;
         } catch (e) {
           const eMessage = (e as Error).message;
           debug(eMessage);
           client.socket.transmit('socketError', { newGig: eMessage });// send error back to client
         }
+        /* istanbul ignore else */if (receiver.done) break;
       }
     })();
   }
