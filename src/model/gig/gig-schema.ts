@@ -22,7 +22,12 @@ const gigSchema = new Schema({
   // all pre-#237 records, which read as the default (josh) artist. Kept in
   // sync with web-jam-back's mirror of this schema.
   artist: { type: String, required: false },
+  venueId: {
+    type: Schema.Types.ObjectId, ref: 'Venue', required: false,
+  },
 }, options);
+
+import '../venue/venue-schema.js';
 
 // Explicit collection name 'gigs' (a tours -> gigs migration moves the data).
 export default mongoose.models.Gig || mongoose.model('Gig', gigSchema, 'gigs');
