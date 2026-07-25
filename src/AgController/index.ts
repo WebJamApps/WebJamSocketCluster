@@ -308,9 +308,13 @@ class AgController {
       if (!gig.venue || !gig.datetime || !gig.city || !gig.usState) throw new Error('Invalid gig data');
       r = await this.gigController.findByIdAndUpdate(id, gig);
     } catch (e) {
-      const eMessage = (e as Error).message;
-      debug(eMessage);
-      return eMessage;
+      // Rethrow (#253, same pattern as handleImage/JaMmusic#1199): swallowing
+      // this and returning the error message meant editDoc's catch (which
+      // already transmits socketError) never saw the failure, so neither
+      // socketError nor gigUpdated was ever sent. Let editDoc's own try/catch
+      // handle it.
+      debug((e as Error).message);
+      throw e;
     }
     this.server.exchange.transmitPublish('gigUpdated', r);
     return 'Gig updated';

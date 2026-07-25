@@ -263,16 +263,22 @@ describe('AgControler', () => {
     });
     expect(r).toBe('Gig updated');
   });
-  it('handles error from updates a tours', async () => {
+  it('rethrows a database failure from updateGig instead of swallowing it (#253)', async () => {
     const agController = new AgController(aStub);
     agController.gigController.findByIdAndUpdate = vi.fn(() => Promise.reject(new Error('bad')));
-    r = await agController.updateGig({
+    await expect(agController.updateGig({
       tourId: testId,
       tour: {
-        venue: 'venue', datetime: new Date(), city: 'city', usState: 'state', 
-      }, 
-    });
-    expect(r).toBe('bad');
+        venue: 'venue', datetime: new Date(), city: 'city', usState: 'state',
+      },
+    })).rejects.toThrow('bad');
+  });
+  it('rethrows a validation failure from updateGig instead of swallowing it (#253)', async () => {
+    const agController = new AgController(aStub);
+    await expect(agController.updateGig({
+      gigId: testId,
+      gig: {},
+    })).rejects.toThrow('Invalid gig data');
   });
   it('does not process the newTour message from client when token is not valid', async () => {
     const agController = new AgController(aStub);
@@ -1010,6 +1016,128 @@ describe('AgControler', () => {
     agController.server.exchange.transmitPublish = vi.fn();
     agController.editDoc(sStub, 'editTour');
     await delay(1000);
+    expect(agController.server.exchange.transmitPublish).not.toHaveBeenCalled();
+  });
+  it('transmits socketError with Invalid gig data when editGig fails validation (#253)', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.verifyAdminWrite = vi.fn(() => Promise.resolve());
+    const sStub:any = {
+      socket: {
+        id: '123',
+        transmit: vi.fn(),
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                gigId: '123',
+                token: 'token',
+                gig: {},
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    agController.server.exchange.transmitPublish = vi.fn();
+    agController.editDoc(sStub, 'editGig');
+    await delay(1000);
+    expect(sStub.socket.transmit).toHaveBeenCalledWith('socketError', { editGig: 'Invalid gig data' });
+    expect(agController.server.exchange.transmitPublish).not.toHaveBeenCalled();
+  });
+  it('transmits socketError with the db message when editGig fails at the database layer (#253)', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.verifyAdminWrite = vi.fn(() => Promise.resolve());
+    agController.gigController.findByIdAndUpdate = vi.fn(() => Promise.reject(new Error('db exploded')));
+    const sStub:any = {
+      socket: {
+        id: '123',
+        transmit: vi.fn(),
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                gigId: '123',
+                token: 'token',
+                gig: {
+                  venue: 'venue', datetime: new Date(), city: 'city', usState: 'state',
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    agController.server.exchange.transmitPublish = vi.fn();
+    agController.editDoc(sStub, 'editGig');
+    await delay(1000);
+    expect(sStub.socket.transmit).toHaveBeenCalledWith('socketError', { editGig: 'db exploded' });
+    expect(agController.server.exchange.transmitPublish).not.toHaveBeenCalled();
+  });
+  it('publishes gigUpdated exactly once and transmits no socketError on a successful editGig (#253)', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.verifyAdminWrite = vi.fn(() => Promise.resolve());
+    agController.gigController.findByIdAndUpdate = vi.fn(() => Promise.resolve({ _id: '123' }));
+    const sStub:any = {
+      socket: {
+        id: '123',
+        transmit: vi.fn(),
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                gigId: '123',
+                token: 'token',
+                gig: {
+                  venue: 'venue', datetime: new Date(), city: 'city', usState: 'state',
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    agController.server.exchange.transmitPublish = vi.fn();
+    agController.editDoc(sStub, 'editGig');
+    await delay(1000);
+    expect(agController.server.exchange.transmitPublish).toHaveBeenCalledTimes(1);
+    expect(agController.server.exchange.transmitPublish).toHaveBeenCalledWith('gigUpdated', { _id: '123' });
+    expect(sStub.socket.transmit).not.toHaveBeenCalledWith('socketError', expect.anything());
+  });
+  it('behaves identically for the legacy editTour alias on a database failure (#253)', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.verifyAdminWrite = vi.fn(() => Promise.resolve());
+    agController.gigController.findByIdAndUpdate = vi.fn(() => Promise.reject(new Error('bad')));
+    const sStub:any = {
+      socket: {
+        id: '123',
+        transmit: vi.fn(),
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                tourId: '123',
+                token: 'token',
+                tour: {
+                  venue: 'venue', datetime: new Date(), city: 'city', usState: 'state',
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    agController.server.exchange.transmitPublish = vi.fn();
+    agController.editDoc(sStub, 'editTour');
+    await delay(1000);
+    expect(sStub.socket.transmit).toHaveBeenCalledWith('socketError', { editTour: 'bad' });
     expect(agController.server.exchange.transmitPublish).not.toHaveBeenCalled();
   });
   it('handles missing token when the deleteTour message from client', async () => {
