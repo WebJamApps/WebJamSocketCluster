@@ -269,7 +269,11 @@ class AgController {
         try {
           const gig = receiver.value.gig ?? receiver.value.tour;
           await this.verifyAdminWrite(receiver.value.token);
-          if (gig && gig.datetime && gig.city && gig.usState && gig.venue) {
+          // A gig is identified by venueId (linked to a Venue doc) OR a non-empty
+          // free-text venue (one-off gig) — #256. city/usState are legacy
+          // display-only fields resolved from the linked venue and are no
+          // longer required here.
+          if (gig && gig.datetime && (gig.venueId || gig.venue)) {
             await utils.handleGig('createDocs', gig, 'gigCreated', this.gigController, this.server);
           } else throw new Error('Invalid create gig data');
         } catch (e) {
@@ -305,7 +309,10 @@ class AgController {
     try {
       const id = data.gigId ?? data.tourId;
       const gig = data.gig ?? data.tour ?? {};
-      if (!gig.venue || !gig.datetime || !gig.city || !gig.usState) throw new Error('Invalid gig data');
+      // Same rule as newGig (#256): a gig is identified by venueId OR a
+      // non-empty free-text venue; city/usState are legacy display-only
+      // fields resolved from the linked venue and are no longer required.
+      if (!gig.datetime || !(gig.venueId || gig.venue)) throw new Error('Invalid gig data');
       r = await this.gigController.findByIdAndUpdate(id, gig);
     } catch (e) {
       // Rethrow (#253, same pattern as handleImage/JaMmusic#1199): swallowing
