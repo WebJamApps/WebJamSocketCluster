@@ -13,7 +13,10 @@ const gigSchema = new Schema({
   location: { type: String, required: false },
   city: { type: String, required: false },
   usState: { type: String, required: false },
-  venue: { type: String, required: true },
+  // A gig is identified by venueId (linked) OR free-text venue (one-off);
+  // neither is mandatory at the schema layer — AgController's newGig/updateGig
+  // guards are the gate (#256).
+  venue: { type: String, required: false },
   tickets: { type: String, required: false },
   duration: { type: Number, required: false, default: 0 },
   promoImageUrl: { type: String, required: false },
