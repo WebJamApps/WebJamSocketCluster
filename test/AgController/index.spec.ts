@@ -280,6 +280,40 @@ describe('AgControler', () => {
       gig: {},
     })).rejects.toThrow('Invalid gig data');
   });
+  it('updates a gig when venueId is set and venue/city/usState are empty strings (#256)', async () => {
+    const agController = new AgController(aStub);
+    agController.gigController.findByIdAndUpdate = vi.fn(() => Promise.resolve(true));
+    r = await agController.updateGig({
+      gigId: testId,
+      gig: {
+        venueId: testId, datetime: new Date(), venue: '', city: '', usState: '',
+      },
+    });
+    expect(r).toBe('Gig updated');
+  });
+  it('updates a one-off gig with only free-text venue set and no venueId (#256)', async () => {
+    const agController = new AgController(aStub);
+    agController.gigController.findByIdAndUpdate = vi.fn(() => Promise.resolve(true));
+    r = await agController.updateGig({
+      gigId: testId,
+      gig: { venue: 'The Local Bar', datetime: new Date() },
+    });
+    expect(r).toBe('Gig updated');
+  });
+  it('rejects updateGig when neither venueId nor venue is set (#256)', async () => {
+    const agController = new AgController(aStub);
+    await expect(agController.updateGig({
+      gigId: testId,
+      gig: { datetime: new Date() },
+    })).rejects.toThrow('Invalid gig data');
+  });
+  it('rejects updateGig when datetime is missing even though venueId is set (#256)', async () => {
+    const agController = new AgController(aStub);
+    await expect(agController.updateGig({
+      gigId: testId,
+      gig: { venueId: testId },
+    })).rejects.toThrow('Invalid gig data');
+  });
   it('does not process the newTour message from client when token is not valid', async () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
@@ -493,6 +527,124 @@ describe('AgControler', () => {
       'socketError',
       { newGig: 'Invalid create gig data' },
     );
+  });
+  it('creates a gig when venueId is set and venue/city/usState are empty strings (#256)', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.gigController.createDocs = vi.fn(() => Promise.resolve([]));
+    agController.verifyAdminWrite = vi.fn(() => Promise.resolve());
+    const cStub:any = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'token',
+                gig: {
+                  venueId: testId, datetime: new Date(), venue: '', city: '', usState: '',
+                },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
+    agController.newGig(cStub, 'newGig');
+    await delay(1000);
+    expect(agController.gigController.createDocs).toHaveBeenCalled();
+  });
+  it('creates a one-off gig with only free-text venue set and no venueId (#256)', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.gigController.createDocs = vi.fn(() => Promise.resolve([]));
+    agController.verifyAdminWrite = vi.fn(() => Promise.resolve());
+    const cStub:any = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: () => { },
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'token',
+                gig: { venue: 'The Local Bar', datetime: new Date() },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
+    agController.newGig(cStub, 'newGig');
+    await delay(1000);
+    expect(agController.gigController.createDocs).toHaveBeenCalled();
+  });
+  it('rejects newGig with neither venueId nor venue (#256)', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.gigController.createDocs = vi.fn(() => Promise.resolve([]));
+    agController.verifyAdminWrite = vi.fn(() => Promise.resolve());
+    const eStub:any = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: vi.fn(),
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'token',
+                gig: { datetime: new Date() },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
+    agController.newGig(eStub, 'newGig');
+    await delay(1000);
+    expect(eStub.socket.transmit).toHaveBeenCalledWith('socketError', { newGig: 'Invalid create gig data' });
+  });
+  it('rejects newGig when datetime is missing even though venueId is set (#256)', async () => {
+    const agController = new AgController(aStub);
+    agController.clients = ['123'];
+    agController.gigController.createDocs = vi.fn(() => Promise.resolve([]));
+    agController.verifyAdminWrite = vi.fn(() => Promise.resolve());
+    const eStub:any = {
+      socket: {
+        id: '123',
+        listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
+        transmit: vi.fn(),
+        receiver: () => ({
+          createConsumer: () => ({
+            next: () => Promise.resolve({
+              value: {
+                token: 'token',
+                gig: { venueId: testId },
+              },
+              done: true,
+            }),
+          }),
+        }),
+      },
+    };
+    const setIntervalMock:any = vi.fn((cb:any) => cb());
+    global.setInterval = setIntervalMock;
+    agController.newGig(eStub, 'newGig');
+    await delay(1000);
+    expect(eStub.socket.transmit).toHaveBeenCalledWith('socketError', { newGig: 'Invalid create gig data' });
   });
   it('handles missing receiver value when process the newTour message from client', () => {
     const agController = new AgController(aStub);
