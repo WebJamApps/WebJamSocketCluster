@@ -1,6 +1,6 @@
 import Debug from 'debug';
 import type socketClusterServer from 'socketcluster-server';
-import ConsumableStream from 'consumable-stream';
+import type ConsumableStream from 'consumable-stream';
 import AgController from '../AgController/index.js';
 
 const debug = Debug('WebJamSocketServer:agServerUtils');
@@ -26,10 +26,11 @@ const routing = async (agServer:socketClusterServer.AGServer): Promise<boolean> 
   })();
   return Promise.resolve(true);
 };
-const setupErrorWarning = (agServer: socketClusterServer.AGServer, type: any): void => {
+const setupErrorWarning = (agServer: socketClusterServer.AGServer, type: 'error' | 'warning'): void => {
   (async () => {
-    let msg;
-    const eConsumer = agServer.listener(type).createConsumer();
+    let msg: { value?: unknown; done?: boolean };
+    const listenerObj = agServer as unknown as { listener(evt: string): { createConsumer(): ConsumableStream.Consumer<unknown> } };
+    const eConsumer = listenerObj.listener(type).createConsumer();
     while (true) {  
       msg = await eConsumer.next(); 
       debug(type);
@@ -39,14 +40,19 @@ const setupErrorWarning = (agServer: socketClusterServer.AGServer, type: any): v
   })();
 };
 
-const handleErrAndWarn = (SOCKETCLUSTER_LOG_LEVEL: any, SOCKETCLUSTER_PORT: any, agServer: socketClusterServer.AGServer): Promise<boolean> => {
-  /* istanbul ignore else */if (SOCKETCLUSTER_LOG_LEVEL >= 1) setupErrorWarning(agServer, 'error');
+const handleErrAndWarn = (
+  SOCKETCLUSTER_LOG_LEVEL: number | string,
+  SOCKETCLUSTER_PORT: number | string,
+  agServer: socketClusterServer.AGServer,
+): Promise<boolean> => {
+  const logLevel = typeof SOCKETCLUSTER_LOG_LEVEL === 'string' ? parseInt(SOCKETCLUSTER_LOG_LEVEL, 10) : SOCKETCLUSTER_LOG_LEVEL;
+  /* istanbul ignore else */if (logLevel >= 1) setupErrorWarning(agServer, 'error');
   function colorText(message: string, color: number) {
     let fullMessage = message;
     /* istanbul ignore else */if (color) fullMessage = `\x1b[${color}m${message}\x1b[0m`;
     return fullMessage;
   }
-  /* istanbul ignore else */if (SOCKETCLUSTER_LOG_LEVEL >= 2) {  
+  /* istanbul ignore else */if (logLevel >= 2) {  
     console.log(`   ${colorText('[Active]', 32)} SocketCluster worker with PID ${process.pid} is listening on port ${SOCKETCLUSTER_PORT}`);
     setupErrorWarning(agServer, 'warning');
   }
