@@ -1,17 +1,23 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import utils from '#src/AgController/utils.js';
+import type GigController from '#src/model/gig/gig-controller.js';
+import type JamPicsController from '#src/model/jamPics/jamPics-controller.js';
 
 describe('AgController/utils', () => {
   it('resetData catches error', async () => {
     const deleteAllDocs = vi.fn(() => Promise.reject(new Error('bad')));
-    const result = await utils.resetData({} as any, {} as any, { deleteAllDocs } as any, {} as any);
+    const result = await utils.resetData(
+      {} as never,
+      {} as never,
+      { deleteAllDocs } as unknown as typeof GigController,
+      {} as unknown as typeof JamPicsController,
+    );
     expect(result).toBe(false);
   });
   it('handleGig is successful', async () => {
     const transmitPublish = vi.fn();
     const server = { exchange: { transmitPublish } };
-    const gigController = { create: vi.fn(() => Promise.resolve()) };
-    await utils.handleGig('create', {} as any, 'created', gigController, server as any);
+    const gigController = { createGig: vi.fn(() => Promise.resolve()) };
+    await utils.handleGig('createGig', {}, 'created', gigController as unknown as typeof GigController, server);
     expect(transmitPublish).toHaveBeenCalled();
   });
   it('removeGig', async () => {
@@ -21,7 +27,13 @@ describe('AgController/utils', () => {
     const receiver = { value: { token: 'token', tour: { tourId: 'asdf' } } };
     const gigController = { deleteById: vi.fn(() => Promise.resolve()) };
     const verifyAdminWrite = vi.fn(() => Promise.resolve());
-    await utils.removeGig(receiver, client, gigController, server, verifyAdminWrite);
+    await utils.removeGig(
+      receiver,
+      client,
+      gigController as unknown as typeof GigController,
+      server,
+      verifyAdminWrite,
+    );
     expect(verifyAdminWrite).toHaveBeenCalledWith('token');
     expect(transmitPublish).toHaveBeenCalled();
   });
@@ -32,7 +44,13 @@ describe('AgController/utils', () => {
     const receiver = { value: { token: 'token', tour: { tourId: 'asdf' } } };
     const gigController = { deleteById: vi.fn(() => Promise.reject(new Error('bad'))) };
     const verifyAdminWrite = vi.fn(() => Promise.resolve());
-    await utils.removeGig(receiver, client, gigController, server, verifyAdminWrite);
+    await utils.removeGig(
+      receiver,
+      client,
+      gigController as unknown as typeof GigController,
+      server,
+      verifyAdminWrite,
+    );
     expect(transmitPublish).not.toHaveBeenCalled();
     expect(client.socket.transmit).toHaveBeenCalled();
   });
@@ -43,7 +61,13 @@ describe('AgController/utils', () => {
     const receiver = { value: { token: 'token', tour: {} } };
     const gigController = { deleteById: vi.fn(() => Promise.resolve()) };
     const verifyAdminWrite = vi.fn(() => Promise.resolve());
-    await utils.removeGig(receiver, client, gigController, server, verifyAdminWrite);
+    await utils.removeGig(
+      receiver,
+      client,
+      gigController as unknown as typeof GigController,
+      server,
+      verifyAdminWrite,
+    );
     expect(verifyAdminWrite).not.toHaveBeenCalled();
     expect(transmitPublish).not.toHaveBeenCalled();
   });
@@ -56,7 +80,13 @@ describe('AgController/utils', () => {
     const receiver = { value: { token: undefined, tour: { tourId: 'asdf' } } };
     const gigController = { deleteById: vi.fn(() => Promise.resolve()) };
     const verifyAdminWrite = vi.fn(() => Promise.reject(new Error('jwt must be provided')));
-    await utils.removeGig(receiver, client, gigController, server, verifyAdminWrite);
+    await utils.removeGig(
+      receiver,
+      client,
+      gigController as unknown as typeof GigController,
+      server,
+      verifyAdminWrite,
+    );
     expect(gigController.deleteById).not.toHaveBeenCalled();
     expect(transmitPublish).not.toHaveBeenCalled();
     expect(client.socket.transmit).toHaveBeenCalledWith('socketError', { deleteGig: 'jwt must be provided' });
@@ -68,7 +98,13 @@ describe('AgController/utils', () => {
     const receiver = { value: { token: 'token', gig: { gigId: 'asdf' } } };
     const gigController = { deleteById: vi.fn(() => Promise.resolve()) };
     const verifyAdminWrite = vi.fn(() => Promise.reject(new Error('Not allowed to create new gig')));
-    await utils.removeGig(receiver, client, gigController, server, verifyAdminWrite);
+    await utils.removeGig(
+      receiver,
+      client,
+      gigController as unknown as typeof GigController,
+      server,
+      verifyAdminWrite,
+    );
     expect(gigController.deleteById).not.toHaveBeenCalled();
     expect(client.socket.transmit).toHaveBeenCalledWith('socketError', { deleteGig: 'Not allowed to create new gig' });
   });
