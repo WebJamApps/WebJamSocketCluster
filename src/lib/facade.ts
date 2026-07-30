@@ -1,59 +1,40 @@
-class Facade {
-  Schema: any;
+import type mongoose from 'mongoose';
+import type { SortOrder, QueryFilter } from '../types/index.js';
 
-  constructor(Schema: any) {
+class Facade<T = Record<string, unknown>> {
+  Schema: mongoose.Model<T>;
+
+  constructor(Schema: mongoose.Model<T>) {
     this.Schema = Schema;
   }
 
-  create(input: any): any {
-    return this.Schema.create(input);
+  create(input: Partial<T> | Partial<T>[]): Promise<T | T[]> {
+    return this.Schema.create(input as never);
   }
 
-  async find(query: any): Promise<any> {
-    let result;
+  async find(query: QueryFilter): Promise<T[]> {
+    let result: T[];
     try { result = await this.Schema.find(query).lean().exec(); } catch (e) { return Promise.reject(e); }
     return Promise.resolve(result);
   }
 
-  async findSort(query: any, sort: any): Promise<any> {
-    let result;
-    try { result = await this.Schema.find(query).sort(sort).lean().exec(); } catch (e) { return Promise.reject(e); }
+  async findSort(query: QueryFilter, sort: SortOrder): Promise<T[]> {
+    let result: T[];
+    try {
+      result = await this.Schema.find(query).sort(sort as Record<string, 1 | -1>).lean().exec();
+    } catch (e) { return Promise.reject(e); }
     return Promise.resolve(result);
   }
 
-  deleteMany(query: any): any {
-    return this.Schema.deleteMany(query);
+  deleteMany(query: QueryFilter): Promise<unknown> {
+    return this.Schema.deleteMany(query).exec();
   }
 
-  // async findOne(query) {
-  //   let result;
-  //   try { result = await this.Schema.findOne(query).lean().exec(); } catch (e) { return Promise.reject(e); }
-  //   return Promise.resolve(result);
-  // }
-
-  // async findOneAndUpdate(conditions, update) {
-  //   let result;
-  //   try {
-  //     result = await this.Schema.findOneAndUpdate(conditions, update, { new: true }).lean().exec();
-  //   } catch (e) { return Promise.reject(e); }
-  //   return Promise.resolve(result);
-  // }
-
-  findByIdAndUpdate(id: any, update: any): any {
-    return this.Schema.findByIdAndUpdate(id, update, { new: true }).lean().exec();
+  findByIdAndUpdate(id: string | mongoose.Types.ObjectId, update: Partial<T>): Promise<T | null> {
+    return this.Schema.findByIdAndUpdate(id, update, { returnDocument: 'after' }).lean().exec();
   }
 
-  //
-  // findById(id) {
-  //   return this.Schema.findById(id).lean().exec();
-  // }
-  //
-  // Mongoose 9.x removed `findByIdAndRemove` entirely (both on Model and
-  // Query) in favor of `findByIdAndDelete` (JaMmusic#1199) — calling the old
-  // name here threw synchronously, which the caller silently swallowed, so
-  // deletes never took effect. Keep this method's own name (`findByIdAndRemove`)
-  // unchanged since Controller/GigController/JamPicsController call it.
-  findByIdAndRemove(id: any): any {
+  findByIdAndRemove(id: string | mongoose.Types.ObjectId): Promise<T | null> {
     return this.Schema.findByIdAndDelete(id).lean().exec();
   }
 }

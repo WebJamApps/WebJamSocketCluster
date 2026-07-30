@@ -4,7 +4,7 @@ import httpServer from '../src/app/httpServer.js';
 httpServer.listen = vi.fn() as unknown as typeof httpServer.listen;
 const server = await import('../src/index.js');
 
-const delay = (ms: any) => new Promise((resolve) => { setTimeout(() => resolve(true), ms); });
+const delay = (ms: number) => new Promise((resolve) => { setTimeout(() => resolve(true), ms); });
 
 describe('server', () => {
   it('is defines the server', async () => {

@@ -48,7 +48,7 @@ export default tseslint.config(
     },
     rules: {
       '@typescript-eslint/no-floating-promises': ['error', { ignoreIIFE: true }],
-      '@typescript-eslint/no-explicit-any': 'warn',
+      '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': 'error',
       '@typescript-eslint/no-unsafe-argument': 'off',
       '@typescript-eslint/no-unsafe-member-access': 'off',
