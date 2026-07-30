@@ -21,33 +21,33 @@ describe('GigController', () => {
     await expect(controller.getAllSort({})).rejects.toThrow('bad');
   });
   it('deletes tour by id', async () => {
-    controller.model.findByIdAndRemove = vi.fn(() => Promise.resolve(true));
+    controller.model.findByIdAndRemove = vi.fn(() => Promise.resolve({}));
     const result = await controller.deleteById(testId);
-    expect(result).toBe(true);
+    expect(result).toEqual({});
   });
   it('throws error on delete by id', async () => {
     controller.model.findByIdAndRemove = vi.fn(() => Promise.reject(new Error('bad')));
     await expect(controller.deleteById(testId)).rejects.toThrow('bad');
   });
   it('detects a bad id', async () => {
-    const anyId:any = '';
+    const anyId = '' as unknown as mongoose.Types.ObjectId;
     await expect(controller.deleteById(anyId)).rejects.toThrow('id is invalid');
   });
   it('fails to delete', async () => {
-    controller.model.findByIdAndRemove = vi.fn(() => Promise.resolve());
+    controller.model.findByIdAndRemove = vi.fn(() => Promise.resolve(null));
     await expect(controller.deleteById(testId)).rejects.toThrow('Delete id not found');
   });
   it('updates a tour by id', async () => {
-    controller.model.findByIdAndUpdate = vi.fn(() => Promise.resolve(true));
+    controller.model.findByIdAndUpdate = vi.fn(() => Promise.resolve({}));
     const r = await controller.findByIdAndUpdate(testId, {});
-    expect(r).toBe(true);
+    expect(r).toEqual({});
   });
   it('updates a tour by id but none found to update', async () => {
-    controller.model.findByIdAndUpdate = vi.fn(() => Promise.resolve());
+    controller.model.findByIdAndUpdate = vi.fn(() => Promise.resolve(null));
     await expect(controller.findByIdAndUpdate(testId, {})).rejects.toThrow('Id Not Found');
   });
   it('should wait unit tests finish before exiting', async () => {
-    const delay = (ms: any) => new Promise((resolve) => { setTimeout(() => resolve(true), ms); });
+    const delay = (ms: number) => new Promise((resolve) => { setTimeout(() => resolve(true), ms); });
     await delay(1000);
   });
 });
