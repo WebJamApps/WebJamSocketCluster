@@ -49,9 +49,9 @@ class AgController {
   handleDisconnect(client: IClient, interval: NodeJS.Timeout):void {
     void (async () => {
       let disconnect: { value?: undefined; done?: boolean };
-      const listener = client.listener ?? client.socket?.listener;
-      if (!listener) return;
-      const dConsumer = listener('disconnect').createConsumer();
+      const target = client.listener ? client : client.socket;
+      if (!target?.listener) return;
+      const dConsumer = target.listener('disconnect').createConsumer();
       while (true) {
         disconnect = await dConsumer.next() as { value?: undefined; done?: boolean };
         clearInterval(interval);
