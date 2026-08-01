@@ -95,6 +95,33 @@ describe('AgControler', () => {
     expect(agController.clients.length).toBe(0);
     await delay(1000);
   });
+  it('invokes client.socket.listener with the socket as its receiver, not detached (production crash regression)', async () => {
+    // Regression for the prod crash-loop: handleDisconnect used to pull
+    // `listener` off `client`/`client.socket` into a bare variable and call
+    // it standalone, so it ran with no receiver. async-stream-emitter reads
+    // `this._listenerDemux` internally, so a detached call throws
+    // "Cannot read properties of undefined (reading 'stream')" on every
+    // incoming socket connection. This asserts `listener` is called AS A
+    // METHOD of its owning object (`this` bound to the socket), matching
+    // how SocketCluster's real ConnectionData shape only exposes
+    // `client.socket.listener`, never `client.listener` directly.
+    const agController = new AgController(aStub);
+    const socketOwner = {
+      receiverThis: undefined as unknown,
+      listener() {
+        socketOwner.receiverThis = this;
+        return { createConsumer: () => ({ next: () => Promise.resolve({ done: true }) }) };
+      },
+    };
+    const sStub: IClient = {
+      id: '123',
+      socket: socketOwner,
+    };
+    const to = null as unknown as NodeJS.Timeout;
+    agController.handleDisconnect(sStub, to);
+    await delay(500);
+    expect(socketOwner.receiverThis).toBe(socketOwner);
+  });
   it('sends a pulse', () => {
     const agController = new AgController(aStub);
     agController.clients = ['123'];
