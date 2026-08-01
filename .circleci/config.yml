@@ -21,6 +21,9 @@ jobs:
             rm -rf node_modules build
             npm install --omit=dev
             node scripts/smoke-start.mjs
+      - run:
+          name:        Production socket connection smoke test (regression: detached-listener crash-loop outage)
+          command:     'node scripts/smoke-prod-socket.mjs'
 
 workflows:
   build-and-test:
