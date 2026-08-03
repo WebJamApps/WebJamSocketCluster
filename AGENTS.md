@@ -11,4 +11,5 @@
 
 ## System & Environment
 - **Runtime:** Node.js v24.18.1
+- **Node Engine Version Bumps:** When bumping Node.js in `package.json` `engines.node`, run `npm install --package-lock-only --ignore-scripts` (or `npm install --ignore-scripts`) to update `package-lock.json` root engine definition without waiting on `postinstall` scripts so both files are committed together.
 
