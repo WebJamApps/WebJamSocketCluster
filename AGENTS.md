@@ -8,3 +8,7 @@
 
 ## Memory & Security Audits
 - **Snyk Failures & Resolution via `npm audit fix`**: PR checks may report failure on `security/snyk` due to transitive dependency vulnerabilities. Running `npm audit fix` updates `package-lock.json` with non-breaking patches to resolve these vulnerabilities. Always run local tests afterwards to verify the test suite remains 100% green before committing and pushing `package-lock.json` to the PR branch.
+
+## System & Environment
+- **Runtime:** Node.js v24.18.1
+
