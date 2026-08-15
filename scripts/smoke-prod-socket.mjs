@@ -26,7 +26,7 @@
 // bind address. Dialling by the hostname 'localhost' leaves address
 // selection to Node's resolver, and that has bitten this exact test once
 // already: confirmed empirically against the actual CI image
-// (cimg/node:24.18-browsers) that Node 24's *default* `dns.lookup`
+// (cimg/node:24.19.0-browsers) that Node 24's *default* `dns.lookup`
 // ('localhost') resolves `::1` first. If a given environment's IPv6
 // loopback is present but not actually routable (a known class of container
 // networking quirk we could not force-reproduce locally, but which matches
