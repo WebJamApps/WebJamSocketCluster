@@ -1,6 +1,6 @@
 import Debug from 'debug';
 import type { Express, Request, Response } from 'express';
-import type http from 'http';
+import type http from 'node:http';
 import type { ISocketConsumer } from '../types/index.js';
 
 interface RequestData {
