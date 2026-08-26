@@ -3,6 +3,8 @@ import tseslint from 'typescript-eslint';
 import nodePlugin from 'eslint-plugin-n';
 import securityPlugin from 'eslint-plugin-security';
 import sonarjs from 'eslint-plugin-sonarjs';
+import unicorn from 'eslint-plugin-unicorn';
+import promise from 'eslint-plugin-promise';
 import globals from 'globals';
 
 export default tseslint.config(
@@ -24,6 +26,25 @@ export default tseslint.config(
   nodePlugin.configs['flat/recommended-module'],
   securityPlugin.configs.recommended,
   sonarjs.configs.recommended,
+  promise.configs['flat/recommended'],
+  {
+    plugins: {
+      unicorn,
+    },
+    rules: {
+      'unicorn/prefer-node-protocol': 'warn',
+      'unicorn/no-unreadable-array-destructuring': 'warn',
+      'unicorn/no-useless-promise-resolve-reject': 'off',
+      'unicorn/prefer-array-find': 'warn',
+      'unicorn/prefer-array-flat-map': 'warn',
+      'unicorn/prefer-includes': 'warn',
+      'unicorn/prefer-string-starts-ends-with': 'warn',
+      'unicorn/prefer-date-now': 'warn',
+      'unicorn/no-typeof-undefined': 'warn',
+      'unicorn/no-invalid-remove-event-listener': 'warn',
+      'promise/no-return-wrap': 'off',
+    },
+  },
   {
     files: ['**/*.ts'],
     extends: [...tseslint.configs.recommendedTypeChecked],
@@ -73,6 +94,8 @@ export default tseslint.config(
     files: ['test/**/*.ts'],
     rules: {
       'sonarjs/no-nested-functions': 'off',
+      'promise/always-return': 'off',
+      'promise/catch-or-return': 'off',
     },
   },
 );
