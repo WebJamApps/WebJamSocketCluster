@@ -1,7 +1,7 @@
 {
   "name": "webjamsocketserver",
   "description": "Uses latest version of socketcluster-server",
-  "version": "3.0.22",
+  "version": "3.0.23",
   "license": "MIT",
   "type": "module",
   "main": "build/src/index.js",
@@ -43,6 +43,7 @@
     "ts-start": "cross-env DEBUG=WebJamSocketServer:* node --watch --trace-warnings build/src/index.js",
     "ts-watch": "tsc -w",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
     "test:lint": "eslint . --fix",
     "test:local": "eslint . --fix && npm run test:unit && npm run cc",
     "test:unit": "vitest run",

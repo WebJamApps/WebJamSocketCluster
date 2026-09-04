@@ -177,16 +177,20 @@ describe('AgControler', () => {
   });
   it('gets all tours', async () => {
     const agController = new AgController(aStub);
+    const transmitMock = vi.fn();
     const cStub: IClient = {
       socket: {
         id: '123',
         listener: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ done: true, value: '1000' }) }) }),
-        transmit: () => { },
+        transmit: transmitMock,
         receiver: () => ({ createConsumer: () => ({ next: () => Promise.resolve({ value: 123, done: true }) }) }),
       },
     };
     agController.gigController.getAllByArtistSort = vi.fn(() => Promise.resolve([]));
     r = await agController.sendGigs(cStub);
+    expect(agController.gigController.getAllByArtistSort).toHaveBeenCalledWith('josh', { datetime: -1 });
+    expect(transmitMock).toHaveBeenCalledWith('allGigs', []);
+    expect(transmitMock).toHaveBeenCalledWith('allTours', []);
     expect(r).toBe('sent gigs');
   });
   it('gets gigs for a non-default artist on a scoped channel', async () => {
