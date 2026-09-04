@@ -74,7 +74,7 @@ function assertCanCreateGig(
     }
     return;
   }
-  if (!goodRoles || !user.userType || goodRoles.indexOf(user.userType) === -1) {
+  if (!goodRoles || !user.userType || !goodRoles.includes(user.userType)) {
     throw new Error('Not allowed to create new gig');
   }
 }

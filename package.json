@@ -1,12 +1,12 @@
 {
   "name": "webjamsocketserver",
   "description": "Uses latest version of socketcluster-server",
-  "version": "3.0.15",
+  "version": "3.0.23",
   "license": "MIT",
   "type": "module",
   "main": "build/src/index.js",
   "engines": {
-    "node": "24.18.0"
+    "node": "24.19.0"
   },
   "contributors": [
     {
@@ -34,7 +34,7 @@
   "scripts": {
     "rmrf": "rimraf build && rimraf JaMmusic && rimraf coverage",
     "dev": "rimraf build && tsc && concurrently --raw \"npm:ts-start\" \"npm:ts-watch\"",
-    "test": "eslint . && npm run typecheck && rimraf coverage && npm run test:unit",
+    "test": "eslint . && npm run typecheck && npm run jscpd && rimraf coverage && npm run test:unit",
     "build:front": "./postinstallJaM.sh && rimraf ./JaMmusic/src && rimraf ./JaMmusic/test",
     "build:prod": "(cd JaMmusic || exit; npm start -- build)",
     "cleaninstall": "rimraf yarn.lock && rimraf package-lock.json && rimraf node_modules && npm cache clean --force && npm install",
@@ -43,10 +43,12 @@
     "ts-start": "cross-env DEBUG=WebJamSocketServer:* node --watch --trace-warnings build/src/index.js",
     "ts-watch": "tsc -w",
     "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
     "test:lint": "eslint . --fix",
     "test:local": "eslint . --fix && npm run test:unit && npm run cc",
     "test:unit": "vitest run",
-    "test:prod": "rm -rf node_modules build && npm install --omit=dev && node scripts/smoke-start.mjs"
+    "test:prod": "rm -rf node_modules build && npm install --omit=dev && node scripts/smoke-start.mjs",
+    "jscpd": "jscpd src"
   },
   "dependencies": {
     "@types/debug": "^4.1.7",
@@ -89,7 +91,10 @@
     "eslint-plugin-sonarjs": "^4.0.3",
     "globals": "^17.5.0",
     "typescript-eslint": "^8.59.1",
-    "vitest": "^4.1.9"
+    "vitest": "^4.1.9",
+    "eslint-plugin-promise": "^7.3.0",
+    "eslint-plugin-unicorn": "^73.0.0",
+    "jscpd": "^5.0.16"
   },
   "overrides": {
     "socketcluster-client": {
