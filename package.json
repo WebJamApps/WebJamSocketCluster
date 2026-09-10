@@ -67,7 +67,7 @@
     "express-sslify": "^1.2.0",
     "jsonwebtoken": "^9.0.1",
     "mongoose": "^9.7.4",
-    "morgan": "^1.10.0",
+    "morgan": "^1.12.0",
     "rimraf": "^6.1.3",
     "sc-errors": "^3.0.0",
     "scc-broker-client": "^9.2.1",
