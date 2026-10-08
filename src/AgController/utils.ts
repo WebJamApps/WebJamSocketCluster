@@ -7,6 +7,33 @@ import type { IClient, IRemoveGigPayload, ISocketExchange, IUser } from '../type
 
 const debug = Debug('WebJamSocketServer:AgController/utils');
 
+async function getDocCount(controller: unknown): Promise<number> {
+  const c = controller as {
+    countDocuments?: () => Promise<number>;
+    count?: () => Promise<number>;
+    model?: { Schema?: { countDocuments: () => { exec?: () => Promise<number> } | Promise<number> } };
+    getAll?: () => Promise<unknown[]>;
+  };
+  if (typeof c.countDocuments === 'function') {
+    return c.countDocuments();
+  }
+  if (typeof c.count === 'function') {
+    return c.count();
+  }
+  if (typeof c.model?.Schema?.countDocuments === 'function') {
+    const query = c.model.Schema.countDocuments();
+    if (query && typeof (query as { exec?: () => Promise<number> }).exec === 'function') {
+      return (query as { exec: () => Promise<number> }).exec();
+    }
+    return query as Promise<number>;
+  }
+  if (typeof c.getAll === 'function') {
+    const docs = await c.getAll();
+    return docs.length;
+  }
+  throw new Error('Unable to determine collection count');
+}
+
 async function resetData(
   gig: typeof gigData['gig'],
   jamPics: typeof jamPicsData['jamPics'],
@@ -14,10 +41,14 @@ async function resetData(
   jamPicsController: typeof JamPicsController,
 ) {
   try {
-    await gigController.deleteAllDocs();
-    await gigController.createDocs(gig);
-    await jamPicsController.deleteAllDocs();
-    await jamPicsController.createDocs(jamPics);
+    const gigCount = await getDocCount(gigController);
+    const jamPicsCount = await getDocCount(jamPicsController);
+    if (gigCount === 0) {
+      await gigController.createDocs(gig);
+    }
+    if (jamPicsCount === 0) {
+      await jamPicsController.createDocs(jamPics);
+    }
     return true;
   } catch (e) {
     const eMessage = (e as Error).message;
