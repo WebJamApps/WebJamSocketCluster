@@ -19,7 +19,7 @@ const handleConnections = async (
 
 const routing = async (agServer:socketClusterServer.AGServer): Promise<boolean> => {
   const agController = new AgController(agServer);
-  /* istanbul ignore else */if (process.env.NODE_ENV !== 'production') await agController.resetData();
+  await agController.resetData();
   (async () => { // SocketCluster/WebSocket connection handling
     const cConsumer = agServer.listener('connection').createConsumer();
     await handleConnections(cConsumer, agController);
