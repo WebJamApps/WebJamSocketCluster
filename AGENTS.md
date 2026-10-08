@@ -23,3 +23,6 @@ rules and do not reconstruct them from memory or from this file.
 ## System & Environment
 - **Runtime:** Node.js v24.19.0
 - **Node Engine Version Bumps:** When bumping Node.js in `package.json` `engines.node`, run `npm install --package-lock-only --ignore-scripts` (or `npm install --ignore-scripts`) to update `package-lock.json` root engine definition without waiting on `postinstall` scripts so both files are committed together.
+
+## SocketCluster & Connection Lifecycle
+- **Synchronous Connection Consumer Registration**: In `agServerUtils.routing`, the `connection` stream consumer (`agServer.listener('connection').createConsumer()`) MUST be registered synchronously before any asynchronous startup operations (such as database seeding, counting, or network I/O) are awaited. SocketCluster stream emitters drop events emitted when no consumer is attached; registering the consumer before awaiting startup ensures that connections arriving during asynchronous startup are buffered and processed by `AgController.addSocket` rather than silently dropped.

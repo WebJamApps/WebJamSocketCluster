@@ -4,6 +4,8 @@ import type socketClusterServer from 'socketcluster-server';
 import mongoose from 'mongoose';
 import utils from '#src/AgController/utils.js';
 import AgController from '#src/AgController/index.js';
+import gigData from '#src/model/gig/reset-gig.js';
+import jamPicsData from '#src/model/jamPics/reset-jamPics.js';
 
 const testId = new mongoose.Types.ObjectId();
 const delay = (ms: number) => new Promise((resolve) => { setTimeout(() => resolve(true), ms); });
@@ -64,6 +66,18 @@ describe('AgControler', () => {
     const cStub = { ...clientStub, socket: { receiver: () => ({ createConsumer }) } };
     expect(agController.addSocket(cStub)).toBeUndefined();
     expect(agController.removeImage).toHaveBeenCalled();
+  });
+  it('resetData delegates to utils.resetData with sample data and controllers', async () => {
+    const agController = new AgController(aStub);
+    const resetDataSpy = vi.spyOn(utils, 'resetData').mockResolvedValue(true);
+    await agController.resetData();
+    expect(resetDataSpy).toHaveBeenCalledWith(
+      gigData.gig,
+      jamPicsData.jamPics,
+      agController.gigController,
+      agController.jamPicsController,
+    );
+    resetDataSpy.mockRestore();
   });
   it('handles undefined disconnects', async () => {
     const agController = new AgController(aStub);
