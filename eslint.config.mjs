@@ -21,8 +21,8 @@ try {
     loaded: true,
     exports: ts6,
   };
-} catch {
-  // Fallback if @typescript/typescript6 is not present
+} catch (error) {
+  console.warn('Warning: Failed to load @typescript/typescript6 bridge in eslint.config.mjs:', error);
 }
 
 const js = (await import('@eslint/js')).default;
