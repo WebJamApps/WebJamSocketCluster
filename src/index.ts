@@ -33,11 +33,9 @@ const SCC_STATE_SERVER_ACK_TIMEOUT = Number(process.env.SCC_STATE_SERVER_ACK_TIM
 const SCC_STATE_SERVER_RECONNECT_RANDOMNESS = Number(process.env.SCC_STATE_SERVER_RECONNECT_RANDOMNESS) || undefined;
 const SCC_PUB_SUB_BATCH_DURATION = Number(process.env.SCC_PUB_SUB_BATCH_DURATION) || undefined;
 const SCC_BROKER_RETRY_DELAY = Number(process.env.SCC_BROKER_RETRY_DELAY) || undefined;
-const agOptions = {};
-/* istanbul ignore if */if (process.env.SOCKETCLUSTER_OPTIONS) {
-  const envOptions = JSON.parse(process.env.SOCKETCLUSTER_OPTIONS);
-  Object.assign(agOptions, envOptions);
-}
+const agOptions: Record<string, unknown> = process.env.SOCKETCLUSTER_OPTIONS
+  ? (JSON.parse(process.env.SOCKETCLUSTER_OPTIONS) as Record<string, unknown>)
+  : {};
 const agServer = socketClusterServer.attach(httpServer, agOptions);
 const expressApp = express();
 /* istanbul ignore if */if (ENVIRONMENT === 'dev' || ENVIRONMENT === 'development') {
