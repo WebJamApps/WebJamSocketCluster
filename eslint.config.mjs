@@ -1,11 +1,38 @@
-import js from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import nodePlugin from 'eslint-plugin-n';
-import securityPlugin from 'eslint-plugin-security';
-import sonarjs from 'eslint-plugin-sonarjs';
-import unicorn from 'eslint-plugin-unicorn';
-import promise from 'eslint-plugin-promise';
-import globals from 'globals';
+import Module from 'node:module';
+import { createRequire } from 'node:module';
+
+// TypeScript 7 Go compiler does not provide the JS programmatic AST API.
+// Forward typescript-eslint, sonarjs, and other ESLint plugins to @typescript/typescript6.
+const origResolveFilename = Module._resolveFilename;
+Module._resolveFilename = function (request, ...args) {
+  if (typeof request === 'string' && request.startsWith('typescript/')) {
+    return origResolveFilename.call(this, request.replace(/^typescript\//, '@typescript/typescript6/'), ...args);
+  }
+  return origResolveFilename.call(this, request, ...args);
+};
+
+const require = createRequire(import.meta.url);
+try {
+  const tsPath = require.resolve('typescript');
+  const ts6 = require('@typescript/typescript6');
+  require.cache[tsPath] = {
+    id: tsPath,
+    filename: tsPath,
+    loaded: true,
+    exports: ts6,
+  };
+} catch (error) {
+  console.warn('Warning: Failed to load @typescript/typescript6 bridge in eslint.config.mjs:', error);
+}
+
+const js = (await import('@eslint/js')).default;
+const tseslint = (await import('typescript-eslint')).default;
+const nodePlugin = (await import('eslint-plugin-n')).default;
+const securityPlugin = (await import('eslint-plugin-security')).default;
+const sonarjs = (await import('eslint-plugin-sonarjs')).default;
+const unicorn = (await import('eslint-plugin-unicorn')).default;
+const promise = (await import('eslint-plugin-promise')).default;
+const globals = (await import('globals')).default;
 
 export default tseslint.config(
   {
